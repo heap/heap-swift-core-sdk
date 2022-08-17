@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+import "Value.proto";
+import "DeviceInfo.proto";
+import "ApplicationInfo.proto";
+import "LibraryInfo.proto";
+
+message UserProperties {
+  string env_id = 1;
+  string user_id = 2;
+  map<string, Value> properties = 3;
+  DeviceInfo initial_device = 4;
+  ApplicationInfo initial_application = 5;
+  LibraryInfo library = 6;
+}

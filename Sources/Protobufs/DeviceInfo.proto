@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+message DeviceInfo {
+  enum DeviceType {
+    UNKNOWN = 0;
+    MOBILE = 1;
+    TABLET = 2;
+    DESKTOP = 3;
+    TV = 4;
+    WATCH = 5;
+    AUTOMOTIVE = 6;
+  }
+
+  string model = 1; // E.g., Samsung Galaxy S22, iPhone14,3
+  string platform = 2; // E.g., Android 13, iOS 16.0
+  optional string user_agent = 3; // For web
+  DeviceType type = 4;
+
+  optional string carrier = 5; // E.g., AT&T
+
+  optional string vendor_id = 6;
+  optional string advertiser_id = 7;
+}

@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+import "Value.proto";
+
+message Event {
+  oneof kind {
+    Custom custom = 1;
+  }
+
+  enum AppVisibility {
+    UNKNOWN = 0; // Default value for unset/unknown app visibility state.
+    BACKGROUNDED = 1; // App is in background
+    FOREGROUNDED = 2; // App is in foreground
+  }
+
+  AppVisibility app_visibility_state = 20;
+
+  // A custom event from the `track` API.
+  message Custom {
+    string name = 1;
+    // Properties from `track`.
+    map<string, Value> properties = 2;
+  }
+}

@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "LibraryInfo.proto";
+
+message UserIdentification {
+  string env_id = 1;
+  string user_id = 2;
+  string identity = 3;
+  google.protobuf.Timestamp time = 4;
+  LibraryInfo library = 5;
+}

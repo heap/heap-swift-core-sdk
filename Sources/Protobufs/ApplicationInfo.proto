@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+message ApplicationInfo {
+  optional string name = 1; // App name displayed to the user
+  optional string identifier = 2; // Package or bundle identifier
+  optional string version_string = 3; // Version string displayed to user, e.g. 10.0.
+}

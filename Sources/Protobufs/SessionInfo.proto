@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+message SessionInfo {
+  message Utm {
+    string source = 1;
+    string medium = 2;
+    string term = 3;
+    string content = 4;
+    string campaign = 5;
+  }
+
+  string id = 1;
+  google.protobuf.Timestamp time = 2;
+
+  optional string referrer = 3;
+  optional string search_keyword = 4;
+  optional Utm utm = 5;
+}
