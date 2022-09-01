@@ -55,7 +55,7 @@ class SqliteDataStore: DataStoreProtocol {
     func deleteSession(environmentId: String, userId: String, sessionId: String) {
     }
 
-    func pruneOldData(activeEnvironmentId: String, activeUserId: String, activeSessionId: String, minLastMessageDate: Date, minUserCreationDate: Date) {
+    func pruneOldData(activeEnvironmentId: String, activeUserId: String, activeSessionId: String, minLastMessageDate: Date, minUserCreationDate: Date, currentDate: Date) {
     }
 
     func deleteDatabase(complete: (Result<Void, Error>) -> Void) {

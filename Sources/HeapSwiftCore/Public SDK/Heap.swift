@@ -27,7 +27,7 @@ public class Heap: NSObject {
     }
 
     public func stopRecording() {
-        consumer.stopRecording()
+        consumer.stopRecording(timestamp: Date())
     }
 
     public func track(_ event: String, properties: [String: HeapPropertyValue] = [:], timestamp: Date = Date(), sourceInfo: SourceInfo? = nil) {
@@ -43,7 +43,7 @@ public class Heap: NSObject {
     }
 
     public func addUserProperties(_ properties: [String: HeapPropertyValue]) {
-        consumer.addUserProperties(properties, timestamp: Date())
+        consumer.addUserProperties(properties)
     }
 
     public func addEventProperties(_ properties: [String: HeapPropertyValue]) {

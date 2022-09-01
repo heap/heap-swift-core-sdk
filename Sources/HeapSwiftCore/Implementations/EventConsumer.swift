@@ -11,7 +11,7 @@ class EventConsumer<DataStore: DataStoreProtocol>: EventConsumerProtocol, Active
     func startRecording(_ environmentId: String, with options: [Option: Any] = [:], timestamp: Date = Date()) {
     }
 
-    func stopRecording() {
+    func stopRecording(timestamp: Date = Date()) {
     }
 
     func track(_ event: String, properties: [String: HeapPropertyValue] = [:], timestamp: Date = Date(), sourceInfo: SourceInfo? = nil) {
@@ -23,7 +23,7 @@ class EventConsumer<DataStore: DataStoreProtocol>: EventConsumerProtocol, Active
     func resetIdentity(timestamp: Date = Date()) {
     }
 
-    func addUserProperties(_ properties: [String: HeapPropertyValue], timestamp: Date = Date()) {
+    func addUserProperties(_ properties: [String: HeapPropertyValue]) {
     }
 
     func addEventProperties(_ properties: [String: HeapPropertyValue]) {
@@ -36,22 +36,33 @@ class EventConsumer<DataStore: DataStoreProtocol>: EventConsumerProtocol, Active
     }
 
     var userId: String? {
-        return nil
+        return "1"
     }
 
     var identity: String? {
-        return nil
+        return "2"
+    }
+
+    var eventProperties: [String: Value] {
+        return [:]
     }
 
     func getSessionId(timestamp: Date = Date()) -> String? {
-        return nil
-    }
-
-    var sessionExpirationTime: Date? {
-        return nil
+        return "3"
     }
 
     var activeSession: ActiveSession? {
         return nil
+    }
+
+
+    /// For testing, returns the last set session ID without attempting to extend the session.
+    var activeOrExpiredSessionId: String? {
+        return "4"
+    }
+
+    /// For testing, returns the last set session expiration time without attempting to extend the session.
+    var sessionExpirationTime: Date? {
+        return Date()
     }
 }

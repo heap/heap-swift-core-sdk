@@ -27,7 +27,14 @@ struct EnvironmentState {
 
   var envID: String = String()
 
-  var userID: String = String()
+  var userID: String {
+    get {return _userID ?? String()}
+    set {_userID = newValue}
+  }
+  /// Returns true if `userID` has been explicitly set.
+  var hasUserID: Bool {return self._userID != nil}
+  /// Clears the value of `userID`. Subsequent reads from it will return its default value.
+  mutating func clearUserID() {self._userID = nil}
 
   var identity: String {
     get {return _identity ?? String()}
@@ -44,6 +51,7 @@ struct EnvironmentState {
 
   init() {}
 
+  fileprivate var _userID: String? = nil
   fileprivate var _identity: String? = nil
 }
 
@@ -69,7 +77,7 @@ extension EnvironmentState: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.envID) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self.userID) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self._userID) }()
       case 3: try { try decoder.decodeSingularStringField(value: &self._identity) }()
       case 4: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Value>.self, value: &self.properties) }()
       default: break
@@ -85,9 +93,9 @@ extension EnvironmentState: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
     if !self.envID.isEmpty {
       try visitor.visitSingularStringField(value: self.envID, fieldNumber: 1)
     }
-    if !self.userID.isEmpty {
-      try visitor.visitSingularStringField(value: self.userID, fieldNumber: 2)
-    }
+    try { if let v = self._userID {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 2)
+    } }()
     try { if let v = self._identity {
       try visitor.visitSingularStringField(value: v, fieldNumber: 3)
     } }()
@@ -99,7 +107,7 @@ extension EnvironmentState: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
 
   static func ==(lhs: EnvironmentState, rhs: EnvironmentState) -> Bool {
     if lhs.envID != rhs.envID {return false}
-    if lhs.userID != rhs.userID {return false}
+    if lhs._userID != rhs._userID {return false}
     if lhs._identity != rhs._identity {return false}
     if lhs.properties != rhs.properties {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
