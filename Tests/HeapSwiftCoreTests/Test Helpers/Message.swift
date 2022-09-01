@@ -32,7 +32,10 @@ extension Message {
         }
 
         expect(file: file, line: line, hasApplication).to(beTrue(), description: "Missing application")
-        
+        expect(file: file, line: line, application.name).notTo(beEmpty(), description: "Application should have a name")
+        expect(file: file, line: line, application.identifier).notTo(beEmpty(), description: "Application should have a model")
+        expect(file: file, line: line, application.versionString).notTo(beEmpty(), description: "Application should have a type")
+
         expect(file: file, line: line, hasDevice).to(beTrue(), description: "Missing device")
         expect(file: file, line: line, device.platform).notTo(beEmpty(), description: "All devices should have a platform")
         expect(file: file, line: line, device.model).notTo(beEmpty(), description: "All devices should have a model")

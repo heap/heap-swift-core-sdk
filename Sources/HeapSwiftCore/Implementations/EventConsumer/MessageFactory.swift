@@ -2,7 +2,7 @@ import Foundation
 
 struct MessageFactory {
 
-    let applicationInfo = ApplicationInfo() // TODO
+    let applicationInfo = ApplicationInfo.current
     let deviceInfo = DeviceInfo.current(includeCarrier: true)
     let libraryInfo = LibraryInfo() // TODO
 
