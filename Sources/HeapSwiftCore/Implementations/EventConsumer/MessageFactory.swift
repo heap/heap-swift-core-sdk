@@ -4,7 +4,11 @@ struct MessageFactory {
 
     let applicationInfo = ApplicationInfo.current
     let deviceInfo = DeviceInfo.current(includeCarrier: true)
-    let libraryInfo = LibraryInfo() // TODO
+    let libraryInfo: LibraryInfo
+
+    init() {
+        libraryInfo = LibraryInfo.baseInfo(with: deviceInfo)
+    }
 
     func sessionMessage(for state: State) -> Message {
         var message = baseMessage(from: state)

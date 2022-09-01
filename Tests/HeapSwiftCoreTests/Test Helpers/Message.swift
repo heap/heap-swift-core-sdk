@@ -43,6 +43,11 @@ extension Message {
         expect(file: file, line: line, device).to(equal(Self.testDeviceInfo), description: "Device should match the current device")
 
         expect(file: file, line: line, hasBaseLibrary).to(beTrue(), description: "Missing base library")
+        expect(file: file, line: line, baseLibrary.name).notTo(beEmpty(), description: "Base library should have a name")
+        expect(file: file, line: line, baseLibrary.platform).notTo(beEmpty(), description: "Base library should have a platform")
+        expect(file: file, line: line, baseLibrary.version).notTo(beEmpty(), description: "Base library should have a version")
+        expect(file: file, line: line, baseLibrary).to(equal(.baseInfo(with: Self.testDeviceInfo)), description: "Base library should match baseInfo(with: .current)")
+
         expect(file: file, line: line, hasSessionInfo).to(beTrue(), description: "All messages must have session info")
     }
 
