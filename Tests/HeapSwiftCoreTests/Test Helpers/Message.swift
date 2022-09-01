@@ -4,6 +4,9 @@ import XCTest
 @testable import HeapSwiftCore
 
 extension Message {
+    
+    /// Loading device info for each test is painfully slow on the iOS simulator and Catalyst.
+    private static let testDeviceInfo = DeviceInfo.current(includeCarrier: true)
 
     private func validateBaseMessage(file: StaticString = #file, line: UInt = #line, user: UserToUpload, id: String?, timestamp: Date?, hasSourceLibrary: Bool, sourceLibrary: LibraryInfo?, eventProperties: [String: Value]?) {
 
@@ -29,7 +32,13 @@ extension Message {
         }
 
         expect(file: file, line: line, hasApplication).to(beTrue(), description: "Missing application")
+        
         expect(file: file, line: line, hasDevice).to(beTrue(), description: "Missing device")
+        expect(file: file, line: line, device.platform).notTo(beEmpty(), description: "All devices should have a platform")
+        expect(file: file, line: line, device.model).notTo(beEmpty(), description: "All devices should have a model")
+        expect(file: file, line: line, device.type).notTo(equal(.unknown), description: "All devices should have a type")
+        expect(file: file, line: line, device).to(equal(Self.testDeviceInfo), description: "Device should match the current device")
+
         expect(file: file, line: line, hasBaseLibrary).to(beTrue(), description: "Missing base library")
         expect(file: file, line: line, hasSessionInfo).to(beTrue(), description: "All messages must have session info")
     }

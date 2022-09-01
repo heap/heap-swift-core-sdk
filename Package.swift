@@ -37,5 +37,12 @@ let package = Package(
                 "Quick",
                 "Nimble",
             ]),
+        .testTarget(
+            name: "HeapSwiftCoreTests-AdSupport",
+            dependencies: [
+                "HeapSwiftCore",
+                "Quick",
+                "Nimble",
+            ]),
     ]
 )

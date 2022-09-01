@@ -3,7 +3,8 @@ import XCTest
 
 final class HeapSwiftCoreTests: XCTestCase {
     
-    func testCoreInit() throws {
-        XCTAssertNotNil(HeapSwiftCore())
+    func testLogDeviceInfo() throws {
+        // Not a real test, just outputs device info.
+        print(DeviceInfo.current)
     }
 }

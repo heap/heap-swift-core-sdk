@@ -3,9 +3,8 @@ import Foundation
 struct MessageFactory {
 
     let applicationInfo = ApplicationInfo() // TODO
-    let deviceInfo = DeviceInfo() // TODO
+    let deviceInfo = DeviceInfo.current(includeCarrier: true)
     let libraryInfo = LibraryInfo() // TODO
-
 
     func sessionMessage(for state: State) -> Message {
         var message = baseMessage(from: state)
