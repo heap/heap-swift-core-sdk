@@ -1,3 +1,4 @@
+#if !os(watchOS)
 import XCTest
 import Quick
 import Nimble
@@ -21,3 +22,4 @@ final class DeviceInfoSpec: QuickSpec {
         }
     }
 }
+#endif

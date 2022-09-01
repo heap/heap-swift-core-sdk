@@ -82,7 +82,9 @@ extension EventConsumer: EventConsumerProtocol {
         
         guard let state = results.current else { return }
         
-        dataStore.insertPendingMessage(messageFactory.customEventMessage(name: event, sanitizedProperties: sanitizedProperties, timestamp: timestamp, pageviewInfo: state.lastPageviewInfo, sourceLibrary: sourceLibrary, in: state))
+        let pendingEvent = messageFactory.pendingEvent(timestamp: timestamp, sourceLibrary: sourceLibrary, in: state, toBeCommittedTo: dataStore)
+        pendingEvent.setKind(.custom(name: event, properties: sanitizedProperties))
+        pendingEvent.setPageviewInfo(state.lastPageviewInfo)
     }
 
     func identify(_ identity: String, timestamp: Date = Date()) {

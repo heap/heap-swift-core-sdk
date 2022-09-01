@@ -27,26 +27,27 @@ struct MessageFactory {
         return message
     }
     
-    func customEventMessage(name: String, sanitizedProperties: [String: Value], timestamp: Date, pageviewInfo: PageviewInfo, sourceLibrary: LibraryInfo?, in state: State) -> Message {
-        
-        var custom = Event.Custom()
-        custom.name = name
-        custom.properties = sanitizedProperties
-        
-        var event = Event()
-        event.kind = .custom(custom)
-        event.appVisibilityState = .unknown // TODO
+    func pendingEvent<DataStore: DataStoreProtocol>(timestamp: Date, sourceLibrary: LibraryInfo?, in state: State, toBeCommittedTo dataStore: DataStore) -> PendingEvent {
         
         var message = baseMessage(from: state)
         message.id = generateRandomHeapId()
         message.time = .init(date: timestamp)
-        message.pageviewInfo = pageviewInfo
         if let sourceLibrary = sourceLibrary {
             message.sourceLibrary = sourceLibrary
         }
-        message.kind = .event(event)
+        message.kind = .event(.init())
         
-        return message
+        let pendingEvent = PendingEvent(partialEventMessage: message, dataStore: dataStore)
+        
+        if Thread.isMainThread {
+            pendingEvent.setAppVisibilityState(.current)
+        } else {
+            DispatchQueue.main.async {
+                pendingEvent.setAppVisibilityState(.current)
+            }
+        }
+        
+        return pendingEvent
     }
 
     private func baseMessage(from state: State) -> Message {

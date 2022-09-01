@@ -161,18 +161,43 @@ final class EventConsumer_TrackSpec: HeapSpec {
                     expect(customEvent.properties["c"]).to(equal(.init(value: "false")))
                 }
 
-                it("records one event per call") {
+                it("records events sequentially on the main thread") {
 
-                    for n in 1...10 {
+                    for n in 1...1000 {
                         consumer.track("event-\(n)")
                     }
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 12)
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 1002)
 
                     expect(messages.map(\.id)).to(allBeUniqueAndValidIds())
 
-                    for n in 1...10 {
+                    for n in 1...1000 {
+                        let eventMessage = messages[n + 1]
+                        let event = try eventMessage.assertEventMessage(user: user, pageviewMessage: messages[1])
+                        let customEvent = try event.assertIsCustomEvent()
+                        expect(customEvent.name).to(equal("event-\(n)"), description: "Event received out of order")
+                    }
+                }
+                
+                it("records events sequentially from a background thread") {
+                    
+                    Thread.detachNewThread {
+                        expect(Thread.isMainThread).to(beFalse(), description: "PRECONDITION: Expected work to happen in a background queue")
+                        for n in 1...1000 {
+                            consumer.track("event-\(n)")
+                        }
+                    }
+                    
+                    // Background events dispatch tasks onto the main queue, so it needs a chance to process them.
+                    CFRunLoopRunInMode(.defaultMode, 0.5, false)
+
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 1002)
+
+                    expect(messages.map(\.id)).to(allBeUniqueAndValidIds())
+
+                    for n in 1...1000 {
                         let eventMessage = messages[n + 1]
                         let event = try eventMessage.assertEventMessage(user: user, pageviewMessage: messages[1])
                         let customEvent = try event.assertIsCustomEvent()
