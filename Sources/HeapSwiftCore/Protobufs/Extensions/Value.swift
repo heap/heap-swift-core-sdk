@@ -6,3 +6,9 @@ extension Value {
         self.string = value.heapValue
     }
 }
+
+extension HeapPropertyValue {
+    var protoValue: Value {
+        .init(value: self)
+    }
+}

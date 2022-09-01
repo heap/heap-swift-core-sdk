@@ -14,4 +14,13 @@ public class SourceInfo: NSObject {
         self.platform = platform
         self.properties = properties
     }
+    
+    internal var libraryInfo: LibraryInfo {
+        var libraryInfo = LibraryInfo()
+        libraryInfo.name = name
+        libraryInfo.version = version
+        libraryInfo.platform = platform
+        libraryInfo.properties = properties.mapValues(\.protoValue)
+        return libraryInfo
+    }
 }
