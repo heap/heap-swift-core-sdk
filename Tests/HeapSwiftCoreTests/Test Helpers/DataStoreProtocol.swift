@@ -81,4 +81,18 @@ extension DataStoreProtocol {
         save(state)
         return state
     }
+    
+    func createSessionIfNeeded(environmentId: String, userId: String, sessionId: String, timestamp: Date) {
+        createSessionIfNeeded(
+            with: .init(
+                forSessionIn: .init(
+                    environment: .with { $0.envID = environmentId; $0.userID = userId },
+                    options: [:],
+                    sessionInfo: .init(newSessionAt: timestamp, id: sessionId),
+                    lastPageviewInfo: .init(newPageviewAt: timestamp),
+                    sessionExpirationDate: timestamp
+                )
+            )
+        )
+    }
 }

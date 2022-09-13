@@ -148,6 +148,27 @@ class APIProtocol: URLProtocol {
     override class func canonicalRequest(for request: URLRequest) -> URLRequest {
         request
     }
+    
+    static var addUserPropertyPayloads: [UserProperties] {
+        requests.compactMap { request in
+            guard case .addUserProperties(.success(let payload)) = request else { return nil }
+            return payload
+        }
+    }
+    
+    static var identifyPayloads: [UserIdentification] {
+        requests.compactMap { request in
+            guard case .identify(.success(let payload)) = request else { return nil }
+            return payload
+        }
+    }
+    
+    static var trackPayloads: [MessageBatch] {
+        requests.compactMap { request in
+            guard case .track(.success(let payload)) = request else { return nil }
+            return payload
+        }
+    }
 }
 
 extension Data {

@@ -20,6 +20,10 @@ enum UploadError: Error, Equatable {
 
 typealias UploadResult = Result<Void, UploadError>
 
+protocol ConnectivityTesterProtocol {
+    var isOnline: Bool { get }
+}
+
 protocol UploaderProtocol {
 
     func startScheduledUploads(with options: [Option: Any])

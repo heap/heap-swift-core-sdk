@@ -2,9 +2,9 @@ import Foundation
 
 extension SessionInfo {
 
-    init(newSessionAt timestamp: Date) {
+    init(newSessionAt timestamp: Date, id: String = generateRandomHeapId()) {
         self.init()
-        self.id = generateRandomHeapId()
+        self.id = id
         self.time = .init(date: timestamp)
     }
 }
