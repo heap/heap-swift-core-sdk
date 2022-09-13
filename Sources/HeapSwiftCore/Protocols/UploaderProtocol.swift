@@ -12,10 +12,13 @@ struct ActiveSession {
     let sessionId: String
 }
 
-enum UploadError: Error {
+enum UploadError: Error, Equatable {
     case normalError
-    case unknownError(Error)
+    case unknownError
+    case networkError
 }
+
+typealias UploadResult = Result<Void, UploadError>
 
 protocol UploaderProtocol {
 
@@ -23,7 +26,7 @@ protocol UploaderProtocol {
     func stopScheduledUploads()
     var nextScheduledUploadDate: Date { get }
 
-    func uploadAll(activeSession: ActiveSession, options: [Option: Any], complete: (Result<Void, UploadError>) -> Void)
-    func uploadUser(_ user: UserToUpload, activeSession: ActiveSession, options: [Option: Any], complete: (Result<Void, UploadError>) -> Void)
-    func uploadSession(with sessionId: String, activeSession: ActiveSession, options: [Option: Any], complete: (Result<Void, UploadError>) -> Void)
+    func uploadAll(activeSession: ActiveSession, options: [Option: Any], complete: @escaping (UploadResult) -> Void)
+    func uploadUser(_ user: UserToUpload, activeSession: ActiveSession, options: [Option: Any], complete: @escaping (UploadResult) -> Void)
+    func uploadSession(with sessionId: String, activeSession: ActiveSession, options: [Option: Any], complete: @escaping (UploadResult) -> Void)
 }

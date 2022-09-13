@@ -4,7 +4,6 @@ class EventConsumer<DataStore: DataStoreProtocol> {
     
     let dataStore: DataStore
     let stateManager: StateManager<DataStore>
-    let messageFactory = MessageFactory()
 
     init(dataStore: DataStore) {
         self.dataStore = dataStore
@@ -46,8 +45,8 @@ class EventConsumer<DataStore: DataStoreProtocol> {
         }
 
         if updateResults.outcomes.sessionCreated {
-            dataStore.createSessionIfNeeded(with: messageFactory.sessionMessage(for: state))
-            dataStore.insertPendingMessage(messageFactory.pageviewMessage(for: state.lastPageviewInfo, in: state))
+            dataStore.createSessionIfNeeded(with: .init(forSessionIn: state))
+            dataStore.insertPendingMessage(.init(forPageviewWith: state.lastPageviewInfo, in: state))
         }
 
         if updateResults.outcomes.currentStarted {
@@ -82,7 +81,9 @@ extension EventConsumer: EventConsumerProtocol {
         
         guard let state = results.current else { return }
         
-        let pendingEvent = messageFactory.pendingEvent(timestamp: timestamp, sourceLibrary: sourceLibrary, in: state, toBeCommittedTo: dataStore)
+        let message = Message(forPartialEventAt: timestamp, sourceLibrary: sourceLibrary, in: state)
+        
+        let pendingEvent = PendingEvent(partialEventMessage: message, toBeCommittedTo: dataStore)
         pendingEvent.setKind(.custom(name: event, properties: sanitizedProperties))
         pendingEvent.setPageviewInfo(state.lastPageviewInfo)
     }

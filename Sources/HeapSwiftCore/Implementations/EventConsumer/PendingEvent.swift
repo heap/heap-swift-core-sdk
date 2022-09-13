@@ -10,9 +10,19 @@ class PendingEvent {
     private var _committed: Bool = false
     private var dataStore: any DataStoreProtocol
     
-    init(partialEventMessage: Message, dataStore: any DataStoreProtocol) {
+    init(partialEventMessage: Message, toBeCommittedTo dataStore: any DataStoreProtocol) {
         self._eventMessage = partialEventMessage
         self.dataStore = dataStore
+        _needsKind = partialEventMessage.event.kind == nil
+        _needsPageviewInfo = !partialEventMessage.hasPageviewInfo
+        
+        if Thread.isMainThread {
+            setAppVisibilityState(.current)
+        } else {
+            DispatchQueue.main.async { [self] in
+                setAppVisibilityState(.current)
+            }
+        }
     }
     
     func setAppVisibilityState(_ appVisibilityState: Event.AppVisibility) {
