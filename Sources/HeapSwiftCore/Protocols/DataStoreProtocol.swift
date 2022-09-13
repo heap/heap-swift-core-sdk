@@ -1,15 +1,31 @@
 import Foundation;
 
-struct UserToUpload {
+final class UserToUpload {
     let environmentId: String
     let userId: String
     let identity: String?
 
-    let needsInitialUpload: Bool
-    let needsIdentityUpload: Bool
+    var needsInitialUpload: Bool
+    var needsIdentityUpload: Bool
 
-    let pendingUserProperties: [String: String]
-    let sessionIds: [String]
+    var pendingUserProperties: [String: String]
+    var sessionIds: [String]
+    
+    init(environmentId: String,
+         userId: String,
+         identity: String?,
+         needsInitialUpload: Bool,
+         needsIdentityUpload: Bool,
+         pendingUserProperties: [String: String],
+         sessionIds: [String]) {
+        self.environmentId = environmentId
+        self.userId = userId
+        self.identity = identity
+        self.needsInitialUpload = needsInitialUpload
+        self.needsIdentityUpload = needsIdentityUpload
+        self.pendingUserProperties = pendingUserProperties
+        self.sessionIds = sessionIds
+    }
 }
 
 typealias MessageIdentifier = Int

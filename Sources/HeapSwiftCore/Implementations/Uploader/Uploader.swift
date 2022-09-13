@@ -35,6 +35,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     let connectivityTester: ConnectivityTester
     let urlSession: URLSession
     
+    /// An set of users who received a 400 response during their initial upload.
     fileprivate var rejectedUsers: Set<RejectedUsers> = []
 
     init(dataStore: DataStore, activeSessionProvider: SessionProvider, connectivityTester: ConnectivityTester, urlSessionConfiguration: URLSessionConfiguration = .ephemeral) {
@@ -58,143 +59,187 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         complete(nextScheduledUploadDate)
     }
     
+    /// Attempts to upload all queued data to the server.
+    ///
+    /// - Parameters:
+    ///   - activeSession: Information about the active session.
+    ///   - options: Any options passed while starting the scheduled upload.
+    ///   - complete: A completion block that fires when the upload process completes.
     func uploadAll(activeSession: ActiveSession, options: [Option : Any], complete: @escaping (UploadResult) -> Void) {
         
-        func finish(_ result: UploadResult) { OperationQueue.uploadQueue.addOperation { complete(result) } }
+        var users: [UserToUpload] = []
+        var result: UploadResult = .success(())
         
-        // TODO: Add reachability test
+        // This method calls `doNextOperation()` repeatedly on the upload queue until there are no more upload operations
+        // or an operation has failed.  When an operation complete `completionOperation` will process the result and queue
+        // up the next batch.
         
-        var users = dataStore.usersToUpload().filter({ !rejectedUsers.contains(.init($0)) })
-        guard users.count > 0 else {
-            finish(.success(()))
-            return
-        }
-        
-        // Move the active user to the front of the list.
-        _ = users.partition(by: { !$0.isActive(in: activeSession) })
-        
-        func uploadNextUser() {
-            let user = users.removeFirst()
-            
-            uploadUser(user, activeSession: activeSession, options: options) { result in
-                
-                // If uploading the user failed, stop uploading.
-                guard case .success = result else {
-                    finish(result)
-                    return
-                }
-                
-                if users.isEmpty {
-                    finish(.success(()))
-                } else {
-                    uploadNextUser()
-                }
-            }
-        }
-        
-        uploadNextUser()
-    }
-    
-    func uploadUser(_ user: UserToUpload, activeSession: ActiveSession, options: [Option : Any], complete: @escaping (UploadResult) -> Void) {
-        
-        func finish(_ result: UploadResult, reject: Bool = false) {
-            OperationQueue.uploadQueue.addOperation {
-                if reject {
-                    self.rejectedUsers.insert(.init(user))
-                }
+        func doNextOperation() {
+            guard case .success(()) = result,
+                let uploadOperation = nextOperation(for: &users, activeSession: activeSession, options: options) else {
                 complete(result)
+                return
             }
+            
+            OperationQueue.uploadQueue.addOperation(uploadOperation)
+            
+            let completionOperation = BlockOperation {
+                result = uploadOperation.result ?? .failure(.badRequest)
+                doNextOperation()
+            }
+            
+            completionOperation.addDependency(uploadOperation)
+            OperationQueue.uploadQueue.addOperation(completionOperation)
         }
         
-        func handleFailure(_ error: UploadError) {
-            
-            let reject: Bool
-            
-            switch error {
-            case .normalError where user.isActive(in: activeSession):
-                reject = true
-            case .normalError:
-                dataStore.deleteUser(environmentId: user.environmentId, userId: user.userId)
-                reject = false
-            default:
-                reject = false
-            }
-            
-            finish(.failure(error), reject: reject)
-        }
-
-        func processUserDetails() {
-            finish(.success(()))
-        }
-        
-        if user.needsInitialUpload {
-            
-            upload(userProperties: .init(withInitialPayloadFor: user), options: options) { [self] result in
-                
-                switch result {
-                case .success(_):
-                    dataStore.setHasSentInitialUser(environmentId: user.environmentId, userId: user.userId)
-                    processUserDetails()
-                case .failure(let error):
-                    handleFailure(error)
-                }
-            }
-            
-        } else {
-            processUserDetails()
+        OperationQueue.uploadQueue.addOperation {
+            users = self.dataStore.usersToUpload().filter({ !self.rejectedUsers.contains(.init($0)) })
+            users.moveActiveSessionToTheFront(using: activeSession)
+            doNextOperation()
         }
     }
     
-    func uploadSession(with sessionId: String, activeSession: ActiveSession, options: [Option : Any], complete: @escaping (UploadResult) -> Void) {
-    }
-    
-    private func upload(userProperties: UserProperties, options: [Option : Any], complete: @escaping (UploadResult) -> Void) {
-        
-        func finish(_ result: UploadResult) { OperationQueue.uploadQueue.addOperation { complete(result) } }
-
-        guard let url = URL(string: "https://heapanalytics.com/api/integrations/capture/2/add-user-properties") else {
-            finish(.failure(.normalError))
-            return
-        }
-
-        do {
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.httpBody = try userProperties.serializedData()
-            urlSession.dataTask(with: request, completionHandler: urlCompletionHandler(wrapping: complete)).resume()
-        } catch {
-            finish(.failure(.normalError))
-        }
-    }
-    
-    private func urlCompletionHandler(wrapping complete: @escaping(UploadResult) -> Void) -> TaskCompletionHandler {
-        
-        return { data, response, error in
-            
-            let result: UploadResult
-            
-            if let response = response as? HTTPURLResponse, error == nil {
-                switch response.statusCode {
-                case 200:
-                    result = .success(())
-                case 400:
-                    result = .failure(.normalError)
-                default:
-                    result = .failure(.unknownError)
-                }
+    /// Creates an operation to with the next piece of information that can be sent for the provided users or `nil` if all information has been sent.
+    ///
+    /// During execution of this method or the operation, the `users` array and properties of the users may be modified to advance its state.  When all data has been consumed and the function returns `nil`, `users` will be an empty array.
+    ///
+    /// - Parameters:
+    ///   - users: A mutable array of users to upload.
+    ///   - activeSession: Information about the active session.
+    ///   - options: Any options passed while starting the scheduled upload.
+    /// - Returns: An operation to upload the initial user data, or nil if it has already been sent.
+    ///
+    /// - Important: This method and the returned operation **MUST** only be executed on the upload queue.
+    func nextOperation(for users: inout [UserToUpload], activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
+        while let user = users.first {
+            if let operation = nextOperation(for: user, activeSession: activeSession, options: options) {
+                return operation
             } else {
-                result = .failure(.networkError)
+                users.removeFirst()
             }
+        }
+        
+        return nil
+    }
+    
+    /// Creates an operation to with the next piece of information that can be sent for the user or `nil` if the user doesn't have any information to send.
+    ///
+    /// During execution of this method or the operation, properties of `user` may be modified to advance its state.
+    ///
+    /// - Parameters:
+    ///   - user: The user to upload.
+    ///   - activeSession: Information about the active session.
+    ///   - options: Any options passed while starting the scheduled upload.
+    /// - Returns: The next upload operation for the user, or `nil` if all data has been sent.
+    ///
+    /// - Important: This method and the returned operation **MUST** only be executed on the upload queue.
+    func nextOperation(for user: UserToUpload, activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
+        
+        if let operation = initialUserUploadOperation(user, activeSession: activeSession, options: options) {
+            return operation
+        }
+        
+        if let operation = identityUploadOperation(user, activeSession: activeSession, options: options) {
+            return operation
+        }
+        
+        return nil
+    }
+    
+    /// Creates an operation to upload the initial data for a user if it has not yet been uploaded.
+    ///
+    /// Once the operation completes, in success or failure, `needsInitialUpload` will be set to `false` to prevent future uploads.  This reflects the change in this upload cycle and may not represent the persisted state.
+    ///
+    /// - Parameters:
+    ///   - user: The user to upload.
+    ///   - activeSession: Information about the active session.
+    ///   - options: Any options passed while starting the scheduled upload.
+    /// - Returns: An operation to upload the initial user data, or `nil` if it has already been sent.
+    ///
+    /// - Important: This method and the returned operation **MUST** only be executed on the upload queue.
+    func initialUserUploadOperation(_ user: UserToUpload, activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
+        
+        guard user.needsInitialUpload
+        else { return nil }
+        
+        return UploadOperation(userProperties: .init(withInitialPayloadFor: user), options: options, in: urlSession) { result in
             
-            OperationQueue.uploadQueue.addOperation {
-                complete(result)
+            user.needsInitialUpload = false
+            
+            switch result {
+            case .failure(.badRequest) where user.isActive(in: activeSession):
+                self.rejectedUsers.insert(.init(user))
+                user.markAsDone()
+            case .failure(.badRequest):
+                self.dataStore.deleteUser(environmentId: user.environmentId, userId: user.userId)
+                user.markAsDone()
+            case .success(()):
+                self.dataStore.setHasSentInitialUser(environmentId: user.environmentId, userId: user.userId)
+            default:
+                break
+            }
+        }
+    }
+    
+    /// Creates an operation to upload the identity for a user if it has not yet been uploaded.
+    ///
+    /// Once the operation completes, in success or failure, `needsIdentityUpload` will be set to `false` to prevent future uploads.  This reflects the change in this upload cycle and may not represent the persisted state.
+    ///
+    /// - Parameters:
+    ///   - user: The user to upload.
+    ///   - activeSession: Information about the active session.
+    ///   - options: Any options passed while starting the scheduled upload.
+    /// - Returns: An operation to upload the user identity data, or `nil` if it has already been sent.
+    ///
+    /// - Important: This method and the returned operation **MUST** only be executed on the upload queue.
+    func identityUploadOperation(_ user: UserToUpload, activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
+        
+        guard user.needsIdentityUpload,
+              let userIdentification = UserIdentification(forIdentificationOf: user, at: Date())
+        else { return nil }
+        
+        return UploadOperation(userIdentification: userIdentification, options: options, in: urlSession) { result in
+            
+            user.needsIdentityUpload = false
+            
+            switch result {
+            case .failure(.badRequest), .success(()):
+                self.dataStore.setHasSentIdentity(environmentId: user.environmentId, userId: user.userId)
+            default:
+                break
             }
         }
     }
 }
 
 extension UserToUpload {
+    
+    /// Checks if the user owns the active session.
     func isActive(in activeSession: ActiveSession) -> Bool {
         userId == activeSession.userId && environmentId == activeSession.environmentId
+    }
+    
+    /// Marks all properties on the user as uploaded so `nextOperation(for:, activeSession:, options:)` will return `nil`.
+    func markAsDone() {
+        self.needsInitialUpload = false
+        self.needsIdentityUpload = false
+        self.pendingUserProperties = [:]
+        self.sessionIds = []
+    }
+}
+
+extension Array where Element == UserToUpload {
+    
+    /// Rearranges the users and sessions so that the active user and session are at the front of the queue.
+    /// - Parameter activeSession: Information about the active session.
+    mutating func moveActiveSessionToTheFront(using activeSession: ActiveSession) {
+        
+        // Move the active user to the front of the list.
+        _ = partition(by: { !$0.isActive(in: activeSession) })
+        
+        // Move the active session to the front of the list.
+        if !isEmpty && self[0].isActive(in: activeSession) {
+            _ = self[0].sessionIds.partition(by: { $0 != activeSession.sessionId })
+        }
     }
 }

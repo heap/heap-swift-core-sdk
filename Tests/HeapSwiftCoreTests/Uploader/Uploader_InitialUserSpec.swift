@@ -27,9 +27,15 @@ final class Uploader_InitialUserSpec: UploaderSpec {
                 expect(APIProtocol.requests.map(\.simplified)).to(equal([
                     .addUserProperties(true),
                 ]))
+            }
+            
+            it("uploads the correct properties") {
+                let timestamp = Date()
+                dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
+                expectUploadAll(in: uploader).toEventually(beSuccess())
                 
                 guard case .addUserProperties(.success(let userProperties)) = APIProtocol.requests.first
-                else { return }
+                else { throw TestFailure("Could not get first user properties") }
                 
                 expect(userProperties.envID).to(equal("11"))
                 expect(userProperties.userID).to(equal("123"))
@@ -42,36 +48,17 @@ final class Uploader_InitialUserSpec: UploaderSpec {
                 expect(userProperties.properties).to(beEmpty())
             }
             
-            it("marks a new user as uploaded after a successful upload") {
-                let timestamp = Date()
-                dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
-                expectUploadAll(in: uploader).toEventually(beSuccess())
-                
-                let user = try dataStore.assertOnlyOneUserToUpload()
-                expect(user.needsInitialUpload).to(beFalse(), description: "The user should not be marked for an additional upload")
-            }
-            
-            it("does not upload the new user again after a successful upload") {
-                let timestamp = Date()
-                dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
-                expectUploadAll(in: uploader).toEventually(beSuccess())
-                expectUploadAll(in: uploader).toEventually(beSuccess())
-                expectUploadAll(in: uploader).toEventually(beSuccess())
-
-                expect(APIProtocol.requests.map(\.simplified)).to(equal([
-                    .addUserProperties(true),
-                ]), description: "There should have been a single attempt to upload")
-            }
-            
             context("multiple new users are present") {
                 
-                it("uploads all the users") {
+                beforeEach {
                     let timestamp = Date()
                     dataStore.createNewUserIfNeeded(environmentId: "11", userId: "345", identity: nil, creationDate: timestamp)
                     dataStore.createNewUserIfNeeded(environmentId: "11", userId: "234", identity: nil, creationDate: timestamp)
                     dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
                     expectUploadAll(in: uploader).toEventually(beSuccess())
-
+                }
+                
+                it("uploads all the users") {
                     expect(APIProtocol.requests.map(\.simplified)).to(equal([
                         .addUserProperties(true),
                         .addUserProperties(true),
@@ -82,12 +69,6 @@ final class Uploader_InitialUserSpec: UploaderSpec {
                 }
                 
                 it("uploads the active user first") {
-                    let timestamp = Date()
-                    dataStore.createNewUserIfNeeded(environmentId: "11", userId: "345", identity: nil, creationDate: timestamp)
-                    dataStore.createNewUserIfNeeded(environmentId: "11", userId: "234", identity: nil, creationDate: timestamp)
-                    dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
-                    expectUploadAll(in: uploader).toEventually(beSuccess())
-
                     expect(APIProtocol.requests.map(\.simplified)).to(equal([
                         .addUserProperties(true),
                         .addUserProperties(true),
@@ -98,127 +79,156 @@ final class Uploader_InitialUserSpec: UploaderSpec {
                 }
             }
             
-            context("a network failure occurs when uploading the initial user") {
-                itHandlesANotFatalErrorResponse(.failWithNetworkError, with: .networkError)
-                itHandlesTheErrorResponse(.failWithNetworkError, with: .networkError)
+            // MARK: - Different network responses
+            
+            func queueJustANewUserUpload() {
+                let timestamp = Date()
+                dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
             }
             
-            context("an unexpected failure occurs when uploading the initial user") {
-                itHandlesANotFatalErrorResponse(.failWithUnexpectedStatus, with: .unknownError)
-                itHandlesTheErrorResponse(.failWithUnexpectedStatus, with: .unknownError)
-            }
-            
-            context("a \"bad request\" failure occurs when uploading the initial user") {
-                
-                itHandlesTheErrorResponse(.failWithBadRequest, with: .normalError)
-                
-                it("does not mark the user as uploaded if the user is active") {
-                    APIProtocol.addUserPropertiesResponse = .failWithBadRequest
-                    let timestamp = Date()
-                    dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
-                    expectUploadAll(in: uploader).toEventually(beFailure(with: .normalError))
-                    
-                    let user = try dataStore.assertOnlyOneUserToUpload()
-                    expect(user.needsInitialUpload).to(beTrue(), description: "The user should still be eligible for upload")
-                }
-                
-                it("deletes the user if the user is not active") {
-                    APIProtocol.addUserPropertiesResponse = .failWithBadRequest
-                    let timestamp = Date()
-                    dataStore.createNewUserIfNeeded(environmentId: "11", userId: "234", identity: nil, creationDate: timestamp)
-                    expectUploadAll(in: uploader).toEventually(beFailure(with: .normalError))
-                    
-                    expect(dataStore.usersToUpload()).to(beEmpty(), description: "The user should have been deleted")
-                }
-                
-                it("does not attempt to upload the active user again") {
-                    APIProtocol.addUserPropertiesResponse = .failWithBadRequest
-                    let timestamp = Date()
-                    dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
-                    expectUploadAll(in: uploader).toEventually(beFailure(with: .normalError))
-                    expectUploadAll(in: uploader).toEventually(beSuccess())
-                    
-                    expect(APIProtocol.requests.map(\.simplified)).to(equal([
-                        .addUserProperties(true),
-                    ]), description: "There should only have been one attempt to upload the user")
+            func itFinishesUploadingSuccessfully(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItFinishesUploadingSuccessfully.self, file: file, line: line) {
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response, beforeEach: queueJustANewUserUpload)
                 }
             }
             
-            func itHandlesANotFatalErrorResponse(_ response: APIResponse, with error: UploadError) {
-                it("does not mark the user as uploaded") {
-                    APIProtocol.addUserPropertiesResponse = response
-                    let timestamp = Date()
-                    dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
-                    expectUploadAll(in: uploader).toEventually(beFailure(with: error))
-                    
-                    let user = try dataStore.assertOnlyOneUserToUpload()
-                    expect(user.needsInitialUpload).to(beTrue(), description: "The user should still be eligible for upload")
+            func itMarksTheUserAsUploaded(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItMarksTheUserAsUploaded.self, file: file, line: line) {
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response, beforeEach: queueJustANewUserUpload)
                 }
-                
-                it("reattempts the upload on future calls, until it succeeds") {
-                    APIProtocol.addUserPropertiesResponse = response
-                    let timestamp = Date()
-                    dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
-                    expectUploadAll(in: uploader).toEventually(beFailure(with: error))
-                    expectUploadAll(in: uploader).toEventually(beFailure(with: error))
-                    
-                    APIProtocol.addUserPropertiesResponse = .normal
-                    expectUploadAll(in: uploader).toEventually(beSuccess())
-                    expectUploadAll(in: uploader).toEventually(beSuccess())
-                    
-                    expect(APIProtocol.requests.map(\.simplified)).to(equal([
-                        .addUserProperties(true),
-                        .addUserProperties(true),
-                        .addUserProperties(true),
-                    ]), description: "There should have been two uploads that failed, followed by the one that succeeded")
-                    
-                    let user = try dataStore.assertOnlyOneUserToUpload()
-                    expect(user.needsInitialUpload).to(beFalse(), description: "The user should not be marked for an additional upload")
+            }
+            
+            func itSendsASingleUserPropertiesRequest(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItSendsASingleRequestOfKind.self, file: file, line: line) {
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response, beforeEach: queueJustANewUserUpload)
+                }
+            }
+            
+            func itDoesNotSendAnythingAfterTheInitialUpload(whenTheUserIsActive isActive: Bool, andAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItDoesNotSendAnythingAfterTheInitialUpload.self, file: file, line: line) {
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response) {
+                        let timestamp = Date()
+                        dataStore.createNewUserIfNeeded(environmentId: "11", userId: isActive ? "123" : "234", identity: nil, creationDate: timestamp)
+                    }
                 }
             }
 
-            func itHandlesTheErrorResponse(_ response: APIResponse, with error: UploadError) {
-                it("returns that there was a network failure") {
-                    APIProtocol.addUserPropertiesResponse = response
-                    let timestamp = Date()
-                    dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
-                    expectUploadAll(in: uploader).toEventually(beFailure(with: error))
+            func itRetriesUntilTheErrorClears(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItRetriesUntilTheErrorClears.self, file: file, line: line) {
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response, beforeEach: queueJustANewUserUpload)
+                }
+            }
+            
+            func itCausesTheUploadToFail(with error: UploadError, whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItCausesTheUploadToFail.self, file: file, line: line) {
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response, error: error, beforeEach: queueJustANewUserUpload)
+                }
+            }
+            
+            func itDoesNotMarkAnythingAsUploaded(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItDoesNotMarkAnythingAsUploaded.self, file: file, line: line) {
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response, beforeEach: queueJustANewUserUpload)
+                }
+            }
+            
+            func itPreventsSubsequentUploads(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItPreventsSubsequentUploads.self, file: file, line: line) {
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response) {
+                        let timestamp = Date()
+                        dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "user-1", creationDate: timestamp)
+                        dataStore.insertOrUpdateUserProperty(environmentId: "11", userId: "123", name: "foo", value: "bar")
+                        dataStore.createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "456", timestamp: timestamp)
+                    }
+                }
+            }
+            
+            func itSendsQueuedMessages(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItConsumesAllTheMessages.self, file: file, line: line) {
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response) {
+                        let timestamp = Date()
+                        dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
+                        dataStore.createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "456", timestamp: timestamp)
+                    }
+                }
+            }
+            
+            func itSendsQueuedIdentity(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItMarksTheIdentityAsUploaded.self, file: file, line: line) {
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response) {
+                        let timestamp = Date()
+                        dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
+                        dataStore.insertOrUpdateUserProperty(environmentId: "11", userId: "123", name: "foo", value: "bar")
+                    }
+                }
+            }
+            
+            func itSendsQueuedUserProperties(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItMarksUserPropertiesAsUploaded.self, file: file, line: line) {
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response) {
+                        let timestamp = Date()
+                        dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
+                        dataStore.insertOrUpdateUserProperty(environmentId: "11", userId: "123", name: "foo", value: "bar")
+                    }
+                }
+            }
+            
+            func itDeletesTheUserAfterTheInitialUpload(whenTheUserIsActive isActive: Bool, andAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItDeletesTheUserAfterUploading.self, file: file, line: line) {
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response) {
+                        let timestamp = Date()
+                        dataStore.createNewUserIfNeeded(environmentId: "11", userId: isActive ? "123" : "234", identity: nil, creationDate: timestamp)
+                    }
+                }
+            }
+            
+            context("uploading the user succeeds") {
+                itFinishesUploadingSuccessfully(whenAddUserProperitiesReceives: .success)
+                itMarksTheUserAsUploaded(whenAddUserProperitiesReceives: .success)
+                itSendsASingleUserPropertiesRequest(whenAddUserProperitiesReceives: .success)
+                itDoesNotSendAnythingAfterTheInitialUpload(whenTheUserIsActive: true, andAddUserProperitiesReceives: .success)
+                
+                context("there is other data to send") {
+                    itSendsQueuedIdentity(whenAddUserProperitiesReceives: .success)
+                    itSendsQueuedMessages(whenAddUserProperitiesReceives: .success)
+                    itSendsQueuedUserProperties(whenAddUserProperitiesReceives: .success)
+                }
+            }
+            
+            context("a network failure occurs when uploading the initial user") {
+                itCausesTheUploadToFail(with: .networkFailure, whenAddUserProperitiesReceives: .networkFailure)
+                itDoesNotMarkAnythingAsUploaded(whenAddUserProperitiesReceives: .networkFailure)
+                itRetriesUntilTheErrorClears(whenAddUserProperitiesReceives: .networkFailure)
+                
+                context("there is other data to send") {
+                    itPreventsSubsequentUploads(whenAddUserProperitiesReceives: .networkFailure)
+                }
+            }
+            
+            context("an unexpected failure occurs when uploading the initial user") {
+                itCausesTheUploadToFail(with: .unexpectedServerResponse, whenAddUserProperitiesReceives: .serviceUnavailable)
+                itDoesNotMarkAnythingAsUploaded(whenAddUserProperitiesReceives: .serviceUnavailable)
+                itRetriesUntilTheErrorClears(whenAddUserProperitiesReceives: .serviceUnavailable)
+                
+                context("there is other data to send") {
+                    itPreventsSubsequentUploads(whenAddUserProperitiesReceives: .serviceUnavailable)
+                }
+            }
+            
+            context("a \"bad request\" failure occurs when uploading the initial user") {
+                itCausesTheUploadToFail(with: .badRequest, whenAddUserProperitiesReceives: .badRequest)
+                
+                context("there is other data to send") {
+                    itPreventsSubsequentUploads(whenAddUserProperitiesReceives: .badRequest)
                 }
                 
-                it("does not continue to upload the identity") {
-                    APIProtocol.addUserPropertiesResponse = response
-                    let timestamp = Date()
-                    dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "my-user", creationDate: timestamp)
-                    expectUploadAll(in: uploader).toEventually(beFailure(with: error))
-                    
-                    expect(APIProtocol.requests.map(\.simplified)).to(equal([
-                        .addUserProperties(true),
-                    ]), description: "There should be no subsequent requests after the user upload")
+                context("the user is the active user") {
+                    itDoesNotMarkAnythingAsUploaded(whenAddUserProperitiesReceives: .badRequest)
+                    itDoesNotSendAnythingAfterTheInitialUpload(whenTheUserIsActive: true, andAddUserProperitiesReceives: .badRequest)
                 }
                 
-                it("does not continue to upload the user properties") {
-                    APIProtocol.addUserPropertiesResponse = response
-                    let timestamp = Date()
-                    dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
-                    dataStore.insertOrUpdateUserProperty(environmentId: "11", userId: "123", name: "hello", value: "world")
-                    expectUploadAll(in: uploader).toEventually(beFailure(with: error))
-                    
-                    expect(APIProtocol.requests.map(\.simplified)).to(equal([
-                        .addUserProperties(true),
-                    ]), description: "There should be no subsequent requests after the user upload")
-                }
-                
-                it("does not continue to upload the messages") {
-                    APIProtocol.addUserPropertiesResponse = response
-                    let timestamp = Date()
-                    dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
-                    dataStore.createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "456", timestamp: timestamp)
-                    
-                    expectUploadAll(in: uploader).toEventually(beFailure(with: error))
-                    
-                    expect(APIProtocol.requests.map(\.simplified)).to(equal([
-                        .addUserProperties(true),
-                    ]), description: "There should be no subsequent requests after the user upload")
+                context("The user is some other user") {
+                    itDeletesTheUserAfterTheInitialUpload(whenTheUserIsActive: false, andAddUserProperitiesReceives: .badRequest)
+                    itDoesNotSendAnythingAfterTheInitialUpload(whenTheUserIsActive: false, andAddUserProperitiesReceives: .badRequest)
                 }
             }
         }

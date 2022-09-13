@@ -32,26 +32,35 @@ extension APIRequest {
     }
 }
 
+/// Possible responses to emit when processing a request
 enum APIResponse {
-    case normal
-    case failWithBadRequest
-    case failWithUnexpectedStatus
-    case failWithNetworkError
+    
+    /// A 200 response
+    case success
+    
+    /// A 400 response
+    case badRequest
+    
+    /// A 503 response, representing some response that the server is unintentionally sending.
+    case serviceUnavailable
+    
+    /// The request ends not with a HTTPURLResponse but with a URLError.
+    case networkFailure
 }
 
 class APIProtocol: URLProtocol {
     
     static var requests: [APIRequest] = []
     
-    static var addUserPropertiesResponse: APIResponse = .normal
-    static var identifyResponse: APIResponse = .normal
-    static var trackResponse: APIResponse = .normal
+    static var addUserPropertiesResponse: APIResponse = .success
+    static var identifyResponse: APIResponse = .success
+    static var trackResponse: APIResponse = .success
     
     static func reset() {
         requests = []
-        addUserPropertiesResponse = .normal
-        identifyResponse = .normal
-        trackResponse = .normal
+        addUserPropertiesResponse = .success
+        identifyResponse = .success
+        trackResponse = .success
     }
     
     static var ephemeralUrlSessionConfig: URLSessionConfiguration {
@@ -120,13 +129,13 @@ class APIProtocol: URLProtocol {
         }
         
         switch response {
-        case .normal:
+        case .success:
             complete(with: 200)
-        case .failWithBadRequest:
+        case .badRequest:
             complete(with: 400)
-        case .failWithUnexpectedStatus:
-            complete(with: 500)
-        case .failWithNetworkError:
+        case .serviceUnavailable:
+            complete(with: 503)
+        case .networkFailure:
             fail()
         }
     }
