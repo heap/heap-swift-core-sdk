@@ -204,7 +204,7 @@ extension UploaderSpec {
         }
     }
     
-    class ItPreventsSubsequentUploads: Behavior<ItPreventsSubsequentUploads.Context> {
+    class ItCausesTheCurrentUploadPassToStopSendingData: Behavior<ItCausesTheCurrentUploadPassToStopSendingData.Context> {
         override class func spec(_ contextProvider: @escaping () -> Context) {
             
             var context: Context!
@@ -231,7 +231,7 @@ extension UploaderSpec {
         }
     }
     
-    class ItDoesNotSendAnythingAfterTheInitialUpload: Behavior<ItDoesNotSendAnythingAfterTheInitialUpload.Context> {
+    class ItDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData: Behavior<ItDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData.Context> {
         override class func spec(_ contextProvider: @escaping () -> Context) {
             
             var context: Context!
@@ -242,7 +242,7 @@ extension UploaderSpec {
                 context.beforeEach()
             }
             
-            it("does not send anything after the initial upload") {
+            it("does not send any requests on subsequent uploads without new data") {
                 expectUploadAll(in: context.uploader).toEventuallyNot(beNil())
                 let initialRequests = APIProtocol.requests.map(\.simplified)
                 
@@ -250,7 +250,7 @@ extension UploaderSpec {
                 expectUploadAll(in: context.uploader).toEventuallyNot(beNil())
                 expectUploadAll(in: context.uploader).toEventuallyNot(beNil())
 
-                expect(APIProtocol.requests.map(\.simplified)).to(equal(initialRequests), description: "There should have been a single attempt to upload")
+                expect(APIProtocol.requests.map(\.simplified)).to(equal(initialRequests), description: "Additional calls to `uploadAll` should not have produced additional requests")
             }
         }
         
@@ -324,6 +324,35 @@ extension UploaderSpec {
             let beforeEach: () -> Void
         }
     }
+    
+    class ItDeletesTheSessionAfterUploading: Behavior<ItDeletesTheSessionAfterUploading.Context> {
+        override class func spec(_ contextProvider: @escaping () -> Context) {
+            
+            var context: Context!
+            
+            beforeEach {
+                context = contextProvider()
+                APIProtocol.setResponse(context.response, for: context.request)
+                context.beforeEach()
+            }
+            
+            it("returns that there was a failure") {
+                expectUploadAll(in: context.uploader).toEventuallyNot(beNil())
+                
+                for user in context.uploader.dataStore.usersToUpload() {
+                    expect(user.sessionIds).notTo(contain(context.sessionId), description: "The sessions should have been deleted")
+                }
+            }
+        }
+        
+        struct Context {
+            let uploader: TestableUploader!
+            let request: APIRequest.Simplified
+            let response: APIResponse
+            let sessionId: String
+            let beforeEach: () -> Void
+        }
+    }
 }
 
 extension TestableUploader {
@@ -334,8 +363,8 @@ extension TestableUploader {
             dataStore.setHasSentInitialUser(environmentId: "11", userId: "123")
         }
         dataStore.insertOrUpdateUserProperty(environmentId: "11", userId: "123", name: "foo", value: "bar")
-        dataStore.createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "456", timestamp: timestamp)
-        dataStore.createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "567", timestamp: timestamp)
+        dataStore.createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "456", timestamp: timestamp, includePageview: true)
+        dataStore.createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "567", timestamp: timestamp, includePageview: true)
     }
 }
 

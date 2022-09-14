@@ -163,8 +163,8 @@ final class Uploader_UserPropertiesSpec: UploaderSpec {
                 }
             }
             
-            func itDoesNotSendAnythingAfterTheInitialUpload(whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
-                itBehavesLike(ItDoesNotSendAnythingAfterTheInitialUpload.self, file: file, line: line) {
+            func itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData.self, file: file, line: line) {
                     .init(uploader: uploader, request: .addUserProperties(true), response: response, beforeEach: queueJustAUserPropertyUpload)
                 }
             }
@@ -187,21 +187,21 @@ final class Uploader_UserPropertiesSpec: UploaderSpec {
                 }
             }
             
-            func itPreventsSubsequentUploads(whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
-                itBehavesLike(ItPreventsSubsequentUploads.self, file: file, line: line) {
-                    .init(uploader: uploader, request: .identify(true), response: response, newUser: false)
+            func itCausesTheCurrentUploadPassToStopSendingData(whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItCausesTheCurrentUploadPassToStopSendingData.self, file: file, line: line) {
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response, newUser: false)
                 }
             }
             
             func itSendsQueuedMessages(whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItConsumesAllTheMessages.self, file: file, line: line) {
-                    .init(uploader: uploader, request: .identify(true), response: response, newUser: false)
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response, newUser: false)
                 }
             }
             
             func itSendsQueuedIdentity(whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItMarksTheIdentityAsUploaded.self, file: file, line: line) {
-                    .init(uploader: uploader, request: .identify(true), response: response, newUser: false)
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response, newUser: false)
                 }
             }
             
@@ -209,7 +209,7 @@ final class Uploader_UserPropertiesSpec: UploaderSpec {
                 itFinishesUploadingSuccessfully(whenAddUserPropertiesReceives: .success)
                 itMarksTheUserPropertiesAsUploaded(whenAddUserPropertiesReceives: .success)
                 itSendsASingleAddUserPropertiesRequest(whenAddUserPropertiesReceives: .success)
-                itDoesNotSendAnythingAfterTheInitialUpload(whenAddUserPropertiesReceives: .success)
+                itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenAddUserPropertiesReceives: .success)
                 
                 context("there is other data to send") {
                     itSendsQueuedMessages(whenAddUserPropertiesReceives: .success)
@@ -221,7 +221,7 @@ final class Uploader_UserPropertiesSpec: UploaderSpec {
                 itCausesTheUploadToFail(with: .badRequest, whenAddUserPropertiesReceives: .badRequest)
                 itMarksTheUserPropertiesAsUploaded(whenAddUserPropertiesReceives: .badRequest)
                 itSendsASingleAddUserPropertiesRequest(whenAddUserPropertiesReceives: .badRequest)
-                itDoesNotSendAnythingAfterTheInitialUpload(whenAddUserPropertiesReceives: .badRequest)
+                itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenAddUserPropertiesReceives: .badRequest)
                 
                 context("there is other data to send") {
                     itSendsQueuedMessages(whenAddUserPropertiesReceives: .badRequest)
@@ -235,7 +235,7 @@ final class Uploader_UserPropertiesSpec: UploaderSpec {
                 itRetriesUntilTheErrorClears(whenAddUserPropertiesReceives: .networkFailure)
 
                 context("there is other data to send") {
-                    itPreventsSubsequentUploads(whenAddUserPropertiesReceives: .networkFailure)
+                    itCausesTheCurrentUploadPassToStopSendingData(whenAddUserPropertiesReceives: .networkFailure)
                 }
             }
             
@@ -245,7 +245,7 @@ final class Uploader_UserPropertiesSpec: UploaderSpec {
                 itRetriesUntilTheErrorClears(whenAddUserPropertiesReceives: .serviceUnavailable)
                 
                 context("there is other data to send") {
-                    itPreventsSubsequentUploads(whenAddUserPropertiesReceives: .serviceUnavailable)
+                    itCausesTheCurrentUploadPassToStopSendingData(whenAddUserPropertiesReceives: .serviceUnavailable)
                 }
             }
         }

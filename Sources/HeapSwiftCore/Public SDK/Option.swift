@@ -25,6 +25,8 @@ public extension Option {
     static let debug = Option(name: "debug", type: .boolean)
     static let uploadInterval = Option(name: "uploadInterval", type: .timeInterval)
     static let baseUrl = Option(name: "baseUrl", type: .url)
+    static let messageBatchByteLimit = Option(name: "messageBatchByteLimit", type: .integer)
+    static let messageBatchMessageLimit = Option(name: "messageBatchMessageLimit", type: .integer)
 }
 
 extension Dictionary where Key == Option, Value == Any {

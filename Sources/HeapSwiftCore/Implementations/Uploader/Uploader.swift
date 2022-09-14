@@ -18,13 +18,25 @@ extension OperationQueue {
 
 fileprivate typealias TaskCompletionHandler = (Data?, URLResponse?, Error?) -> Void
 
-fileprivate struct RejectedUsers: Equatable, Hashable {
+fileprivate struct RejectedUser: Equatable, Hashable {
     let environmentId: String
     let userId: String
     
     init(_ user: UserToUpload) {
         environmentId = user.environmentId
         userId = user.userId
+    }
+}
+
+fileprivate struct RejectedSession: Equatable, Hashable {
+    let environmentId: String
+    let userId: String
+    let sessionId: String
+    
+    init(_ user: UserToUpload, sessionId: String) {
+        environmentId = user.environmentId
+        userId = user.userId
+        self.sessionId = sessionId
     }
 }
 
@@ -36,7 +48,10 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     let urlSession: URLSession
     
     /// An set of users who received a 400 response during their initial upload.
-    fileprivate var rejectedUsers: Set<RejectedUsers> = []
+    fileprivate var rejectedUsers: Set<RejectedUser> = []
+    
+    /// A set of sessions which have recieved a 400 response.
+    fileprivate var rejectedSessions: Set<RejectedSession> = []
 
     init(dataStore: DataStore, activeSessionProvider: SessionProvider, connectivityTester: ConnectivityTester, urlSessionConfiguration: URLSessionConfiguration = .ephemeral) {
         self.dataStore = dataStore
@@ -93,7 +108,8 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         }
         
         OperationQueue.uploadQueue.addOperation {
-            users = self.dataStore.usersToUpload().filter({ !self.rejectedUsers.contains(.init($0)) })
+            users = self.dataStore.usersToUpload()
+            users.remove(rejectedUsers: self.rejectedUsers, rejectedSessions: self.rejectedSessions)
             users.moveActiveSessionToTheFront(using: activeSession)
             doNextOperation()
         }
@@ -152,6 +168,10 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         }
         
         if let operation = addUserPropertiesUploadOperation(user, activeSession: activeSession, options: options) {
+            return operation
+        }
+        
+        if let operation = addMessageBatchUploadOperation(user, activeSession: activeSession, options: options) {
             return operation
         }
         
@@ -267,6 +287,49 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
             }
         }
     }
+    
+    func addMessageBatchUploadOperation(_ user: UserToUpload, activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
+        let messageLimit = options.integer(at: .messageBatchMessageLimit) ?? 200
+        let byteLimit = options.integer(at: .messageBatchByteLimit) ?? 1_000_000
+        let (messageBatch, sessionId) = nextMessageBatch(user, activeSession: activeSession, messageLimit: messageLimit, byteLimit: byteLimit)
+        
+        guard !messageBatch.isEmpty
+        else { return nil }
+        
+        return UploadOperation(encodedMessages: messageBatch.map(\.1), options: options, in: urlSession) { result in
+            
+            switch result {
+            case .failure(.badRequest) where user.isActive(in: activeSession) && sessionId == activeSession.sessionId:
+                self.rejectedSessions.insert(.init(user, sessionId: sessionId))
+                user.removeSession(withId: sessionId)
+            case .failure(.badRequest):
+                self.dataStore.deleteSession(environmentId: user.environmentId, userId: user.userId, sessionId: sessionId)
+                user.removeSession(withId: sessionId)
+            case .success(()):
+                self.dataStore.deleteSentMessages(Set(messageBatch.map(\.0)))
+            default:
+                break
+            }
+        }
+    }
+    
+    func nextMessageBatch(_ user: UserToUpload, activeSession: ActiveSession, messageLimit: Int, byteLimit: Int) -> ([(MessageIdentifier, Data)], String) {
+        guard let sessionId = user.sessionIds.first else { return ([], "") }
+        
+        let messages = dataStore.getPendingEncodedMessages(environmentId: user.environmentId, userId: user.userId, sessionId: sessionId, messageLimit: messageLimit, byteLimit: byteLimit)
+        
+        if !messages.isEmpty {
+            return (messages, sessionId)
+        }
+        
+        user.sessionIds.removeFirst()
+        
+        if !user.isActive(in: activeSession) || sessionId != activeSession.sessionId {
+            dataStore.deleteSession(environmentId: user.environmentId, userId: user.userId, sessionId: sessionId)
+        }
+        
+        return nextMessageBatch(user, activeSession: activeSession, messageLimit: messageLimit, byteLimit: byteLimit)
+    }
 }
 
 extension UserToUpload {
@@ -283,9 +346,13 @@ extension UserToUpload {
         self.pendingUserProperties = [:]
         self.sessionIds = []
     }
+    
+    func removeSession(withId sessionId: String) {
+        sessionIds.removeAll(where: { $0 == sessionId })
+    }
 }
 
-extension Array where Element == UserToUpload {
+fileprivate extension Array where Element == UserToUpload {
     
     /// Rearranges the users and sessions so that the active user and session are at the front of the queue.
     /// - Parameter activeSession: Information about the active session.
@@ -298,6 +365,26 @@ extension Array where Element == UserToUpload {
         if !isEmpty && self[0].isActive(in: activeSession) {
             _ = self[0].sessionIds.partition(by: { $0 != activeSession.sessionId })
         }
+    }
+    
+    mutating func remove(rejectedUsers: Set<RejectedUser>, rejectedSessions: Set<RejectedSession>) {
+        if !rejectedUsers.isEmpty {
+            self = self.filter({ !rejectedUsers.contains(.init($0)) })
+        }
+        
+        for user in self {
+            let sessionsIdsToReject = rejectedSessions.sessionIds(for: user)
+            if !sessionsIdsToReject.isEmpty {
+                user.sessionIds = user.sessionIds.filter({ !sessionsIdsToReject.contains($0) })
+            }
+        }
+    }
+}
+
+extension Set where Element == RejectedSession {
+    
+    func sessionIds(for user: UserToUpload) -> Set<String> {
+        return Set<String>(compactMap({ $0.environmentId == user.environmentId && $0.userId == user.userId ? $0.sessionId : nil }))
     }
 }
 

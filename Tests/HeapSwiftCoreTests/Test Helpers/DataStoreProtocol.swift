@@ -82,17 +82,26 @@ extension DataStoreProtocol {
         return state
     }
     
-    func createSessionIfNeeded(environmentId: String, userId: String, sessionId: String, timestamp: Date) {
-        createSessionIfNeeded(
-            with: .init(
-                forSessionIn: .init(
-                    environment: .with { $0.envID = environmentId; $0.userID = userId },
-                    options: [:],
-                    sessionInfo: .init(newSessionAt: timestamp, id: sessionId),
-                    lastPageviewInfo: .init(newPageviewAt: timestamp),
-                    sessionExpirationDate: timestamp
-                )
-            )
+    func createSessionIfNeeded(environmentId: String, userId: String, sessionId: String, timestamp: Date, includePageview: Bool = false, includeEvent: Bool = false) {
+        
+        let state = State(
+            environment: .with { $0.envID = environmentId; $0.userID = userId },
+            options: [:],
+            sessionInfo: .init(newSessionAt: timestamp, id: sessionId),
+            lastPageviewInfo: .init(newPageviewAt: timestamp),
+            sessionExpirationDate: timestamp
         )
+        
+        createSessionIfNeeded(with: .init(forSessionIn: state))
+        if includePageview {
+            insertPendingMessage(.init(forPageviewWith: state.lastPageviewInfo, in: state))
+        }
+        
+        if includeEvent {
+            var event = Message(forPartialEventAt: timestamp, sourceLibrary: nil, in: state)
+            event.pageviewInfo = state.lastPageviewInfo
+            event.event.custom = .init(name: "my-event", properties: [:])
+            insertPendingMessage(event)
+        }
     }
 }

@@ -104,8 +104,8 @@ final class Uploader_InitialUserSpec: UploaderSpec {
                 }
             }
             
-            func itDoesNotSendAnythingAfterTheInitialUpload(whenTheUserIsActive isActive: Bool, andAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
-                itBehavesLike(ItDoesNotSendAnythingAfterTheInitialUpload.self, file: file, line: line) {
+            func itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheUserIsActive isActive: Bool, andAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData.self, file: file, line: line) {
                     .init(uploader: uploader, request: .addUserProperties(true), response: response) {
                         let timestamp = Date()
                         dataStore.createNewUserIfNeeded(environmentId: "11", userId: isActive ? "123" : "234", identity: nil, creationDate: timestamp)
@@ -131,8 +131,8 @@ final class Uploader_InitialUserSpec: UploaderSpec {
                 }
             }
             
-            func itPreventsSubsequentUploads(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
-                itBehavesLike(ItPreventsSubsequentUploads.self, file: file, line: line) {
+            func itCausesTheCurrentUploadPassToStopSendingData(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItCausesTheCurrentUploadPassToStopSendingData.self, file: file, line: line) {
                     .init(uploader: uploader, request: .addUserProperties(true), response: response, newUser: true)
                 }
             }
@@ -168,7 +168,7 @@ final class Uploader_InitialUserSpec: UploaderSpec {
                 itFinishesUploadingSuccessfully(whenAddUserProperitiesReceives: .success)
                 itMarksTheUserAsUploaded(whenAddUserProperitiesReceives: .success)
                 itSendsASingleUserPropertiesRequest(whenAddUserProperitiesReceives: .success)
-                itDoesNotSendAnythingAfterTheInitialUpload(whenTheUserIsActive: true, andAddUserProperitiesReceives: .success)
+                itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheUserIsActive: true, andAddUserProperitiesReceives: .success)
                 
                 context("there is other data to send") {
                     itSendsQueuedIdentity(whenAddUserProperitiesReceives: .success)
@@ -183,7 +183,7 @@ final class Uploader_InitialUserSpec: UploaderSpec {
                 itRetriesUntilTheErrorClears(whenAddUserProperitiesReceives: .networkFailure)
                 
                 context("there is other data to send") {
-                    itPreventsSubsequentUploads(whenAddUserProperitiesReceives: .networkFailure)
+                    itCausesTheCurrentUploadPassToStopSendingData(whenAddUserProperitiesReceives: .networkFailure)
                 }
             }
             
@@ -193,7 +193,7 @@ final class Uploader_InitialUserSpec: UploaderSpec {
                 itRetriesUntilTheErrorClears(whenAddUserProperitiesReceives: .serviceUnavailable)
                 
                 context("there is other data to send") {
-                    itPreventsSubsequentUploads(whenAddUserProperitiesReceives: .serviceUnavailable)
+                    itCausesTheCurrentUploadPassToStopSendingData(whenAddUserProperitiesReceives: .serviceUnavailable)
                 }
             }
             
@@ -201,17 +201,17 @@ final class Uploader_InitialUserSpec: UploaderSpec {
                 itCausesTheUploadToFail(with: .badRequest, whenAddUserProperitiesReceives: .badRequest)
                 
                 context("there is other data to send") {
-                    itPreventsSubsequentUploads(whenAddUserProperitiesReceives: .badRequest)
+                    itCausesTheCurrentUploadPassToStopSendingData(whenAddUserProperitiesReceives: .badRequest)
                 }
                 
                 context("the user is the active user") {
                     itDoesNotMarkAnythingAsUploaded(whenAddUserProperitiesReceives: .badRequest)
-                    itDoesNotSendAnythingAfterTheInitialUpload(whenTheUserIsActive: true, andAddUserProperitiesReceives: .badRequest)
+                    itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheUserIsActive: true, andAddUserProperitiesReceives: .badRequest)
                 }
                 
                 context("The user is some other user") {
                     itDeletesTheUserAfterTheInitialUpload(whenTheUserIsActive: false, andAddUserProperitiesReceives: .badRequest)
-                    itDoesNotSendAnythingAfterTheInitialUpload(whenTheUserIsActive: false, andAddUserProperitiesReceives: .badRequest)
+                    itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheUserIsActive: false, andAddUserProperitiesReceives: .badRequest)
                 }
             }
         }

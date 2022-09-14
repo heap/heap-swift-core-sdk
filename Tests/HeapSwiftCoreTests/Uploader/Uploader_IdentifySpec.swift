@@ -117,8 +117,8 @@ final class Uploader_IdentifySpec: UploaderSpec {
                 }
             }
             
-            func itDoesNotSendAnythingAfterTheInitialUpload(whenIdentityReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
-                itBehavesLike(ItDoesNotSendAnythingAfterTheInitialUpload.self, file: file, line: line) {
+            func itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenIdentityReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData.self, file: file, line: line) {
                     .init(uploader: uploader, request: .identify(true), response: response, beforeEach: queueJustAnIdentityUpload)
                 }
             }
@@ -141,8 +141,8 @@ final class Uploader_IdentifySpec: UploaderSpec {
                 }
             }
             
-            func itPreventsSubsequentUploads(whenIdentityReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
-                itBehavesLike(ItPreventsSubsequentUploads.self, file: file, line: line) {
+            func itCausesTheCurrentUploadPassToStopSendingData(whenIdentityReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+                itBehavesLike(ItCausesTheCurrentUploadPassToStopSendingData.self, file: file, line: line) {
                     .init(uploader: uploader, request: .identify(true), response: response, newUser: false)
                 }
             }
@@ -163,7 +163,7 @@ final class Uploader_IdentifySpec: UploaderSpec {
                 itFinishesUploadingSuccessfully(whenIdentityReceives: .success)
                 itMarksTheIdentityAsUploaded(whenIdentityReceives: .success)
                 itSendsASingleIdentifyRequest(whenIdentityReceives: .success)
-                itDoesNotSendAnythingAfterTheInitialUpload(whenIdentityReceives: .success)
+                itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenIdentityReceives: .success)
                 
                 context("there is other data to send") {
                     itSendsQueuedMessages(whenIdentityReceives: .success)
@@ -175,7 +175,7 @@ final class Uploader_IdentifySpec: UploaderSpec {
                 itCausesTheUploadToFail(with: .badRequest, whenIdentityReceives: .badRequest)
                 itMarksTheIdentityAsUploaded(whenIdentityReceives: .badRequest)
                 itSendsASingleIdentifyRequest(whenIdentityReceives: .badRequest)
-                itDoesNotSendAnythingAfterTheInitialUpload(whenIdentityReceives: .badRequest)
+                itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenIdentityReceives: .badRequest)
                 
                 context("there is other data to send") {
                     itSendsQueuedMessages(whenIdentityReceives: .badRequest)
@@ -189,7 +189,7 @@ final class Uploader_IdentifySpec: UploaderSpec {
                 itRetriesUntilTheErrorClears(whenIdentityReceives: .networkFailure)
 
                 context("there is other data to send") {
-                    itPreventsSubsequentUploads(whenIdentityReceives: .networkFailure)
+                    itCausesTheCurrentUploadPassToStopSendingData(whenIdentityReceives: .networkFailure)
                 }
             }
             
@@ -199,7 +199,7 @@ final class Uploader_IdentifySpec: UploaderSpec {
                 itRetriesUntilTheErrorClears(whenIdentityReceives: .serviceUnavailable)
                 
                 context("there is other data to send") {
-                    itPreventsSubsequentUploads(whenIdentityReceives: .serviceUnavailable)
+                    itCausesTheCurrentUploadPassToStopSendingData(whenIdentityReceives: .serviceUnavailable)
                 }
             }
         }
