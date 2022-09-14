@@ -67,7 +67,7 @@ extension UploaderSpec {
             beforeEach {
                 context = contextProvider()
                 APIProtocol.setResponse(context.response, for: context.request)
-                context.beforeEach()
+                context.uploader.queueWholeSession(newUser: context.newUser)
             }
             
             it(label) {
@@ -81,7 +81,7 @@ extension UploaderSpec {
             let uploader: TestableUploader!
             let request: APIRequest.Simplified
             let response: APIResponse
-            let beforeEach: () -> Void
+            let newUser: Bool
         }
     }
     
@@ -111,7 +111,7 @@ extension UploaderSpec {
             beforeEach {
                 context = contextProvider()
                 APIProtocol.setResponse(context.response, for: context.request)
-                context.beforeEach()
+                context.uploader.queueWholeSession(newUser: context.newUser)
             }
             
             func messageIds() throws -> Set<String> {
@@ -132,7 +132,7 @@ extension UploaderSpec {
             let uploader: TestableUploader!
             let request: APIRequest.Simplified
             let response: APIResponse
-            let beforeEach: () -> Void
+            let newUser: Bool
         }
     }
     
@@ -212,15 +212,14 @@ extension UploaderSpec {
             beforeEach {
                 context = contextProvider()
                 APIProtocol.setResponse(context.response, for: context.request)
-                context.beforeEach()
+                context.uploader.queueWholeSession(newUser: context.newUser)
             }
             
-            it("performs only the one request") {
+            it("stops uploading after the request") {
                 expectUploadAll(in: context.uploader).toEventuallyNot(beNil())
                 
-                expect(APIProtocol.requests.map(\.simplified)).to(equal([
-                    context.request,
-                ]), description: "There hould only have been the one upload that failed")
+                expect(APIProtocol.requests.map(\.simplified).last).to(equal(context.request), description: "There should not have been any requests after the failed request")
+                expect(APIProtocol.requests.map(\.simplified).filter({ $0 == context.request })).to(haveCount(1), description: "There should only have been one request of the failed type")
             }
         }
         
@@ -228,7 +227,7 @@ extension UploaderSpec {
             let uploader: TestableUploader!
             let request: APIRequest.Simplified
             let response: APIResponse
-            let beforeEach: () -> Void
+            let newUser: Bool
         }
     }
     
@@ -324,6 +323,19 @@ extension UploaderSpec {
             let response: APIResponse
             let beforeEach: () -> Void
         }
+    }
+}
+
+extension TestableUploader {
+    func queueWholeSession(newUser: Bool) {
+        let timestamp = Date()
+        dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "user-1", creationDate: timestamp)
+        if !newUser {
+            dataStore.setHasSentInitialUser(environmentId: "11", userId: "123")
+        }
+        dataStore.insertOrUpdateUserProperty(environmentId: "11", userId: "123", name: "foo", value: "bar")
+        dataStore.createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "456", timestamp: timestamp)
+        dataStore.createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "567", timestamp: timestamp)
     }
 }
 

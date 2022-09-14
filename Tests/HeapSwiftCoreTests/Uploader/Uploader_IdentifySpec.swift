@@ -107,7 +107,7 @@ final class Uploader_IdentifySpec: UploaderSpec {
             
             func itMarksTheIdentityAsUploaded(whenIdentityReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItMarksTheIdentityAsUploaded.self, file: file, line: line) {
-                    .init(uploader: uploader, request: .identify(true), response: response, beforeEach: queueJustAnIdentityUpload)
+                    .init(uploader: uploader, request: .identify(true), response: response, newUser: false)
                 }
             }
             
@@ -143,34 +143,19 @@ final class Uploader_IdentifySpec: UploaderSpec {
             
             func itPreventsSubsequentUploads(whenIdentityReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItPreventsSubsequentUploads.self, file: file, line: line) {
-                    .init(uploader: uploader, request: .identify(true), response: response) {
-                        let timestamp = Date()
-                        dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "user-1", creationDate: timestamp)
-                        dataStore.setHasSentInitialUser(environmentId: "11", userId: "123")
-                        dataStore.createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "456", timestamp: timestamp)
-                    }
+                    .init(uploader: uploader, request: .identify(true), response: response, newUser: false)
                 }
             }
             
             func itSendsQueuedMessages(whenIdentityReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItConsumesAllTheMessages.self, file: file, line: line) {
-                    .init(uploader: uploader, request: .identify(true), response: response) {
-                        let timestamp = Date()
-                        dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "user-1", creationDate: timestamp)
-                        dataStore.setHasSentInitialUser(environmentId: "11", userId: "123")
-                        dataStore.createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "456", timestamp: timestamp)
-                    }
+                    .init(uploader: uploader, request: .identify(true), response: response, newUser: false)
                 }
             }
             
             func itSendsQueuedUserProperties(whenIdentityReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItMarksUserPropertiesAsUploaded.self, file: file, line: line) {
-                    .init(uploader: uploader, request: .identify(true), response: response) {
-                        let timestamp = Date()
-                        dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "user-1", creationDate: timestamp)
-                        dataStore.setHasSentInitialUser(environmentId: "11", userId: "123")
-                        dataStore.insertOrUpdateUserProperty(environmentId: "11", userId: "123", name: "foo", value: "bar")
-                    }
+                    .init(uploader: uploader, request: .identify(true), response: response, newUser: false)
                 }
             }
 

@@ -70,13 +70,13 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         var users: [UserToUpload] = []
         var result: UploadResult = .success(())
         
-        // This method calls `doNextOperation()` repeatedly on the upload queue until there are no more upload operations
-        // or an operation has failed.  When an operation complete `completionOperation` will process the result and queue
-        // up the next batch.
+        // This method calls `doNextOperation()` repeatedly on the upload queue until there are no
+        // more upload operations or an operation has failed.  When an operation complete
+        // `completionOperation` will process the result and queue up the next batch.
         
         func doNextOperation() {
-            guard case .success(()) = result,
-                let uploadOperation = nextOperation(for: &users, activeSession: activeSession, options: options) else {
+            guard result.canContinueUploading,
+                  let uploadOperation = nextOperation(for: &users, activeSession: activeSession, options: options) else {
                 complete(result)
                 return
             }
@@ -99,17 +99,22 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         }
     }
     
-    /// Creates an operation to with the next piece of information that can be sent for the provided users or `nil` if all information has been sent.
+    /// Creates an operation to with the next piece of information that can be sent for the
+    /// provided users or `nil` if all information has been sent.
     ///
-    /// During execution of this method or the operation, the `users` array and properties of the users may be modified to advance its state.  When all data has been consumed and the function returns `nil`, `users` will be an empty array.
+    /// During execution of this method or the operation, the `users` array and properties of the
+    /// users may be modified to advance its state.  When all data has been consumed and the
+    /// function returns `nil`, `users` will be an empty array.
     ///
     /// - Parameters:
     ///   - users: A mutable array of users to upload.
     ///   - activeSession: Information about the active session.
     ///   - options: Any options passed while starting the scheduled upload.
-    /// - Returns: An operation to upload the initial user data, or nil if it has already been sent.
+    /// - Returns: The next upload operation for the list of users, or `nil` if all data has been
+    ///            sent.
     ///
-    /// - Important: This method and the returned operation **MUST** only be executed on the upload queue.
+    /// - Important: This method and the returned operation **MUST** only be executed on the upload
+    ///              queue.
     func nextOperation(for users: inout [UserToUpload], activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
         while let user = users.first {
             if let operation = nextOperation(for: user, activeSession: activeSession, options: options) {
@@ -122,9 +127,11 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         return nil
     }
     
-    /// Creates an operation to with the next piece of information that can be sent for the user or `nil` if the user doesn't have any information to send.
+    /// Creates an operation to with the next piece of information that can be sent for the user or
+    /// `nil` if the user doesn't have any information to send.
     ///
-    /// During execution of this method or the operation, properties of `user` may be modified to advance its state.
+    /// During execution of this method or the operation, properties of `user` may be modified to
+    /// advance its state.
     ///
     /// - Parameters:
     ///   - user: The user to upload.
@@ -132,7 +139,8 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     ///   - options: Any options passed while starting the scheduled upload.
     /// - Returns: The next upload operation for the user, or `nil` if all data has been sent.
     ///
-    /// - Important: This method and the returned operation **MUST** only be executed on the upload queue.
+    /// - Important: This method and the returned operation **MUST** only be executed on the upload
+    ///              queue.
     func nextOperation(for user: UserToUpload, activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
         
         if let operation = initialUserUploadOperation(user, activeSession: activeSession, options: options) {
@@ -143,20 +151,28 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
             return operation
         }
         
+        if let operation = addUserPropertiesUploadOperation(user, activeSession: activeSession, options: options) {
+            return operation
+        }
+        
         return nil
     }
     
     /// Creates an operation to upload the initial data for a user if it has not yet been uploaded.
     ///
-    /// Once the operation completes, in success or failure, `needsInitialUpload` will be set to `false` to prevent future uploads.  This reflects the change in this upload cycle and may not represent the persisted state.
+    /// Once the operation completes, in success or failure, `needsInitialUpload` will be set to
+    /// `false` to prevent future uploads.  This reflects the change in this upload cycle and may
+    /// not represent the persisted state.
     ///
     /// - Parameters:
     ///   - user: The user to upload.
     ///   - activeSession: Information about the active session.
     ///   - options: Any options passed while starting the scheduled upload.
-    /// - Returns: An operation to upload the initial user data, or `nil` if it has already been sent.
+    /// - Returns: An operation to upload the initial user data, or `nil` if it has already been
+    ///            sent.
     ///
-    /// - Important: This method and the returned operation **MUST** only be executed on the upload queue.
+    /// - Important: This method and the returned operation **MUST** only be executed on the upload
+    ///              queue.
     func initialUserUploadOperation(_ user: UserToUpload, activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
         
         guard user.needsInitialUpload
@@ -183,15 +199,19 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     
     /// Creates an operation to upload the identity for a user if it has not yet been uploaded.
     ///
-    /// Once the operation completes, in success or failure, `needsIdentityUpload` will be set to `false` to prevent future uploads.  This reflects the change in this upload cycle and may not represent the persisted state.
+    /// Once the operation completes, in success or failure, `needsIdentityUpload` will be set to
+    /// `false` to prevent future uploads.  This reflects the change in this upload cycle and may
+    /// not represent the persisted state.
     ///
     /// - Parameters:
     ///   - user: The user to upload.
     ///   - activeSession: Information about the active session.
     ///   - options: Any options passed while starting the scheduled upload.
-    /// - Returns: An operation to upload the user identity data, or `nil` if it has already been sent.
+    /// - Returns: An operation to upload the user pending user properties, or `nil` if it has
+    ///            there are no pending properties.
     ///
-    /// - Important: This method and the returned operation **MUST** only be executed on the upload queue.
+    /// - Important: This method and the returned operation **MUST** only be executed on the upload
+    ///              queue.
     func identityUploadOperation(_ user: UserToUpload, activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
         
         guard user.needsIdentityUpload,
@@ -205,6 +225,43 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
             switch result {
             case .failure(.badRequest), .success(()):
                 self.dataStore.setHasSentIdentity(environmentId: user.environmentId, userId: user.userId)
+            default:
+                break
+            }
+        }
+    }
+    
+    /// Creates an operation to add user properties to a user.
+    ///
+    /// Once the operation completes, in success or failure, `pendingUserProperties` will be
+    /// cleared to prevent future uploads.  This reflects the change in this upload cycle and may
+    /// not represent the persisted state.
+    ///
+    /// - Parameters:
+    ///   - user: The user to upload.
+    ///   - activeSession: Information about the active session.
+    ///   - options: Any options passed while starting the scheduled upload.
+    /// - Returns: An operation to upload the user identity data, or `nil` if it has already been
+    ///            sent.
+    ///
+    /// - Important: This method and the returned operation **MUST** only be executed on the upload
+    ///              queue.
+    func addUserPropertiesUploadOperation(_ user: UserToUpload, activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
+        
+        let properties = user.pendingUserProperties
+        
+        guard !properties.isEmpty
+        else { return nil }
+        
+        return UploadOperation(userProperties: .init(withUserPropertiesFor: user), options: options, in: urlSession) { result in
+            
+            user.pendingUserProperties.removeAll()
+            
+            switch result {
+            case .failure(.badRequest), .success(()):
+                for (name, value) in properties {
+                    self.dataStore.setHasSentUserProperty(environmentId: user.environmentId, userId: user.userId, name: name, value: value)
+                }
             default:
                 break
             }
@@ -240,6 +297,23 @@ extension Array where Element == UserToUpload {
         // Move the active session to the front of the list.
         if !isEmpty && self[0].isActive(in: activeSession) {
             _ = self[0].sessionIds.partition(by: { $0 != activeSession.sessionId })
+        }
+    }
+}
+
+extension UploadResult {
+    
+    /// Returns whether or not the result should stop the upload process.
+    ///
+    /// We allow uploading to proceed for success and bad request payloads. In cases where a bad
+    /// request prevents part of the upload from continuing, the source operation must mark the
+    /// appropriate data as unuploadable rather than stopping the whole process.
+    var canContinueUploading: Bool {
+        switch self {
+        case .success(()), .failure(.badRequest):
+            return true
+        case .failure(.networkFailure), .failure(.unexpectedServerResponse):
+            return false
         }
     }
 }

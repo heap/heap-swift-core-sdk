@@ -94,7 +94,7 @@ final class Uploader_InitialUserSpec: UploaderSpec {
             
             func itMarksTheUserAsUploaded(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItMarksTheUserAsUploaded.self, file: file, line: line) {
-                    .init(uploader: uploader, request: .addUserProperties(true), response: response, beforeEach: queueJustANewUserUpload)
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response, newUser: true)
                 }
             }
             
@@ -133,42 +133,25 @@ final class Uploader_InitialUserSpec: UploaderSpec {
             
             func itPreventsSubsequentUploads(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItPreventsSubsequentUploads.self, file: file, line: line) {
-                    .init(uploader: uploader, request: .addUserProperties(true), response: response) {
-                        let timestamp = Date()
-                        dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "user-1", creationDate: timestamp)
-                        dataStore.insertOrUpdateUserProperty(environmentId: "11", userId: "123", name: "foo", value: "bar")
-                        dataStore.createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "456", timestamp: timestamp)
-                    }
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response, newUser: true)
                 }
             }
             
             func itSendsQueuedMessages(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItConsumesAllTheMessages.self, file: file, line: line) {
-                    .init(uploader: uploader, request: .addUserProperties(true), response: response) {
-                        let timestamp = Date()
-                        dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
-                        dataStore.createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "456", timestamp: timestamp)
-                    }
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response, newUser: true)
                 }
             }
             
             func itSendsQueuedIdentity(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItMarksTheIdentityAsUploaded.self, file: file, line: line) {
-                    .init(uploader: uploader, request: .addUserProperties(true), response: response) {
-                        let timestamp = Date()
-                        dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
-                        dataStore.insertOrUpdateUserProperty(environmentId: "11", userId: "123", name: "foo", value: "bar")
-                    }
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response, newUser: true)
                 }
             }
             
             func itSendsQueuedUserProperties(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItMarksUserPropertiesAsUploaded.self, file: file, line: line) {
-                    .init(uploader: uploader, request: .addUserProperties(true), response: response) {
-                        let timestamp = Date()
-                        dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
-                        dataStore.insertOrUpdateUserProperty(environmentId: "11", userId: "123", name: "foo", value: "bar")
-                    }
+                    .init(uploader: uploader, request: .addUserProperties(true), response: response, newUser: true)
                 }
             }
             
