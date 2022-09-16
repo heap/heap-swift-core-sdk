@@ -10,7 +10,7 @@ public class Heap: NSObject {
     public static var shared: Heap = {
         let dataStore = SqliteDataStore()
         let consumer = EventConsumer(dataStore: dataStore)
-        let uploader = Uploader(dataStore: dataStore, activeSessionProvider: consumer, connectivityTester: ReachabilityConnectivityTester())
+        let uploader = Uploader(dataStore: dataStore, activeSessionProvider: consumer)
 
         return Heap(consumer: consumer, uploader: uploader)
     }()

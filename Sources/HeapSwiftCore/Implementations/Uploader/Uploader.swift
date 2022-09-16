@@ -4,21 +4,22 @@ protocol ActiveSessionProvider {
     var activeSession: ActiveSession? { get }
 }
 
+extension DispatchQueue {
+    @nonobjc static let upload = DispatchQueue(label: "io.heap.Uploader")
+}
+
 extension OperationQueue {
     
-    private static func createUploaderQueue() -> (DispatchQueue, OperationQueue) {
-        let underlyingQueue = DispatchQueue(label: "io.heap.Uploader")
+    private static func createUploaderQueue() -> OperationQueue {
         let queue = OperationQueue()
         queue.name = "io.heap.Uploader"
         queue.maxConcurrentOperationCount = 1
-        queue.underlyingQueue = underlyingQueue
-        return (underlyingQueue, queue)
+        queue.underlyingQueue = .upload
+        return queue
     }
     
-    private static let uploadQueuePair = createUploaderQueue()
-    
     /// An operation queue for performing upload operations.
-    static var uploadQueue: OperationQueue { uploadQueuePair.1 }
+    @nonobjc static let upload = createUploaderQueue()
 }
 
 fileprivate typealias TaskCompletionHandler = (Data?, URLResponse?, Error?) -> Void
@@ -45,11 +46,21 @@ fileprivate struct RejectedSession: Equatable, Hashable {
     }
 }
 
-class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvider, ConnectivityTester: ConnectivityTesterProtocol>: UploaderProtocol {
+extension URLSessionConfiguration {
+    
+    /// A network configuration that does not cache data and is in a low priority state.
+    static var heapUploader: URLSessionConfiguration {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.waitsForConnectivity = true // Don't make requests until the network is reachable.
+        configuration.networkServiceType = .background // Mark that our requests don't need immediate network access.
+        return configuration
+    }
+}
+
+class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvider>: UploaderProtocol {
     
     let dataStore: DataStore
     let activeSessionProvider: SessionProvider
-    let connectivityTester: ConnectivityTester
     let urlSession: URLSession
     
     /// An set of users who received a 400 response during their initial upload.
@@ -70,15 +81,14 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     fileprivate var shouldScheduleUploads = false
     fileprivate var isPerformingScheduledUpload = false
 
-    init(dataStore: DataStore, activeSessionProvider: SessionProvider, connectivityTester: ConnectivityTester, urlSessionConfiguration: URLSessionConfiguration = .ephemeral) {
+    init(dataStore: DataStore, activeSessionProvider: SessionProvider, urlSessionConfiguration: URLSessionConfiguration = .heapUploader) {
         self.dataStore = dataStore
         self.activeSessionProvider = activeSessionProvider
-        self.connectivityTester = connectivityTester
         self.urlSession = URLSession(configuration: urlSessionConfiguration)
     }
 
     func startScheduledUploads(with options: [Option : Any]) {
-        OperationQueue.uploadQueue.addOperation { [self] in
+        OperationQueue.upload.addOperation { [self] in
             shouldScheduleUploads = true
             nextUploadTimer?.cancel()
             scheduledUploadOptions = options
@@ -87,7 +97,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     }
 
     func stopScheduledUploads() {
-        OperationQueue.uploadQueue.addOperation { [self] in
+        OperationQueue.upload.addOperation { [self] in
             shouldScheduleUploads = false
             nextUploadTimer?.cancel()
             nextUploadTimer = nil
@@ -101,7 +111,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         
         performScheduledUpload { [weak self] nextScheduledUploadDate in
             self?.nextUploadTimer?.cancel()
-            self?.nextUploadTimer = HeapTimer.schedule(in: OperationQueue.uploadQueue, at: nextScheduledUploadDate) { [weak self] in
+            self?.nextUploadTimer = HeapTimer.schedule(in: OperationQueue.upload, at: nextScheduledUploadDate) { [weak self] in
                 self?.repeatedlyPerformScheduledUploads()
             }
         }
@@ -112,7 +122,6 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     /// This method is safe to call at any point. In order to upload data:
     ///
     /// - The next upload date must be in the past.
-    /// - The device must be connected to the network.
     /// - There must be (or must have been) an active session.
     /// - This method must not be currently uploading data.
     ///
@@ -122,15 +131,14 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     /// - Parameter complete: A completion block containing the next time that the uploader should
     ///                       run.  Executes in the upload queue.
     func performScheduledUpload(complete: @escaping (Date) -> Void) {
-        OperationQueue.uploadQueue.addOperation { [self] in
+        OperationQueue.upload.addOperation { [self] in
             guard Date() >= nextScheduledUploadDate
             else {
                 complete(nextScheduledUploadDate)
                 return
             }
             
-            guard connectivityTester.isOnline,
-                  let activeSession = activeSessionProvider.activeSession,
+            guard let activeSession = activeSessionProvider.activeSession,
                   !isPerformingScheduledUpload
             else {
                 nextScheduledUploadDate = calculateNextScheduledUploadDate(with: .success(()), options: scheduledUploadOptions)
@@ -189,7 +197,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
                 return
             }
             
-            OperationQueue.uploadQueue.addOperation(uploadOperation)
+            OperationQueue.upload.addOperation(uploadOperation)
             
             let completionOperation = BlockOperation {
                 result = uploadOperation.result ?? .failure(.badRequest)
@@ -197,10 +205,10 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
             }
             
             completionOperation.addDependency(uploadOperation)
-            OperationQueue.uploadQueue.addOperation(completionOperation)
+            OperationQueue.upload.addOperation(completionOperation)
         }
         
-        OperationQueue.uploadQueue.addOperation {
+        OperationQueue.upload.addOperation {
             users = self.dataStore.usersToUpload()
             users.remove(rejectedUsers: self.rejectedUsers, rejectedSessions: self.rejectedSessions)
             users.moveActiveSessionToTheFront(using: activeSession)

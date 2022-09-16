@@ -68,7 +68,7 @@ class APIProtocol: URLProtocol {
 #if os(watchOS)
         preconditionFailure("watchOS does not appear to support URLProtocol")
 #else
-        let urlSessionConfig = URLSessionConfiguration.ephemeral
+        let urlSessionConfig = URLSessionConfiguration.heapUploader
         urlSessionConfig.protocolClasses = [APIProtocol.self]
         return urlSessionConfig
 #endif

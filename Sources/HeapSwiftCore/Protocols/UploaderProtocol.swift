@@ -28,14 +28,6 @@ enum UploadError: Error, Equatable {
 /// The result of an upload operation.
 typealias UploadResult = Result<Void, UploadError>
 
-/// A protocol to be implemented by a connectivity detector, informing the uploader whether or not
-/// it is possible to perform an upload request.
-protocol ConnectivityTesterProtocol {
-    
-    /// Indicates whether or not the device is connected to the internet.
-    var isOnline: Bool { get }
-}
-
 /// A protocol to be implemented by an uploader.
 protocol UploaderProtocol {
 

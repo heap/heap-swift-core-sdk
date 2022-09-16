@@ -12,7 +12,6 @@ final class Uploader_ScheduleSpec: UploaderSpec {
 
         beforeEach {
             self.prepareUploader(dataStore: &dataStore, uploader: &uploader)
-            self.connectivityTester.isOnline = true
         }
         
         afterEach {
@@ -31,12 +30,6 @@ final class Uploader_ScheduleSpec: UploaderSpec {
                 context("there is data to upload") {
                     beforeEach {
                         uploader.dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: Date())
-                    }
-                    
-                    it("does not make any requests when the network is unreachable") {
-                        self.connectivityTester.isOnline = false
-                        expectPerformScheduledUpload(in: uploader).toEventuallyNot(beNil())
-                        expect(APIProtocol.requests).to(beEmpty(), description: "No requests should have been made while the network was unreachable")
                     }
                     
                     it("performs Uploader.uploadAll") {

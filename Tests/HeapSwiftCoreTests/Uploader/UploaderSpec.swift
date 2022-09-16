@@ -14,20 +14,15 @@ class TestActiveSessionProvider: ActiveSessionProvider {
     }
 }
 
-class TestConnectivityTester: ConnectivityTesterProtocol {
-    var isOnline: Bool = true
-}
-
-typealias TestableUploader = Uploader<InMemoryDataStore, TestActiveSessionProvider, TestConnectivityTester>
+typealias TestableUploader = Uploader<InMemoryDataStore, TestActiveSessionProvider>
 
 class UploaderSpec: HeapSpec {
     
     let activeSessionProvider = TestActiveSessionProvider()
-    let connectivityTester = TestConnectivityTester()
     
     func prepareUploader(dataStore: inout InMemoryDataStore?, uploader: inout TestableUploader?) {
         dataStore = InMemoryDataStore()
-        uploader = Uploader(dataStore: dataStore!, activeSessionProvider: activeSessionProvider, connectivityTester: connectivityTester, urlSessionConfiguration: APIProtocol.ephemeralUrlSessionConfig)
+        uploader = Uploader(dataStore: dataStore!, activeSessionProvider: activeSessionProvider, urlSessionConfiguration: APIProtocol.ephemeralUrlSessionConfig)
     }
     
 #if os(watchOS)
