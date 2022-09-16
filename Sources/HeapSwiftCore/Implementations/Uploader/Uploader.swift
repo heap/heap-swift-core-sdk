@@ -6,14 +6,19 @@ protocol ActiveSessionProvider {
 
 extension OperationQueue {
     
-    private static func createUploaderQueue() -> OperationQueue {
+    private static func createUploaderQueue() -> (DispatchQueue, OperationQueue) {
+        let underlyingQueue = DispatchQueue(label: "io.heap.Uploader")
         let queue = OperationQueue()
         queue.name = "io.heap.Uploader"
         queue.maxConcurrentOperationCount = 1
-        return queue
+        queue.underlyingQueue = underlyingQueue
+        return (underlyingQueue, queue)
     }
     
-    static let uploadQueue = createUploaderQueue()
+    private static let uploadQueuePair = createUploaderQueue()
+    
+    /// An operation queue for performing upload operations.
+    static var uploadQueue: OperationQueue { uploadQueuePair.1 }
 }
 
 fileprivate typealias TaskCompletionHandler = (Data?, URLResponse?, Error?) -> Void
@@ -48,10 +53,22 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     let urlSession: URLSession
     
     /// An set of users who received a 400 response during their initial upload.
+    ///
+    /// Although these users may continue to exist in the data store, they should not be uploaded
+    /// again because they are active.
     fileprivate var rejectedUsers: Set<RejectedUser> = []
     
     /// A set of sessions which have recieved a 400 response.
+    ///
+    /// Although these sessions may continue to exist in the data store, they should not be
+    /// uploaded again because they are active.
     fileprivate var rejectedSessions: Set<RejectedSession> = []
+    
+    var nextScheduledUploadDate: Date = Date()
+    fileprivate var scheduledUploadOptions: [Option: Any] = [:]
+    fileprivate var nextUploadTimer: HeapTimer? = nil
+    fileprivate var shouldScheduleUploads = false
+    fileprivate var isPerformingScheduledUpload = false
 
     init(dataStore: DataStore, activeSessionProvider: SessionProvider, connectivityTester: ConnectivityTester, urlSessionConfiguration: URLSessionConfiguration = .ephemeral) {
         self.dataStore = dataStore
@@ -61,17 +78,93 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     }
 
     func startScheduledUploads(with options: [Option : Any]) {
+        OperationQueue.uploadQueue.addOperation { [self] in
+            shouldScheduleUploads = true
+            nextUploadTimer?.cancel()
+            scheduledUploadOptions = options
+            repeatedlyPerformScheduledUploads()
+        }
     }
 
     func stopScheduledUploads() {
-    }
-
-    var nextScheduledUploadDate: Date {
-        Date()
+        OperationQueue.uploadQueue.addOperation { [self] in
+            shouldScheduleUploads = false
+            nextUploadTimer?.cancel()
+            nextUploadTimer = nil
+        }
     }
     
+    /// Calls `performScheduledUpload` and schedules the next upload, so long as
+    /// `shouldScheduleUploads` is true.
+    func repeatedlyPerformScheduledUploads() {
+        guard shouldScheduleUploads else { return }
+        
+        performScheduledUpload { [weak self] nextScheduledUploadDate in
+            self?.nextUploadTimer?.cancel()
+            self?.nextUploadTimer = HeapTimer.schedule(in: OperationQueue.uploadQueue, at: nextScheduledUploadDate) { [weak self] in
+                self?.repeatedlyPerformScheduledUploads()
+            }
+        }
+    }
+    
+    /// Performs a single scheduled upload if conditions are met.
+    ///
+    /// This method is safe to call at any point. In order to upload data:
+    ///
+    /// - The next upload date must be in the past.
+    /// - The device must be connected to the network.
+    /// - There must be (or must have been) an active session.
+    /// - This method must not be currently uploading data.
+    ///
+    /// If those conditions are not met, the method will return the next time it should be called
+    /// again.
+    ///
+    /// - Parameter complete: A completion block containing the next time that the uploader should
+    ///                       run.  Executes in the upload queue.
     func performScheduledUpload(complete: @escaping (Date) -> Void) {
-        complete(nextScheduledUploadDate)
+        OperationQueue.uploadQueue.addOperation { [self] in
+            guard Date() >= nextScheduledUploadDate
+            else {
+                complete(nextScheduledUploadDate)
+                return
+            }
+            
+            guard connectivityTester.isOnline,
+                  let activeSession = activeSessionProvider.activeSession,
+                  !isPerformingScheduledUpload
+            else {
+                nextScheduledUploadDate = calculateNextScheduledUploadDate(with: .success(()), options: scheduledUploadOptions)
+                complete(nextScheduledUploadDate)
+                return
+            }
+            
+            isPerformingScheduledUpload = true
+            
+            uploadAll(activeSession: activeSession, options: scheduledUploadOptions) { [weak self] result in
+                if let self = self {
+                    self.nextScheduledUploadDate = self.calculateNextScheduledUploadDate(with: result, options: self.scheduledUploadOptions)
+                    complete(self.nextScheduledUploadDate)
+                    self.isPerformingScheduledUpload = false
+                }
+            }
+        }
+    }
+    
+    /// Determines the next time the uploader should run, based on previous run results and the
+    /// option dictionary.
+    ///
+    /// - Parameters:
+    ///   - result: The result of the last upload attempt.
+    ///   - options: Any options passed while starting the scheduled upload.
+    /// - Returns: The next time the uploader should run.
+    private func calculateNextScheduledUploadDate(with result: UploadResult, options: [Option: Any]) -> Date {
+        let uploadInterval = options.timeInterval(at: .uploadInterval) ?? 15
+        
+        if result.canContinueUploading {
+            return Date().addingTimeInterval(uploadInterval)
+        } else {
+            return Date().addingTimeInterval(uploadInterval * 4)
+        }
     }
     
     /// Attempts to upload all queued data to the server.

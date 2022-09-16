@@ -37,10 +37,20 @@ class UploaderSpec: HeapSpec {
 #endif
 }
 
-func expectUploadAll(file: StaticString = #file, line: UInt = #line, in upload: TestableUploader, with options: [Option : Any] = [:]) -> Expectation<Result<Void, UploadError>> {
+func expectUploadAll(file: StaticString = #file, line: UInt = #line, in uploader: TestableUploader, with options: [Option : Any] = [:]) -> Expectation<Result<Void, UploadError>> {
     
     var result: Result<Void, UploadError>? = nil
-    upload.uploadAll(activeSession: upload.activeSessionProvider.activeSession!, options: options) {
+    uploader.uploadAll(activeSession: uploader.activeSessionProvider.activeSession!, options: options) {
+        result = $0
+    }
+    
+    return expect(file: file, line: line, result)
+}
+
+func expectPerformScheduledUpload(file: StaticString = #file, line: UInt = #line, in uploader: TestableUploader) -> Expectation<Date> {
+    
+    var result: Date? = nil
+    uploader.performScheduledUpload {
         result = $0
     }
     
