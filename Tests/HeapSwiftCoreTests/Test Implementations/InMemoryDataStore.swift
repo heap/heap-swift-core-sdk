@@ -91,6 +91,8 @@ class InMemoryDataStore: DataStoreProtocol {
         with(environmentId: environmentId) {
             if $0.users[userId] == nil {
                 $0.users[userId] = .init(id: userId, identity: identity, creationDate: creationDate)
+            } else if identity != nil && $0.users[userId]?.identity == nil {
+                $0.users[userId]?.identity = identity
             }
         }
     }

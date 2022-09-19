@@ -84,24 +84,15 @@ extension DataStoreProtocol {
     
     func createSessionIfNeeded(environmentId: String, userId: String, sessionId: String, timestamp: Date, includePageview: Bool = false, includeEvent: Bool = false) {
         
-        let state = State(
-            environment: .with { $0.envID = environmentId; $0.userID = userId },
-            options: [:],
-            sessionInfo: .init(newSessionAt: timestamp, id: sessionId),
-            lastPageviewInfo: .init(newPageviewAt: timestamp),
-            sessionExpirationDate: timestamp
-        )
+        let fakeSession = FakeSession(environmentId: environmentId, userId: userId, sessionId: sessionId, timestamp: timestamp)
         
-        createSessionIfNeeded(with: .init(forSessionIn: state))
+        createSessionIfNeeded(with: fakeSession.sessionMessage)
         if includePageview {
-            insertPendingMessage(.init(forPageviewWith: state.lastPageviewInfo, in: state))
+            insertPendingMessage(fakeSession.pageviewMessage)
         }
         
         if includeEvent {
-            var event = Message(forPartialEventAt: timestamp, sourceLibrary: nil, in: state)
-            event.pageviewInfo = state.lastPageviewInfo
-            event.event.custom = .init(name: "my-event", properties: [:])
-            insertPendingMessage(event)
+            insertPendingMessage(fakeSession.customEventMessage(name: "my-event"))
         }
     }
 }

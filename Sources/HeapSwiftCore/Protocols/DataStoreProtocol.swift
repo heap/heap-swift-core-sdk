@@ -28,6 +28,34 @@ final class UserToUpload {
     }
 }
 
+extension UserToUpload: Equatable {
+    static func == (lhs: UserToUpload, rhs: UserToUpload) -> Bool {
+        lhs.environmentId == rhs.environmentId &&
+        lhs.userId == rhs.userId &&
+        lhs.identity == rhs.identity &&
+        lhs.needsInitialUpload == rhs.needsInitialUpload &&
+        lhs.needsIdentityUpload == rhs.needsIdentityUpload &&
+        lhs.pendingUserProperties == rhs.pendingUserProperties &&
+        lhs.sessionIds == rhs.sessionIds
+    }
+}
+
+extension UserToUpload: CustomDebugStringConvertible {
+    var debugDescription: String {
+        return """
+Environment ID:          \(environmentId)
+User ID:                 \(userId)
+Identity:                \(identity ?? "")
+
+Needs Initial Upload:    \(needsInitialUpload)
+Needs Identity Upload:   \(needsIdentityUpload)
+
+Session ID(s):           \(sessionIds.joined(separator: ", "))
+Pending User Properties: \(pendingUserProperties)
+"""
+    }
+}
+
 typealias MessageIdentifier = Int
 
 protocol DataStoreProtocol {
