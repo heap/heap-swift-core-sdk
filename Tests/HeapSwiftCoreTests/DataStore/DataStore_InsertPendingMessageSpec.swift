@@ -61,7 +61,7 @@ final class SqliteDataStore_InsertPendingMessageSpec: HeapSpec {
         var fakeSession: FakeSession! = nil
 
         beforeEach {
-            dataStore = SqliteDataStore()
+            dataStore = .temporary()
             fakeSession = FakeSession(environmentId: "11", userId: "123", sessionId: "456")
             dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: Date())
         }

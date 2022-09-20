@@ -6,9 +6,19 @@ public class Heap: NSObject {
     private var consumer: any EventConsumerProtocol
     private var uploader: any UploaderProtocol
 
+    private static let heapDirectory: URL = {
+        // TODO: Need to validate that this works on all environments and places things where they need to go.
+        let fileManager = FileManager.default
+        var url = fileManager.urls(for: .libraryDirectory, in: .userDomainMask).first!
+        url.appendPathComponent("HeapSwiftCore", isDirectory: true)
+        url.appendPathComponent(SDKInfo.shared.applicationInfo.identifier, isDirectory: true)
+        try! fileManager.createDirectory(at: url, withIntermediateDirectories: true)
+        return url
+    }()
+    
     @objc(sharedInstance)
     public static var shared: Heap = {
-        let dataStore = SqliteDataStore()
+        let dataStore = SqliteDataStore(databaseUrl: heapDirectory.appendingPathComponent("DataStore.db"))
         let consumer = EventConsumer(dataStore: dataStore)
         let uploader = Uploader(dataStore: dataStore, activeSessionProvider: consumer)
 

@@ -1,3 +1,4 @@
+import Foundation
 import Quick
 @testable import HeapSwiftCore
 
@@ -20,7 +21,7 @@ class DataStoreSpec: HeapSpec {
             var dataStore: SqliteDataStore! = nil
             
             beforeEach {
-                dataStore = SqliteDataStore()
+                dataStore = .temporary()
             }
             
             afterEach {
@@ -32,4 +33,11 @@ class DataStoreSpec: HeapSpec {
     }
     
     open func spec<DataStore>(dataStore: @escaping () -> DataStore) where DataStore : DataStoreProtocol { }
+}
+
+extension SqliteDataStore {
+    class func temporary() -> SqliteDataStore {
+        let databaseUrl = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        return .init(databaseUrl: databaseUrl)
+    }
 }

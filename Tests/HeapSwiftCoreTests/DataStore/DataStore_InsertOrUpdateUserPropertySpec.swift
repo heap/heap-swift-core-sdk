@@ -62,7 +62,7 @@ final class SqliteDataStore_InsertOrUpdateUserPropertySpec: HeapSpec {
         var dataStore: SqliteDataStore! = nil
 
         beforeEach {
-            dataStore = SqliteDataStore()
+            dataStore = .temporary()
         }
         
         afterEach {

@@ -11,7 +11,7 @@ final class DataStore_CreateNewUserIfNeededSpec: DataStoreSpec {
             it("creates a new user") {
                 dataStore().createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: Date())
                 
-                expect(dataStore().usersToUpload()).toEventually(equal([
+                expect(dataStore().usersToUpload()).to(equal([
                     .init(
                         environmentId: "11",
                         userId: "123",
@@ -27,7 +27,7 @@ final class DataStore_CreateNewUserIfNeededSpec: DataStoreSpec {
             it("sets the identity and marks it for upload if provided") {
                 dataStore().createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "my-user", creationDate: Date())
                 
-                expect(dataStore().usersToUpload()).toEventually(equal([
+                expect(dataStore().usersToUpload()).to(equal([
                     .init(
                         environmentId: "11",
                         userId: "123",
@@ -42,11 +42,11 @@ final class DataStore_CreateNewUserIfNeededSpec: DataStoreSpec {
             
             it("sets the identity on an existing user if they are not identified") {
                 dataStore().createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: Date())
-                expect(dataStore().usersToUpload()).toEventually(haveCount(1), description: "PRECONDITION: Could not create user")
+                expect(dataStore().usersToUpload()).to(haveCount(1), description: "PRECONDITION: Could not create user")
 
                 dataStore().createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "my-user", creationDate: Date())
                 
-                expect(dataStore().usersToUpload()).toEventually(equal([
+                expect(dataStore().usersToUpload()).to(equal([
                     .init(
                         environmentId: "11",
                         userId: "123",
@@ -66,7 +66,7 @@ final class DataStore_CreateNewUserIfNeededSpec: DataStoreSpec {
                 dataStore().insertOrUpdateUserProperty(environmentId: "11", userId: "123", name: "prop", value: "val")
                 dataStore().createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "456", timestamp: Date())
                 
-                expect(dataStore().usersToUpload()).toEventually(equal([
+                expect(dataStore().usersToUpload()).to(equal([
                     .init(
                         environmentId: "11",
                         userId: "123",
@@ -81,7 +81,7 @@ final class DataStore_CreateNewUserIfNeededSpec: DataStoreSpec {
                 
                 dataStore().createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "my-other-user", creationDate: Date())
                 
-                expect(dataStore().usersToUpload()).toAlways(equal([
+                expect(dataStore().usersToUpload()).to(equal([
                     .init(
                         environmentId: "11",
                         userId: "123",
@@ -104,7 +104,7 @@ final class SqliteDataStore_CreateNewUserIfNeededSpec: HeapSpec {
         var dataStore: SqliteDataStore! = nil
         
         beforeEach {
-            dataStore = SqliteDataStore()
+            dataStore = .temporary()
         }
         
         afterEach {

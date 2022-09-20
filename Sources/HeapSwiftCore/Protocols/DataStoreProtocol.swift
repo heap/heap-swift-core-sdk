@@ -16,8 +16,8 @@ final class UserToUpload {
          identity: String?,
          needsInitialUpload: Bool,
          needsIdentityUpload: Bool,
-         pendingUserProperties: [String: String],
-         sessionIds: [String]) {
+         pendingUserProperties: [String: String] = [:],
+         sessionIds: [String] = []) {
         self.environmentId = environmentId
         self.userId = userId
         self.identity = identity

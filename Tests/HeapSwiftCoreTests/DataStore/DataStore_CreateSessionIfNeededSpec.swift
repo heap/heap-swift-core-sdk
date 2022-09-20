@@ -72,7 +72,7 @@ final class SqliteDataStore_CreateSessionIfNeededSpec: HeapSpec {
         var dataStore: SqliteDataStore! = nil
 
         beforeEach {
-            dataStore = SqliteDataStore()
+            dataStore = .temporary()
         }
         
         afterEach {
