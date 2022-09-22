@@ -13,7 +13,37 @@
 		D6258EFE28D8805E00E81D63 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D6258EFD28D8805E00E81D63 /* Assets.xcassets */; };
 		D6258F0128D8805E00E81D63 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D6258EFF28D8805E00E81D63 /* LaunchScreen.storyboard */; };
 		D6258F2828D8812F00E81D63 /* HeapSwiftCore in Frameworks */ = {isa = PBXBuildFile; productRef = D6258F2728D8812F00E81D63 /* HeapSwiftCore */; };
+		D6664ED428DD059F00AC0814 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6664ED328DD059F00AC0814 /* WidgetKit.framework */; };
+		D6664ED628DD059F00AC0814 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6664ED528DD059F00AC0814 /* SwiftUI.framework */; };
+		D6664ED928DD059F00AC0814 /* iOSWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6664ED828DD059F00AC0814 /* iOSWidget.swift */; };
+		D6664EDB28DD059F00AC0814 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D6664EDA28DD059F00AC0814 /* Assets.xcassets */; };
+		D6664EDF28DD059F00AC0814 /* iOSWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D6664ED228DD059F00AC0814 /* iOSWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D6664EE528DD0CCB00AC0814 /* HeapSwiftCore in Frameworks */ = {isa = PBXBuildFile; productRef = D6664EE428DD0CCB00AC0814 /* HeapSwiftCore */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D6664EDD28DD059F00AC0814 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D6258EE628D8805E00E81D63 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D6664ED128DD059F00AC0814;
+			remoteInfo = iOSWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D6664EE028DD059F00AC0814 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D6664EDF28DD059F00AC0814 /* iOSWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		D6258EEE28D8805E00E81D63 /* SwiftCoreiOSExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftCoreiOSExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -24,6 +54,12 @@
 		D6258F0028D8805E00E81D63 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		D6258F0228D8805E00E81D63 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D6258F2528D8807A00E81D63 /* heap-swift-core */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "heap-swift-core"; path = ../..; sourceTree = "<group>"; };
+		D6664ED228DD059F00AC0814 /* iOSWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = iOSWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D6664ED328DD059F00AC0814 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		D6664ED528DD059F00AC0814 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		D6664ED828DD059F00AC0814 /* iOSWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSWidget.swift; sourceTree = "<group>"; };
+		D6664EDA28DD059F00AC0814 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D6664EDC28DD059F00AC0814 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -35,6 +71,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D6664ECF28DD059F00AC0814 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D6664EE528DD0CCB00AC0814 /* HeapSwiftCore in Frameworks */,
+				D6664ED628DD059F00AC0814 /* SwiftUI.framework in Frameworks */,
+				D6664ED428DD059F00AC0814 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -43,6 +89,7 @@
 			children = (
 				D6258F2428D8807A00E81D63 /* Packages */,
 				D6258EF028D8805E00E81D63 /* SwiftCoreiOSExample */,
+				D6664ED728DD059F00AC0814 /* iOSWidget */,
 				D6258EEF28D8805E00E81D63 /* Products */,
 				D6258F2628D8812F00E81D63 /* Frameworks */,
 			);
@@ -52,6 +99,7 @@
 			isa = PBXGroup;
 			children = (
 				D6258EEE28D8805E00E81D63 /* SwiftCoreiOSExample.app */,
+				D6664ED228DD059F00AC0814 /* iOSWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -80,8 +128,20 @@
 		D6258F2628D8812F00E81D63 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D6664ED328DD059F00AC0814 /* WidgetKit.framework */,
+				D6664ED528DD059F00AC0814 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D6664ED728DD059F00AC0814 /* iOSWidget */ = {
+			isa = PBXGroup;
+			children = (
+				D6664ED828DD059F00AC0814 /* iOSWidget.swift */,
+				D6664EDA28DD059F00AC0814 /* Assets.xcassets */,
+				D6664EDC28DD059F00AC0814 /* Info.plist */,
+			);
+			path = iOSWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -94,10 +154,12 @@
 				D6258EEA28D8805E00E81D63 /* Sources */,
 				D6258EEB28D8805E00E81D63 /* Frameworks */,
 				D6258EEC28D8805E00E81D63 /* Resources */,
+				D6664EE028DD059F00AC0814 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D6664EDE28DD059F00AC0814 /* PBXTargetDependency */,
 			);
 			name = SwiftCoreiOSExample;
 			packageProductDependencies = (
@@ -106,6 +168,26 @@
 			productName = SwiftCoreiOSExample;
 			productReference = D6258EEE28D8805E00E81D63 /* SwiftCoreiOSExample.app */;
 			productType = "com.apple.product-type.application";
+		};
+		D6664ED128DD059F00AC0814 /* iOSWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D6664EE328DD059F00AC0814 /* Build configuration list for PBXNativeTarget "iOSWidgetExtension" */;
+			buildPhases = (
+				D6664ECE28DD059F00AC0814 /* Sources */,
+				D6664ECF28DD059F00AC0814 /* Frameworks */,
+				D6664ED028DD059F00AC0814 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = iOSWidgetExtension;
+			packageProductDependencies = (
+				D6664EE428DD0CCB00AC0814 /* HeapSwiftCore */,
+			);
+			productName = iOSWidgetExtension;
+			productReference = D6664ED228DD059F00AC0814 /* iOSWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -118,6 +200,9 @@
 				LastUpgradeCheck = 1400;
 				TargetAttributes = {
 					D6258EED28D8805E00E81D63 = {
+						CreatedOnToolsVersion = 14.0;
+					};
+					D6664ED128DD059F00AC0814 = {
 						CreatedOnToolsVersion = 14.0;
 					};
 				};
@@ -136,6 +221,7 @@
 			projectRoot = "";
 			targets = (
 				D6258EED28D8805E00E81D63 /* SwiftCoreiOSExample */,
+				D6664ED128DD059F00AC0814 /* iOSWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -151,6 +237,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D6664ED028DD059F00AC0814 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D6664EDB28DD059F00AC0814 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -163,7 +257,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D6664ECE28DD059F00AC0814 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D6664ED928DD059F00AC0814 /* iOSWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D6664EDE28DD059F00AC0814 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D6664ED128DD059F00AC0814 /* iOSWidgetExtension */;
+			targetProxy = D6664EDD28DD059F00AC0814 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		D6258EF728D8805E00E81D63 /* Main.storyboard */ = {
@@ -302,6 +412,7 @@
 		D6258F1C28D8805E00E81D63 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
@@ -330,6 +441,7 @@
 		D6258F1D28D8805E00E81D63 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
@@ -349,6 +461,62 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = io.heap.SwiftCoreiOSExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D6664EE128DD059F00AC0814 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = iOSWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = iOSWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.heap.SwiftCoreiOSExample.iOSWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D6664EE228DD059F00AC0814 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = iOSWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = iOSWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.heap.SwiftCoreiOSExample.iOSWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -376,10 +544,23 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		D6664EE328DD059F00AC0814 /* Build configuration list for PBXNativeTarget "iOSWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D6664EE128DD059F00AC0814 /* Debug */,
+				D6664EE228DD059F00AC0814 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		D6258F2728D8812F00E81D63 /* HeapSwiftCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HeapSwiftCore;
+		};
+		D6664EE428DD0CCB00AC0814 /* HeapSwiftCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = HeapSwiftCore;
 		};
