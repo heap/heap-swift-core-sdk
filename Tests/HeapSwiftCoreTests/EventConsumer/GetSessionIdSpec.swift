@@ -9,11 +9,11 @@ final class EventConsumer_GetSessionIdSpec: HeapSpec {
         describe("EventConsumer.getSessionid") {
             
             var dataStore: InMemoryDataStore!
-            var consumer: EventConsumer<InMemoryDataStore>!
+            var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
 
             beforeEach {
                 dataStore = InMemoryDataStore()
-                consumer = EventConsumer(dataStore: dataStore)
+                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
             }
             
             it("returns nil before `startRecording` is called") {

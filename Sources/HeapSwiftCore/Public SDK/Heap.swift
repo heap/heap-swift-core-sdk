@@ -18,8 +18,9 @@ public class Heap: NSObject {
     
     @objc(sharedInstance)
     public static var shared: Heap = {
+        let stateStore = FileBasedStateStore(directoryUrl: heapDirectory)
         let dataStore = SqliteDataStore(databaseUrl: heapDirectory.appendingPathComponent("DataStore.db"))
-        let consumer = EventConsumer(dataStore: dataStore)
+        let consumer = EventConsumer(stateStore: stateStore, dataStore: dataStore)
         let uploader = Uploader(dataStore: dataStore, activeSessionProvider: consumer)
 
         return Heap(consumer: consumer, uploader: uploader)

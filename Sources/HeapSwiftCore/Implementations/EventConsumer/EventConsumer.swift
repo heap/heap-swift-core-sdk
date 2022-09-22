@@ -1,13 +1,13 @@
 import Foundation
 
-class EventConsumer<DataStore: DataStoreProtocol> {
+class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol> {
     
     let dataStore: DataStore
-    let stateManager: StateManager<DataStore>
+    let stateManager: StateManager<StateStore>
 
-    init(dataStore: DataStore) {
+    init(stateStore: StateStore, dataStore: DataStore) {
         self.dataStore = dataStore
-        self.stateManager = StateManager(dataStore: dataStore)
+        self.stateManager = StateManager(stateStore: stateStore)
     }
 
     /// For testing, returns the last set session ID without attempting to extend the session.

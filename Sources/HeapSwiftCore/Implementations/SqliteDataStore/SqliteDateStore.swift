@@ -108,15 +108,6 @@ Create Table If Not Exists UserProperties
         }
     }
 
-    func loadState(for environmentId: String) -> EnvironmentState {
-        var state = EnvironmentState()
-        state.envID = environmentId
-        return state
-    }
-
-    func save(_ environmentState: EnvironmentState) {
-    }
-
     func createNewUserIfNeeded(environmentId: String, userId: String, identity: String?, creationDate: Date) {
         performOnSqliteQueue { connection in
             try connection.perform(query: """

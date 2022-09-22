@@ -60,9 +60,6 @@ typealias MessageIdentifier = Int
 
 protocol DataStoreProtocol {
 
-    func loadState(for environmentId: String) -> EnvironmentState
-    func save(_ environmentState: EnvironmentState)
-
     func createNewUserIfNeeded(environmentId: String, userId: String, identity: String?, creationDate: Date)
     func setIdentityIfNull(environmentId: String, userId: String, identity: String)
     func insertOrUpdateUserProperty(environmentId: String, userId: String, name: String, value: String)

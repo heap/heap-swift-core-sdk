@@ -29,7 +29,7 @@ struct InMemorySession {
     var messages: [(identifier: Int, payload: Data)] = []
 }
 
-class InMemoryDataStore: DataStoreProtocol {
+class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
 
     var identifier = 0
 

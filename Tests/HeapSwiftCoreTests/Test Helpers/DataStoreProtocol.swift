@@ -63,24 +63,6 @@ extension DataStoreProtocol {
 
         return user
     }
-
-    func applyIdentifiedState(to environmentId: String) -> EnvironmentState {
-        var state = loadState(for: environmentId)
-        state.userID = "9999999"
-        state.identity = "__initial_identity__"
-        state.properties = ["__initial__": .init(value: "__value__")]
-        save(state)
-        return state
-    }
-
-    func applyUnidentifiedState(to environmentId: String) -> EnvironmentState {
-        var state = loadState(for: environmentId)
-        state.userID = "9999999"
-        state.clearIdentity()
-        state.properties = ["__initial__": .init(value: "__value__")]
-        save(state)
-        return state
-    }
     
     func createSessionIfNeeded(environmentId: String, userId: String, sessionId: String, timestamp: Date, includePageview: Bool = false, includeEvent: Bool = false) {
         

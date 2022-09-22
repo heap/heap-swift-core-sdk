@@ -1,13 +1,13 @@
 import Foundation
 
-class StateManager<DataStore: DataStoreProtocol> {
-    let dataStore: DataStore
+class StateManager<StateStore: StateStoreProtocol> {
+    let stateStore: StateStore
     private var _loadedEnvironmentStates: [String: EnvironmentState] = [:]
     private var _current: State? = nil
     private let _currentLock = DispatchSemaphore(value: 1)
 
-    init(dataStore: DataStore) {
-        self.dataStore = dataStore
+    init(stateStore: StateStore) {
+        self.stateStore = stateStore
     }
     
     func update(block: (inout State?, inout State.UpdateResults.Outcomes) -> Void) -> State.UpdateResults {
@@ -21,7 +21,7 @@ class StateManager<DataStore: DataStoreProtocol> {
 
         if let current = current, current.environment != previous?.environment {
             _loadedEnvironmentStates[current.environment.envID] = current.environment
-            dataStore.save(current.environment)
+            stateStore.save(current.environment)
         }
 
         _currentLock.signal()
@@ -39,7 +39,7 @@ class StateManager<DataStore: DataStoreProtocol> {
 
     fileprivate func loadEnvironmentState(_ environmentId: String) -> EnvironmentState {
         if let state = _loadedEnvironmentStates[environmentId] { return state }
-        let state = dataStore.loadState(for: environmentId)
+        let state = stateStore.loadState(for: environmentId)
         _loadedEnvironmentStates[environmentId] = state
         return state
     }

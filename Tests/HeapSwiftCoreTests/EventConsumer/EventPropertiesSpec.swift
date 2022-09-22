@@ -19,11 +19,11 @@ final class EventConsumer_EventPropertiesSpec: HeapSpec {
         describe("EventConsumer.addEventProperties") {
 
             var dataStore: InMemoryDataStore!
-            var consumer: EventConsumer<InMemoryDataStore>!
+            var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
 
             beforeEach {
                 dataStore = InMemoryDataStore()
-                consumer = EventConsumer(dataStore: dataStore)
+                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
             }
             
             it("doesn't do anything before `startRecording` is called") {
@@ -161,12 +161,12 @@ final class EventConsumer_EventPropertiesSpec: HeapSpec {
         describe("EventConsumer.removeEventProperty") {
 
             var dataStore: InMemoryDataStore!
-            var consumer: EventConsumer<InMemoryDataStore>!
+            var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
             var originalState: EnvironmentState!
 
             beforeEach {
                 dataStore = InMemoryDataStore()
-                consumer = EventConsumer(dataStore: dataStore)
+                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
 
                 originalState = dataStore.loadState(for: "11")
                 originalState.userID = "123"
@@ -227,12 +227,12 @@ final class EventConsumer_EventPropertiesSpec: HeapSpec {
         describe("EventConsumer.clearEventProperties") {
 
             var dataStore: InMemoryDataStore!
-            var consumer: EventConsumer<InMemoryDataStore>!
+            var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
             var originalState: EnvironmentState!
 
             beforeEach {
                 dataStore = InMemoryDataStore()
-                consumer = EventConsumer(dataStore: dataStore)
+                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
 
                 originalState = dataStore.loadState(for: "11")
                 originalState.userID = "123"

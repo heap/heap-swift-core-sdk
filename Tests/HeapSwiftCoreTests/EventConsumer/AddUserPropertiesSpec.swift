@@ -9,11 +9,11 @@ final class EventConsumer_AddUserPropertiesSpec: HeapSpec {
         describe("EventConsumer.addUserProperties") {
 
             var dataStore: InMemoryDataStore!
-            var consumer: EventConsumer<InMemoryDataStore>!
+            var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
 
             beforeEach {
                 dataStore = InMemoryDataStore()
-                consumer = EventConsumer(dataStore: dataStore)
+                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
             }
             
             it("doesn't do anything before `startRecording` is called") {

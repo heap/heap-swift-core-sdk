@@ -9,11 +9,11 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
         describe("EventConsumer.startRecording") {
             
             var dataStore: InMemoryDataStore!
-            var consumer: EventConsumer<InMemoryDataStore>!
+            var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
 
             beforeEach {
                 dataStore = InMemoryDataStore()
-                consumer = EventConsumer(dataStore: dataStore)
+                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
             }
 
             context("without an existing persisted state") {

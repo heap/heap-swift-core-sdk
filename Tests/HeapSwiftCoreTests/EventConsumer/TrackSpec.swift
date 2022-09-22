@@ -9,11 +9,11 @@ final class EventConsumer_TrackSpec: HeapSpec {
         describe("EventConsumer.track") {
             
             var dataStore: InMemoryDataStore!
-            var consumer: EventConsumer<InMemoryDataStore>!
+            var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
 
             beforeEach {
                 dataStore = InMemoryDataStore()
-                consumer = EventConsumer(dataStore: dataStore)
+                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
             }
             
             it("doesn't track an event before `startRecording` is called") {

@@ -9,11 +9,11 @@ final class EventConsumer_SimplePropertiesSpec: HeapSpec {
         describe("EventConsumer.userId") {
             
             var dataStore: InMemoryDataStore!
-            var consumer: EventConsumer<InMemoryDataStore>!
+            var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
 
             beforeEach {
                 dataStore = InMemoryDataStore()
-                consumer = EventConsumer(dataStore: dataStore)
+                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
             }
             
             it("returns nil before `startRecording` is called") {
@@ -35,11 +35,11 @@ final class EventConsumer_SimplePropertiesSpec: HeapSpec {
         describe("EventConsumer.identity") {
             
             var dataStore: InMemoryDataStore!
-            var consumer: EventConsumer<InMemoryDataStore>!
+            var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
 
             beforeEach {
                 dataStore = InMemoryDataStore()
-                consumer = EventConsumer(dataStore: dataStore)
+                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
             }
             
             it("returns nil before `startRecording` is called") {
