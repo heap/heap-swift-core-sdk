@@ -9,7 +9,7 @@ class FileBasedStateStore: StateStoreProtocol {
     }
     
     func url(for environmentId: String) -> URL {
-        return directoryUrl.appendingPathComponent("environment-\(environmentId).json")
+        return directoryUrl.appendingPathComponent("environment-\(environmentId).bin")
     }
     
     func loadState(for environmentId: String) -> EnvironmentState {

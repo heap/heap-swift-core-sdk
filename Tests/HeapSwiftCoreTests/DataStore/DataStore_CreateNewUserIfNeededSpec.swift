@@ -95,33 +95,43 @@ final class DataStore_CreateNewUserIfNeededSpec: DataStoreSpec {
             }
         }
     }
-}
-
-final class SqliteDataStore_CreateNewUserIfNeededSpec: HeapSpec {
     
-    override func spec() {
+    override func sqliteSpec(dataStore: @escaping () -> SqliteDataStore) {
         
-        var dataStore: SqliteDataStore! = nil
-        
-        beforeEach {
-            dataStore = .temporary()
-        }
-        
-        afterEach {
-            dataStore.deleteDatabase(complete: { _ in })
-        }
-        
-        describe("SqliteDataStore.createUserIfNeeded") {
-            xit("sets the creation date") {
-                // TODO: Implement
+        describe("createUserIfNeeded") {
+            it("sets the creation date") {
+                let creationDate = Date().addingTimeInterval(100)
+                dataStore().createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: creationDate)
+                dataStore().performOnSqliteQueue(waitUntilFinished: true) { connection in
+                    try connection.perform(query: "Select creationDate From Users") { row in
+                        expect(row.date(at: 0)).to(beCloseTo(creationDate, within: 1))
+                    }
+                }
             }
             
-            xit("does not overwrite the creation date when setting the identity on an existing user") {
-                // TODO: Implement
+            it("does not overwrite the creation date when setting the identity on an existing user") {
+                let creationDate = Date().addingTimeInterval(100)
+                dataStore().createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: creationDate)
+                dataStore().createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "my-user", creationDate: creationDate.addingTimeInterval(100))
+                
+                dataStore().performOnSqliteQueue(waitUntilFinished: true) { connection in
+                    try connection.perform(query: "Select creationDate From Users") { row in
+                        expect(row.date(at: 0)).to(beCloseTo(creationDate, within: 1))
+                    }
+                }
             }
             
-            xit("does not overwrite the creation date when called multiple times for the same user") {
-                // TODO: Implement
+            it("does not overwrite the creation date when called multiple times for the same user") {
+                let creationDate = Date().addingTimeInterval(100)
+                dataStore().createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: creationDate)
+                dataStore().createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: creationDate.addingTimeInterval(100))
+                dataStore().createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: creationDate.addingTimeInterval(200))
+
+                dataStore().performOnSqliteQueue(waitUntilFinished: true) { connection in
+                    try connection.perform(query: "Select creationDate From Users") { row in
+                        expect(row.date(at: 0)).to(beCloseTo(creationDate, within: 1))
+                    }
+                }
             }
         }
     }

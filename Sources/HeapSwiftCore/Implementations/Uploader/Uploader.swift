@@ -414,7 +414,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         }
     }
     
-    func nextMessageBatch(_ user: UserToUpload, activeSession: ActiveSession, messageLimit: Int, byteLimit: Int) -> ([(MessageIdentifier, Data)], String) {
+    func nextMessageBatch(_ user: UserToUpload, activeSession: ActiveSession, messageLimit: Int, byteLimit: Int) -> ([(identifier: MessageIdentifier, payload: Data)], String) {
         guard let sessionId = user.sessionIds.first else { return ([], "") }
         
         let messages = dataStore.getPendingEncodedMessages(environmentId: user.environmentId, userId: user.userId, sessionId: sessionId, messageLimit: messageLimit, byteLimit: byteLimit)

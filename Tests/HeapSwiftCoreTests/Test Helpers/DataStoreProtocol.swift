@@ -10,7 +10,7 @@ extension DataStoreProtocol {
         }
 
         return try getPendingEncodedMessages(environmentId: user.environmentId, userId: user.userId, sessionId: sessionId, messageLimit: messageLimit, byteLimit: .max).map({
-            try Message(serializedData: $0.1)
+            try Message(serializedData: $0.payload)
         })
     }
 

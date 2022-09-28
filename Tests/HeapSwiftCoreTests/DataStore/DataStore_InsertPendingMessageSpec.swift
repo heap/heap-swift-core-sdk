@@ -11,10 +11,10 @@ final class DataStore_InsertPendingMessageSpec: DataStoreSpec {
             
             it("doesn't insert a session if there isn't one") {
                 dataStore().createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: Date())
-                expect(dataStore().usersToUpload()).toEventuallyNot(beEmpty(), description: "PRECONDITION: The user wasn't created")
+                expect(dataStore().usersToUpload()).toNot(beEmpty(), description: "PRECONDITION: The user wasn't created")
                 
                 dataStore().insertPendingMessage(.init(forSessionIn: .init(environmentId: "11", userId: "123", sessionId: "456")))
-                expect(dataStore().usersToUpload().flatMap(\.sessionIds)).toAlways(beEmpty(), description: "A session should not have been created")
+                expect(dataStore().usersToUpload().flatMap(\.sessionIds)).to(beEmpty(), description: "A session should not have been created")
             }
             
             it("inserts a message in the queue") {
@@ -25,7 +25,7 @@ final class DataStore_InsertPendingMessageSpec: DataStoreSpec {
                 
                 dataStore().insertPendingMessage(fakeSession.pageviewMessage)
                 
-                expect(dataStore().getPendingEncodedMessages(environmentId: "11", userId: "123", sessionId: "456", messageLimit: .max, byteLimit: .max).map(\.1)).toEventually(haveCount(2), description: "The message should have been inserted into the session")
+                expect(dataStore().getPendingEncodedMessages(environmentId: "11", userId: "123", sessionId: "456", messageLimit: .max, byteLimit: .max).map(\.1)).to(haveCount(2), description: "The message should have been inserted into the session")
             }
             
             it("inserts messages in order") {
@@ -47,51 +47,58 @@ final class DataStore_InsertPendingMessageSpec: DataStoreSpec {
                     messages.append(try eventMessage.serializedData())
                 }
                 
-                expect(dataStore().getPendingEncodedMessages(environmentId: "11", userId: "123", sessionId: "456", messageLimit: .max, byteLimit: .max).map(\.1)).toEventually(equal(messages), description: "The messages should have been inserted in order")
+                expect(dataStore().getPendingEncodedMessages(environmentId: "11", userId: "123", sessionId: "456", messageLimit: .max, byteLimit: .max).map(\.payload)).to(equal(messages), description: "The messages should have been inserted in order")
             }
         }
     }
-}
-
-final class SqliteDataStore_InsertPendingMessageSpec: HeapSpec {
     
-    override func spec() {
+    override func sqliteSpec(dataStore: @escaping () -> SqliteDataStore) {
         
-        var dataStore: SqliteDataStore! = nil
         var fakeSession: FakeSession! = nil
 
         beforeEach {
-            dataStore = .temporary()
             fakeSession = FakeSession(environmentId: "11", userId: "123", sessionId: "456")
-            dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: Date())
         }
         
-        afterEach {
-            dataStore.deleteDatabase(complete: { _ in })
-        }
-        
-        describe("SqliteDataStore.insertPendingMessage") {
-            xit("doesn't insert a session if there isn't one") {
-                dataStore.insertPendingMessage(fakeSession.customEventMessage(name: "my-event"))
-                // TODO: Implement
+        describe("insertPendingMessage") {
+            it("doesn't insert a session if there isn't one") {
+                dataStore().insertPendingMessage(fakeSession.customEventMessage(name: "my-event"))
+                
+                expect("Select 1 From Sessions").to(returnNoRows(in: dataStore()))
             }
             
-            xit("doesn't insert a message if there is no session") {
-                dataStore.insertPendingMessage(fakeSession.customEventMessage(name: "my-event"))
-                // TODO: Implement
+            it("doesn't insert a message if there is no session") {
+                dataStore().insertPendingMessage(fakeSession.customEventMessage(name: "my-event"))
+                
+                expect("Select 1 From PendingMessages").to(returnNoRows(in: dataStore()))
             }
             
-            xit("advances the session last message date if the message time is greater") {
-                dataStore.createSessionIfNeeded(with: fakeSession.sessionMessage)
-                dataStore.insertPendingMessage(fakeSession.customEventMessage(name: "my-event", timestamp: fakeSession.sessionMessage.time.date.addingTimeInterval(100)))
-                // TODO: Implement
-
+            it("advances the session last message date if the message time is greater") {
+                let sessionTimestamp = fakeSession.sessionMessage.time.date
+                let eventTimestamp = sessionTimestamp.addingTimeInterval(100)
+                
+                dataStore().createSessionIfNeeded(with: fakeSession.sessionMessage)
+                dataStore().insertPendingMessage(fakeSession.customEventMessage(name: "my-event", timestamp: eventTimestamp))
+                
+                dataStore().performOnSqliteQueue(waitUntilFinished: true) { connection in
+                    try connection.perform(query: "Select lastEventDate From Sessions") { row in
+                        expect(row.date(at: 0)).to(beCloseTo(eventTimestamp, within: 1))
+                    }
+                }
             }
             
-            xit("doesn't advance the session last message date if the message time is less") {
-                dataStore.createSessionIfNeeded(with: fakeSession.sessionMessage)
-                dataStore.insertPendingMessage(fakeSession.customEventMessage(name: "my-event", timestamp: fakeSession.sessionMessage.time.date.addingTimeInterval(-100)))
-                // TODO: Implement
+            it("doesn't advance the session last message date if the message time is less") {
+                let sessionTimestamp = fakeSession.sessionMessage.time.date
+                let eventTimestamp = sessionTimestamp.addingTimeInterval(-100)
+                
+                dataStore().createSessionIfNeeded(with: fakeSession.sessionMessage)
+                dataStore().insertPendingMessage(fakeSession.customEventMessage(name: "my-event", timestamp: eventTimestamp))
+                
+                dataStore().performOnSqliteQueue(waitUntilFinished: true) { connection in
+                    try connection.perform(query: "Select lastEventDate From Sessions") { row in
+                        expect(row.date(at: 0)).to(beCloseTo(sessionTimestamp, within: 1))
+                    }
+                }
             }
         }
     }

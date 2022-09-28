@@ -164,7 +164,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
         })
     }
 
-    func getPendingEncodedMessages(environmentId: String, userId: String, sessionId: String, messageLimit: Int, byteLimit: Int) -> [(MessageIdentifier, Data)] {
+    func getPendingEncodedMessages(environmentId: String, userId: String, sessionId: String, messageLimit: Int, byteLimit: Int) -> [(identifier: MessageIdentifier, payload: Data)] {
 
         var messages: [(MessageIdentifier, Data)] = []
 
@@ -199,7 +199,9 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     func setHasSentIdentity(environmentId: String, userId: String) {
         do {
             try with(environmentId: environmentId, userId: userId) {
-                $0.hasIdentityBeenSent = true
+                if $0.identity != nil {
+                    $0.hasIdentityBeenSent = true
+                }
             }
         } catch {
             NSLog("Error in setHasSentIdentity: \(error)")
@@ -254,7 +256,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
         }
     }
 
-    func pruneOldData(activeEnvironmentId: String, activeUserId: String, activeSessionId: String, minLastMessageDate: Date, minUserCreationDate: Date, currentDate: Date) {
+    func pruneOldData(activeEnvironmentId: String, activeUserId: String, activeSessionId: String, minLastMessageDate: Date, minUserCreationDate: Date) {
 
         environments = environments.mapValues({ environment in
             var environment = environment
@@ -268,11 +270,12 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 })
 
                 if !isActiveUser {
+                    
                     if user.sessions.count == 0 && user.hasUserBeenSent && (user.identity == nil || user.hasIdentityBeenSent) && user.userProperties.filter({ !$0.value.uploaded }).count == 0 {
                         return nil
                     }
 
-                    if user.creationDate < minUserCreationDate {
+                    if user.creationDate < minUserCreationDate && (user.sessions.count == 0 || !user.hasUserBeenSent) {
                         return nil
                     }
                 }

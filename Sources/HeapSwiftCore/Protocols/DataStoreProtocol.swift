@@ -68,7 +68,7 @@ protocol DataStoreProtocol {
     func insertPendingMessage(_ message: Message)
 
     func usersToUpload() -> [UserToUpload]
-    func getPendingEncodedMessages(environmentId: String, userId: String, sessionId: String, messageLimit: Int, byteLimit: Int) -> [(MessageIdentifier, Data)]
+    func getPendingEncodedMessages(environmentId: String, userId: String, sessionId: String, messageLimit: Int, byteLimit: Int) -> [(identifier: MessageIdentifier, payload: Data)]
 
     func setHasSentInitialUser(environmentId: String, userId: String)
     func setHasSentIdentity(environmentId: String, userId: String)
@@ -78,5 +78,5 @@ protocol DataStoreProtocol {
     func deleteUser(environmentId: String, userId: String)
     func deleteSession(environmentId: String, userId: String, sessionId: String)
 
-    func pruneOldData(activeEnvironmentId: String, activeUserId: String, activeSessionId: String, minLastMessageDate: Date, minUserCreationDate: Date, currentDate: Date)
+    func pruneOldData(activeEnvironmentId: String, activeUserId: String, activeSessionId: String, minLastMessageDate: Date, minUserCreationDate: Date)
 }

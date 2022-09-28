@@ -29,10 +29,13 @@ class DataStoreSpec: HeapSpec {
             }
             
             spec(dataStore: { dataStore })
+            sqliteSpec(dataStore: { dataStore })
         }
     }
     
     open func spec<DataStore>(dataStore: @escaping () -> DataStore) where DataStore : DataStoreProtocol { }
+    
+    open func sqliteSpec(dataStore: @escaping () -> SqliteDataStore) { }
 }
 
 extension SqliteDataStore {

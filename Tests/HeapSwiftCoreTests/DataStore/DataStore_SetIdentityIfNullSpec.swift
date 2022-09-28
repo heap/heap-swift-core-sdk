@@ -11,14 +11,14 @@ final class DataStore_SetIdentityIfNullSpec: DataStoreSpec {
             
             it("doesn't do anything if there is no user") {
                 dataStore().setIdentityIfNull(environmentId: "11", userId: "123", identity: "my-user")
-                expect(dataStore().usersToUpload()).toAlways(beEmpty(), description: "A user should not have been created")
+                expect(dataStore().usersToUpload()).to(beEmpty(), description: "A user should not have been created")
             }
             
             it("sets the identity and marks it for upload") {
                 dataStore().createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: Date())
                 dataStore().setIdentityIfNull(environmentId: "11", userId: "123", identity: "my-user")
                 
-                expect(dataStore().usersToUpload()).toEventually(equal([
+                expect(dataStore().usersToUpload()).to(equal([
                     .init(
                         environmentId: "11",
                         userId: "123",
@@ -35,7 +35,7 @@ final class DataStore_SetIdentityIfNullSpec: DataStoreSpec {
                 dataStore().createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "my-user", creationDate: Date())
                 dataStore().setHasSentIdentity(environmentId: "11", userId: "123")
                 
-                expect(dataStore().usersToUpload()).toEventually(equal([
+                expect(dataStore().usersToUpload()).to(equal([
                     .init(
                         environmentId: "11",
                         userId: "123",
@@ -49,7 +49,7 @@ final class DataStore_SetIdentityIfNullSpec: DataStoreSpec {
                 
                 dataStore().setIdentityIfNull(environmentId: "11", userId: "123", identity: "my-other-user")
                 
-                expect(dataStore().usersToUpload()).toAlways(equal([
+                expect(dataStore().usersToUpload()).to(equal([
                     .init(
                         environmentId: "11",
                         userId: "123",

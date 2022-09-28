@@ -55,8 +55,8 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
                 activeUserId: environment.userID,
                 activeSessionId: sessionInfo.id,
                 minLastMessageDate: timestamp.addingTimeInterval(-86_400 * 6),
-                minUserCreationDate: timestamp.addingTimeInterval(-86_400 * 6),
-                currentDate: timestamp)
+                minUserCreationDate: timestamp.addingTimeInterval(-86_400 * 6)
+            )
         }
     }
 }
