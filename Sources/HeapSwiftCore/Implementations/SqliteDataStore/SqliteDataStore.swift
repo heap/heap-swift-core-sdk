@@ -288,9 +288,28 @@ Limit ?4;
     }
 
     func setHasSentInitialUser(environmentId: String, userId: String) {
+        performOnSqliteQueue { connection in
+            try connection.perform(query: """
+Update Users
+Set hasSentUser = 1
+Where
+    environmentId = ?1
+    And userId = ?2;
+""", parameters: [environmentId, userId])
+        }
     }
 
     func setHasSentIdentity(environmentId: String, userId: String) {
+        performOnSqliteQueue { connection in
+            try connection.perform(query: """
+Update Users
+Set hasSentIdentity = 1
+Where
+    environmentId = ?1
+    And userId = ?2
+    And identity Is Not Null;
+""", parameters: [environmentId, userId])
+        }
     }
 
     func setHasSentUserProperty(environmentId: String, userId: String, name: String, value: String) {
@@ -318,6 +337,17 @@ Where
     }
 
     func deleteUser(environmentId: String, userId: String) {
+        
+        // The foreign key causes the user properties, sessions, and messages to be deleted as well.
+        
+        performOnSqliteQueue { connection in
+            try connection.perform(query: """
+Delete From Users
+Where
+    environmentId = ?1
+    And userId = ?2;
+""", parameters: [environmentId, userId])
+        }
     }
 
     func deleteSession(environmentId: String, userId: String, sessionId: String) {
@@ -336,6 +366,93 @@ Where
     }
 
     func pruneOldData(activeEnvironmentId: String, activeUserId: String, activeSessionId: String, minLastMessageDate: Date, minUserCreationDate: Date) {
+        
+        // First, delete all sessions and corresponding messages where the session’s last message is older than
+        // maxSessionAge and the session does not match activeEnvironmentId, activeUserId, and maxSessionAge.
+        performOnSqliteQueue { connection in
+            try connection.perform(query: """
+Delete From Sessions
+Where
+    lastEventDate < ?1
+    And Not (environmentId = ?2 And sessionId = ?3 And UserId = ?4);
+""", parameters: [minLastMessageDate, activeEnvironmentId, activeSessionId, activeUserId])
+        }
+
+        // Next, delete all sessions that don’t have any pending messages and do not match
+        // activeEnvironmentId, activeUserId, and maxSessionAge.
+        performOnSqliteQueue { connection in
+            try connection.perform(query: """
+Delete From Sessions as s
+Where
+    Not (environmentId = ?1 And sessionId = ?2 And UserId = ?3)
+    And Not Exists (
+            Select 1 From
+            PendingMessages As pm
+            Where
+                pm.environmentId = s.environmentId
+                And pm.userId = s.userId
+                And pm.sessionId = s.sessionId
+    );
+""", parameters: [activeEnvironmentId, activeSessionId, activeUserId])
+        }
+
+        // Next, delete all users who do not have pending data,
+        // measured by the fact that they have no sessions,
+        // no pending user properties,
+        // either no identity or a sent identity,
+        // and a sent initial user,
+        // excluding the user that matches activeEnvironmentId and activeUserId.
+        performOnSqliteQueue { connection in
+            try connection.perform(query: """
+Delete From Users as u
+Where
+    Not (environmentId = ?1 And UserId = ?2)
+    And Not Exists (
+        Select 1
+        From Sessions as s
+        Where
+            s.environmentId = u.environmentId
+            And s.userId = u.userId
+    )
+    And Not Exists (
+        Select 1
+        From UserProperties as up
+        Where
+            up.environmentId = u.environmentId
+            And up.userId = u.userId
+            And hasBeenSent = 0
+    )
+    And hasSentUser = 1
+    And (
+        identity Is Null
+        Or hasSentIdentity = 1
+    );
+""", parameters: [activeEnvironmentId, activeUserId])
+        }
+        
+        
+        // Lastly, delete all users who are older than maxUserAge who don’t match
+        // activeEnvironmentId and activeUserId
+        // and (either have no sessions or have not sent their initial payload.)
+        performOnSqliteQueue { connection in
+               try connection.perform(query: """
+Delete From Users as u
+Where
+    creationDate < ?1
+    And Not (environmentId = ?2 And UserId = ?3)
+    And (
+        Not Exists (
+            Select 1
+            From Sessions as s
+            Where
+                s.environmentId = u.environmentId
+                And s.userId = u.userId
+        )
+        Or hasSentUser = 0
+    );
+""", parameters: [minUserCreationDate, activeEnvironmentId, activeUserId])
+        }
+        
     }
 
     func deleteDatabase(complete: @escaping (Result<Void, Error>) -> Void) {
