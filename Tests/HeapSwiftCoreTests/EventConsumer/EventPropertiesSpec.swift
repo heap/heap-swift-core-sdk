@@ -156,6 +156,65 @@ final class EventConsumer_EventPropertiesSpec: HeapSpec {
                     "c": .init(value: "c"),
                 ]))
             }
+            
+            it("does not truncate properties exactly 1024 characters long") {
+
+                consumer.startRecording("11")
+                let value = String(repeating: "あ", count: 1024)
+                let expectedValue = value
+
+                consumer.addEventProperties(["a": value])
+                expect(consumer.eventProperties).to(equal(["a": .init(value: expectedValue)]))
+            }
+
+            it("truncates properties that are more than 1024 characters long") {
+
+                consumer.startRecording("11")
+                let value = String(repeating: "あ", count: 1030)
+                let expectedValue = String(repeating: "あ", count: 1024)
+
+                consumer.addEventProperties(["a": value])
+                expect(consumer.eventProperties).to(equal(["a":  .init(value: expectedValue)]), description: "The property value should have been truncated.")
+            }
+
+            it("does not partially truncate emoji") {
+
+                consumer.startRecording("11")
+                let value = String(repeating: "あ", count: 1020).appending("👨‍👨‍👧‍👧")
+                let expectedValue = String(repeating: "あ", count: 1020)
+
+                consumer.addEventProperties(["a": value])
+                expect(consumer.eventProperties).to(equal(["a":  .init(value: expectedValue)]), description: "The property value should have been truncated.")
+
+            }
+
+            it("does not partially truncate diacritics") {
+
+                consumer.startRecording("11")
+                let value = String(repeating: "あ", count: 1000).appending("A̶̧̨̨̡̡̼̯̯͖̖͔̗̞̣̯̲̰̞̹͎̝̱̪̬̹̰͔̹̫̙̤̞̯͓̖̣͉̻̣̙͉̰̦͔͚̔̍̍̃͌͆̎̊̈̇̽̿̕͜͠͝ͅ")
+                let expectedValue = String(repeating: "あ", count: 1000)
+
+                consumer.addEventProperties(["a": value])
+                expect(consumer.eventProperties).to(equal(["a":  .init(value: expectedValue)]), description: "The property value should have been truncated.")
+            }
+            
+            it("does not omit properties where the key is the maximum length") {
+                
+                consumer.startRecording("11")
+                let key = String(repeating: "あ", count: 512)
+                
+                consumer.addEventProperties([key: "value"])
+                expect(consumer.eventProperties[key]).toNot(beNil())
+            }
+            
+            it("omits properties where the key is above the maximum length") {
+                
+                consumer.startRecording("11")
+                let key = String(repeating: "あ", count: 513)
+                
+                consumer.addEventProperties([key: "value"])
+                expect(consumer.eventProperties[key]).to(beNil())
+            }
         }
 
         describe("EventConsumer.removeEventProperty") {

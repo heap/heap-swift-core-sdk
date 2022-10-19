@@ -21,7 +21,15 @@ steps:
 
   - label: "iOS 12.4 - iPhone - Unit Test Suite"
     timeout_in_minutes: 5
-    command:  "make clear_results iphone_unit_tests"
+    command:  "make clear_results iphone_ios12_unit_tests"
+    agents:
+      queue: "macos"
+    artifact_paths:
+      - "build/reports/*"
+
+  - label: "iOS 16.0 - iPhone - Unit Test Suite"
+    timeout_in_minutes: 5
+    command:  "make clear_results iphone_ios16_unit_tests"
     agents:
       queue: "macos"
     artifact_paths:

@@ -1,7 +1,8 @@
 .PHONY: \
 		macos_unit_tests \
 		catalyst_unit_tests \
-		iphone_unit_tests \
+		iphone_ios12_unit_tests \
+		iphone_ios16_unit_tests \
 		ipad_unit_tests \
 		tvos_unit_tests \
 		watchos_unit_tests \
@@ -73,7 +74,7 @@ catalyst_unit_tests:
 	$(call run_unit_tests,catalyst_unit_tests,-destination "`cat build/.destination`")
 	@if [ ! -f build/.success ]; then exit 1; fi
 
-iphone_unit_tests:
+iphone_ios12_unit_tests:
 
 	DevTools/DeleteOldSimulators.rb
 	
@@ -83,7 +84,23 @@ iphone_unit_tests:
 	mkdir -p build
 	echo "platform=iOS Simulator,id=`cat build/.device_udid`" > build/.destination
 
-	$(call run_unit_tests,iphone_unit_tests,-destination "`cat build/.destination`")
+	$(call run_unit_tests,iphone_ios12_unit_tests,-destination "`cat build/.destination`")
+
+	$(call delete_device)
+
+	@if [ ! -f build/.success ]; then exit 1; fi
+
+iphone_ios16_unit_tests:
+
+	DevTools/DeleteOldSimulators.rb
+	
+	$(call create_device,com.apple.CoreSimulator.SimRuntime.iOS-16-0,iPhone Xs)
+
+	# The "," breaks `call` so we move it to a file
+	mkdir -p build
+	echo "platform=iOS Simulator,id=`cat build/.device_udid`" > build/.destination
+
+	$(call run_unit_tests,iphone_ios16_unit_tests,-destination "`cat build/.destination`")
 
 	$(call delete_device)
 

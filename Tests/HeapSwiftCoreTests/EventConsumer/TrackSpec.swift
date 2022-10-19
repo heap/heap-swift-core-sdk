@@ -160,6 +160,106 @@ final class EventConsumer_TrackSpec: HeapSpec {
                     expect(customEvent.properties["b"]).to(equal(.init(value: "2")))
                     expect(customEvent.properties["c"]).to(equal(.init(value: "false")))
                 }
+                
+                it("does not truncate properties exactly 1024 characters long") {
+                    let value = String(repeating: "あ", count: 1024)
+                    let expectedValue = value
+                    
+                    consumer.track("my-event", properties: ["key": value])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    let event = try messages[2].assertEventMessage(user: user)
+                    let customEvent = try event.assertIsCustomEvent()
+                    
+                    expect(customEvent.properties["key"]?.string).to(equal(expectedValue))
+                    expect(customEvent.properties["key"]?.string.count).to(equal(expectedValue.count))
+                }
+                
+                it("truncates properties that are more than 1024 characters long") {
+                    let value = String(repeating: "あ", count: 1030)
+                    let expectedValue = String(repeating: "あ", count: 1024)
+                    
+                    consumer.track("my-event", properties: ["key": value])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    let event = try messages[2].assertEventMessage(user: user)
+                    let customEvent = try event.assertIsCustomEvent()
+                    
+                    expect(customEvent.properties["key"]?.string).to(equal(expectedValue))
+                    expect(customEvent.properties["key"]?.string.count).to(equal(expectedValue.count))
+                }
+                
+                it("does not partially truncate emoji") {
+                    let value = String(repeating: "あ", count: 1020).appending("👨‍👨‍👧‍👧")
+                    let expectedValue = String(repeating: "あ", count: 1020)
+                    
+                    consumer.track("my-event", properties: ["key": value])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    let event = try messages[2].assertEventMessage(user: user)
+                    let customEvent = try event.assertIsCustomEvent()
+                    
+                    expect(customEvent.properties["key"]?.string).to(equal(expectedValue))
+                    expect(customEvent.properties["key"]?.string.count).to(equal(expectedValue.count))
+                }
+                
+                it("does not partially truncate diacritics") {
+                    let value = String(repeating: "あ", count: 1000).appending("A̶̧̨̨̡̡̼̯̯͖̖͔̗̞̣̯̲̰̞̹͎̝̱̪̬̹̰͔̹̫̙̤̞̯͓̖̣͉̻̣̙͉̰̦͔͚̔̍̍̃͌͆̎̊̈̇̽̿̕͜͠͝ͅ")
+                    let expectedValue = String(repeating: "あ", count: 1000)
+                    
+                    consumer.track("my-event", properties: ["key": value])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    let event = try messages[2].assertEventMessage(user: user)
+                    let customEvent = try event.assertIsCustomEvent()
+                    
+                    expect(customEvent.properties["key"]?.string).to(equal(expectedValue))
+                    expect(customEvent.properties["key"]?.string.count).to(equal(expectedValue.count))
+                }
+                
+                it("does not omit properties where the key is the maximum length") {
+                    let key = String(repeating: "あ", count: 512)
+                    
+                    consumer.track("my-event", properties: [key: "value"])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    let event = try messages[2].assertEventMessage(user: user)
+                    let customEvent = try event.assertIsCustomEvent()
+                    
+                    expect(customEvent.properties[key]).toNot(beNil())
+                }
+                
+                it("omits properties where the key is above the maximum length") {
+                    let key = String(repeating: "あ", count: 513)
+                    
+                    consumer.track("my-event", properties: [key: "value"])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    let event = try messages[2].assertEventMessage(user: user)
+                    let customEvent = try event.assertIsCustomEvent()
+                    
+                    expect(customEvent.properties[key]).to(beNil())
+                }
+                
+                it("sends events where the event name is the maximum length") {
+                    let name = String(repeating: "あ", count: 1024)
+                    consumer.track(name)
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                }
+                
+                it("does not send event where the event name is above the maximum length") {
+                    let name = String(repeating: "あ", count: 1025)
+                    consumer.track(name)
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 2)
+                }
 
                 it("records events sequentially on the main thread") {
 
