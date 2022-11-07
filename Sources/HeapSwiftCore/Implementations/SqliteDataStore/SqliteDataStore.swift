@@ -18,8 +18,7 @@ extension Operation {
             do {
                 try block(connection)
             } catch {
-                // TODO: Need logging spec.
-                print("Error occurred executing query: \(error)")
+                HeapLogger.shared.logDebug("Error occurred executing query: \(error)")
             }
         }
     }

@@ -14,6 +14,11 @@ final class EventConsumer_ResetIdentitySpec: HeapSpec {
             beforeEach {
                 dataStore = InMemoryDataStore()
                 consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
+                HeapLogger.shared.logLevel = .debug
+            }
+            
+            afterEach {
+                HeapLogger.shared.logLevel = .prod
             }
             
             context("identity is not set") {
@@ -37,7 +42,7 @@ final class EventConsumer_ResetIdentitySpec: HeapSpec {
                     expect(user.identity).to(beNil(), description: "Values should not have changed")
                 }
                 
-                it("doesn't reset the identity before `stopRecording` is called") {
+                it("doesn't reset the identity after `stopRecording` is called") {
                     
                     consumer.startRecording("11")
                     consumer.stopRecording()

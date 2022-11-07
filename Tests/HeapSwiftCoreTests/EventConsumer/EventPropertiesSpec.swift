@@ -16,15 +16,21 @@ extension MyEnum: HeapPropertyValue {
 final class EventConsumer_EventPropertiesSpec: HeapSpec {
 
     override func spec() {
+        
+        var dataStore: InMemoryDataStore!
+        var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
+
+        beforeEach {
+            dataStore = InMemoryDataStore()
+            consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
+            HeapLogger.shared.logLevel = .debug
+        }
+        
+        afterEach {
+            HeapLogger.shared.logLevel = .prod
+        }
+        
         describe("EventConsumer.addEventProperties") {
-
-            var dataStore: InMemoryDataStore!
-            var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
-
-            beforeEach {
-                dataStore = InMemoryDataStore()
-                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
-            }
             
             it("doesn't do anything before `startRecording` is called") {
                 
@@ -219,14 +225,9 @@ final class EventConsumer_EventPropertiesSpec: HeapSpec {
 
         describe("EventConsumer.removeEventProperty") {
 
-            var dataStore: InMemoryDataStore!
-            var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
             var originalState: EnvironmentState!
 
             beforeEach {
-                dataStore = InMemoryDataStore()
-                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
-
                 originalState = dataStore.loadState(for: "11")
                 originalState.userID = "123"
                 originalState.properties = [
@@ -285,14 +286,9 @@ final class EventConsumer_EventPropertiesSpec: HeapSpec {
 
         describe("EventConsumer.clearEventProperties") {
 
-            var dataStore: InMemoryDataStore!
-            var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
             var originalState: EnvironmentState!
 
             beforeEach {
-                dataStore = InMemoryDataStore()
-                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
-
                 originalState = dataStore.loadState(for: "11")
                 originalState.userID = "123"
                 originalState.properties = [

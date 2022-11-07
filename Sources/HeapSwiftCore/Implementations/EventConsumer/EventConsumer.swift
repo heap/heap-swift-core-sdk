@@ -64,31 +64,58 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
 extension EventConsumer: EventConsumerProtocol {
     
     func startRecording(_ environmentId: String, with options: [Option: Any] = [:], timestamp: Date = Date()) {
+        
+        if environmentId.isEmpty {
+            HeapLogger.shared.logDev("Heap.startRecording was called with an invalid environment ID. Recording will not proceed.")
+            return
+        }
+        
         let sanitizedOptions = options.sanitizedCopy()
         let results = stateManager.start(environmentId: environmentId, sanitizedOptions: sanitizedOptions, at: timestamp)
+        
+        if results.outcomes.currentStarted {
+            HeapLogger.shared.logProd("Heap started recording with environment ID \(environmentId).")
+            
+            // Use the option name when logging.
+            HeapLogger.shared.logDev("Heap started recording with the following options: \(Dictionary(sanitizedOptions.map({ ($0.key.name, $0.value)}), uniquingKeysWith: { a, _ in a })).")
+            
+        } else if results.outcomes.alreadyRecording {
+            HeapLogger.shared.logDev("Heap.startRecording was called multiple times with the same parameters. The duplicate call will have no effect.")
+        }
+        
         handleChanges(results, timestamp: timestamp)
     }
 
     func stopRecording(timestamp: Date = Date()) {
+        
         let results = stateManager.stop()
+        
+        if results.outcomes.previousStopped {
+            HeapLogger.shared.logProd("Heap has stopped recording.")
+        }
+        
         handleChanges(results, timestamp: timestamp)
     }
     
-    // TODO: Move this, refactor
     func logSanitizedProperties(_ functionName: String, _ keys: [String], _ values: [String])  {
-        if !keys.isEmpty { print("\(functionName): The following properties were omitted because the key exceeded 512 utf-16 code units:\n\(keys)") }
-        if !values.isEmpty { print("\(functionName): The following properties were truncated because the value exceeded 1024 utf-16 code units:\n\(values)") }
+        if !keys.isEmpty { HeapLogger.shared.logDev("\(functionName): The following properties were omitted because the key exceeded 512 utf-16 code units:\n\(keys)") }
+        if !values.isEmpty { HeapLogger.shared.logDev("\(functionName): The following properties were truncated because the value exceeded 1024 utf-16 code units:\n\(values)") }
     }
 
     func track(_ event: String, properties: [String: HeapPropertyValue] = [:], timestamp: Date = Date(), sourceInfo: SourceInfo? = nil) {
         
-        if event.utf16.count > 1024 {
-            // TODO: Update per Logging Spec
-            print("Error: Event name too long, exceeds 1024 UTF-16 code units.")
+        if event.utf16.count > 512 {
+            HeapLogger.shared.logDev("Event \(event) was not logged because its name exceeds 512 UTF-16 code units")
             return
         }
+        
         let (sanitizedProperties, omittedKeys, truncatedValues) = properties.sanitized()
         logSanitizedProperties("track", omittedKeys, truncatedValues)
+        
+        if stateManager.current == nil {
+            HeapLogger.shared.logDev("Heap.track was called before Heap.startRecording and the event will not be recorded.")
+            return
+        }
         
         let sourceLibrary = sourceInfo?.libraryInfo
         let results = stateManager.createSessionIfExpired(extendIfNotExpired: true, at: timestamp)
@@ -101,16 +128,53 @@ extension EventConsumer: EventConsumerProtocol {
         let pendingEvent = PendingEvent(partialEventMessage: message, toBeCommittedTo: dataStore)
         pendingEvent.setKind(.custom(name: event, properties: sanitizedProperties.mapValues(\.protoValue)))
         pendingEvent.setPageviewInfo(state.lastPageviewInfo)
+        HeapLogger.shared.logDev("Tracked event named \(event).")
     }
 
     func identify(_ identity: String, timestamp: Date = Date()) {
-        guard !identity.isEmpty else { return }
+        
+        // Don't set an empty identity
+        if identity.isEmpty {
+            HeapLogger.shared.logDev("Heap.identify was called with an empty string and the identity will not be set.")
+            return
+        }
+        
+        // Check for an environment
+        guard stateManager.current != nil else {
+            HeapLogger.shared.logDev("Heap.identify was called before Heap.startRecording and will not set the identity.")
+            return
+        }
+        
         let results = stateManager.identify(identity, at: timestamp)
+        
+        if results.outcomes.wasAlreadyIdentified {
+            HeapLogger.shared.logDev("Heap.identify was called with the existing identity so no identity will be set.")
+        } else if results.outcomes.identitySet && results.outcomes.userCreated {
+            HeapLogger.shared.logDev("Heap.identify was called while already identified, so a new user was created with the new identity.")
+        }
+        
+        if results.outcomes.identitySet {
+            HeapLogger.shared.logDev("Identity set to \(identity).")
+        }
+        
         handleChanges(results, timestamp: timestamp)
     }
 
     func resetIdentity(timestamp: Date = Date()) {
+        
+        if stateManager.current == nil {
+            HeapLogger.shared.logDev("Heap.resetIdentity was called before Heap.startRecording and will not reset the identity.")
+            return
+        }
+        
         let results = stateManager.resetIdentity(at: timestamp)
+        
+        if results.outcomes.identityReset {
+            HeapLogger.shared.logDev("Identity reset.")
+        } else if results.outcomes.wasAlreadyUnindentified {
+            HeapLogger.shared.logDev("Heap.resetIdentity was called while already unidentified, so no action will be taken.")
+        }
+        
         handleChanges(results, timestamp: timestamp)
     }
 
@@ -119,7 +183,10 @@ extension EventConsumer: EventConsumerProtocol {
         let (sanitizedProperties, omittedKeys, truncatedValues) = properties.sanitized()
         logSanitizedProperties("addUserProperties", omittedKeys, truncatedValues)
         
-        guard let environment = stateManager.current?.environment else { return }
+        guard let environment = stateManager.current?.environment else {
+            HeapLogger.shared.logDev("Heap.addUserProperties was called before Heap.startRecording and will not add user properties.")
+            return
+        }
         
         
         for (name, value) in sanitizedProperties {
@@ -128,6 +195,7 @@ extension EventConsumer: EventConsumerProtocol {
                 userId: environment.userID,
                 name: name, value: value)
         }
+        HeapLogger.shared.logDev("Added \(sanitizedProperties.count) user properties.")
     }
 
     func addEventProperties(_ properties: [String: HeapPropertyValue]) {
@@ -135,23 +203,59 @@ extension EventConsumer: EventConsumerProtocol {
         let (sanitizedProperties, omittedKeys, truncatedValues) = properties.sanitized()
         logSanitizedProperties("addEventProperties", omittedKeys, truncatedValues)
         
+        if stateManager.current == nil {
+            HeapLogger.shared.logDev("Heap.addEventProperties was called before Heap.startRecording and will not add event properties.")
+            return
+        }
+        
         stateManager.addEventProperties(sanitizedProperties.mapValues(\.protoValue))
+        HeapLogger.shared.logDev("Added \(sanitizedProperties.count) event properties.")
     }
 
     func removeEventProperty(_ name: String) {
+        
+        if name.isEmpty {
+            HeapLogger.shared.logDev("Heap.removeEventProperty was called with an invalid property name and no action will be taken.")
+            return
+        }
+        
+        if stateManager.current == nil {
+            HeapLogger.shared.logDev("Heap.removeEventProperty was called before Heap.startRecording and will not remove the event property.")
+            return
+        }
+        
         stateManager.removeEventProperty(name)
+        HeapLogger.shared.logDev("Removed the event property named \(name).")
     }
 
     func clearEventProperties() {
+        
+        if stateManager.current == nil {
+            HeapLogger.shared.logDev("Heap.clearEventProperties was called before Heap.startRecording and will not clear event properties.")
+            return
+        }
+        
         stateManager.clearEventProperties()
+        HeapLogger.shared.logDev("Cleared all event properties.")
     }
 
     var userId: String? {
-        return stateManager.current?.environment.userID
+        
+        guard let environment = stateManager.current?.environment else {
+            HeapLogger.shared.logDev("Heap.getUserId was called before Heap.startRecording and will return nil.")
+            return nil
+        }
+        
+        return environment.userID
     }
 
     var identity: String? {
-        guard let environment = stateManager.current?.environment, environment.hasIdentity else {
+        guard let environment = stateManager.current?.environment else {
+            HeapLogger.shared.logDev("Heap.identity was called before Heap.startRecording and will return nil.")
+            return nil
+        }
+        
+        guard environment.hasIdentity else {
             return nil
         }
         
@@ -163,6 +267,12 @@ extension EventConsumer: EventConsumerProtocol {
     }
 
     func getSessionId(timestamp: Date = Date()) -> String? {
+        
+        if stateManager.current == nil {
+            HeapLogger.shared.logDev("Heap.getSessionId was called before Heap.startRecording and will return nil.")
+            return nil
+        }
+        
         let results = stateManager.createSessionIfExpired(extendIfNotExpired: false, at: timestamp)
         handleChanges(results, timestamp: timestamp)
         

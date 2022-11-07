@@ -6,15 +6,21 @@ import Nimble
 final class EventConsumer_SimplePropertiesSpec: HeapSpec {
     
     override func spec() {
-        describe("EventConsumer.userId") {
-            
-            var dataStore: InMemoryDataStore!
-            var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
+        
+        var dataStore: InMemoryDataStore!
+        var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
 
-            beforeEach {
-                dataStore = InMemoryDataStore()
-                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
-            }
+        beforeEach {
+            dataStore = InMemoryDataStore()
+            consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
+            HeapLogger.shared.logLevel = .debug
+        }
+        
+        afterEach {
+            HeapLogger.shared.logLevel = .prod
+        }
+
+        describe("EventConsumer.userId") {
             
             it("returns nil before `startRecording` is called") {
                 expect(consumer.userId).to(beNil())
@@ -33,14 +39,6 @@ final class EventConsumer_SimplePropertiesSpec: HeapSpec {
         }
 
         describe("EventConsumer.identity") {
-            
-            var dataStore: InMemoryDataStore!
-            var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
-
-            beforeEach {
-                dataStore = InMemoryDataStore()
-                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
-            }
             
             it("returns nil before `startRecording` is called") {
                 _ = dataStore.applyIdentifiedState(to: "11")

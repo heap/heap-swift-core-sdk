@@ -192,7 +192,19 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         
         func doNextOperation() {
             guard result.canContinueUploading,
-                  let uploadOperation = nextOperation(for: &users, activeSession: activeSession, options: options) else {
+                  let uploadOperation = nextOperation(for: &users, activeSession: activeSession, options: options)
+            else {
+                switch result {
+                case .failure(.networkFailure):
+                    HeapLogger.shared.logProd("A network error occurred while uploading data and Heap will try again later.")
+                case .failure(.unexpectedServerResponse):
+                    HeapLogger.shared.logProd("A server issue was encountered while uploading and Heap will try again later.")
+                case .failure(.badRequest):
+                    HeapLogger.shared.logProd("All pending data has been uploaded but some invalid data was discarded.")
+                case .success(()):
+                    HeapLogger.shared.logProd("All pending data has been uploaded.")
+                }
+                
                 complete(result)
                 return
             }

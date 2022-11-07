@@ -6,7 +6,7 @@ import Nimble
 final class EventConsumer_GetSessionIdSpec: HeapSpec {
     
     override func spec() {
-        describe("EventConsumer.getSessionid") {
+        describe("EventConsumer.getSessionId") {
             
             var dataStore: InMemoryDataStore!
             var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
@@ -14,6 +14,11 @@ final class EventConsumer_GetSessionIdSpec: HeapSpec {
             beforeEach {
                 dataStore = InMemoryDataStore()
                 consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
+                HeapLogger.shared.logLevel = .debug
+            }
+            
+            afterEach {
+                HeapLogger.shared.logLevel = .prod
             }
             
             it("returns nil before `startRecording` is called") {

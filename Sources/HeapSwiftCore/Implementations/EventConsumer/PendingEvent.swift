@@ -65,6 +65,7 @@ class PendingEvent {
         
         if let message = message {
             dataStore.insertPendingMessage(message)
+            HeapLogger.shared.logDebug("Committed event message:\n\(message)")
         }
     }
 }

@@ -105,7 +105,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 }
             }
         } catch {
-            NSLog("Unexpected error in setIdentityIfNull: \(error)")
+            HeapLogger.shared.logCritical("Unexpected error in setIdentityIfNull: \(error)")
         }
     }
 
@@ -117,7 +117,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 }
             }
         } catch {
-            NSLog("Unexpected error in insertOrUpdateUserProperty: \(error)")
+            HeapLogger.shared.logCritical("Unexpected error in insertOrUpdateUserProperty: \(error)")
         }
     }
 
@@ -133,7 +133,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 }
             })
         } catch {
-            NSLog("Error in createSessionIfNeeded: \(error)")
+            HeapLogger.shared.logCritical("Error in createSessionIfNeeded: \(error)")
         }
     }
 
@@ -146,7 +146,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 $0.messages.append((nextIdentifier(), data))
             }
         } catch {
-            NSLog("Error in insertPendingMessage: \(error)")
+            HeapLogger.shared.logCritical("Error in insertPendingMessage: \(error)")
         }
     }
 
@@ -180,7 +180,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 })
             }
         } catch {
-            NSLog("Error in getPendingEncodedMessages: \(error)")
+            HeapLogger.shared.logCritical("Error in getPendingEncodedMessages: \(error)")
         }
 
         return messages
@@ -192,7 +192,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 $0.hasUserBeenSent = true
             }
         } catch {
-            NSLog("Error in setHasSentInitialUser: \(error)")
+            HeapLogger.shared.logCritical("Error in setHasSentInitialUser: \(error)")
         }
     }
 
@@ -204,7 +204,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 }
             }
         } catch {
-            NSLog("Error in setHasSentIdentity: \(error)")
+            HeapLogger.shared.logCritical("Error in setHasSentIdentity: \(error)")
         }
     }
 
@@ -216,7 +216,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 }
             }
         } catch {
-            NSLog("Error in setHasSentUserProperty: \(error)")
+            HeapLogger.shared.logCritical("Error in setHasSentUserProperty: \(error)")
         }
     }
 
@@ -252,7 +252,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 $0.sessions[sessionId] = nil
             }
         } catch {
-            NSLog("Error in setHasSentInitialUser: \(error)")
+            HeapLogger.shared.logCritical("Error in setHasSentInitialUser: \(error)")
         }
     }
 

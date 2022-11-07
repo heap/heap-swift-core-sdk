@@ -25,11 +25,11 @@ class FileBasedStateStore: StateStoreProtocol {
             if state.envID == environmentId && !state.userID.isEmpty {
                 return state
             } else {
-                print("The environment state at \(fileUrl) is corrupted and will be ignored.")
+                HeapLogger.shared.logDev("The environment state at \(fileUrl) is corrupted and will be ignored.")
             }
         } catch {
-            // TODO: Logging
-            print("An error occurred while reading the environment state from \(fileUrl):\n\(error.localizedDescription)")
+            HeapLogger.shared.logDev("The environment state at \(fileUrl) is corrupted and will be ignored.")
+            HeapLogger.shared.logDebug("Read error: \(error.localizedDescription)")
         }
         
         return .with { $0.envID = environmentId }
@@ -40,8 +40,8 @@ class FileBasedStateStore: StateStoreProtocol {
         do {
             try environmentState.serializedData().write(to: fileUrl)
         } catch {
-            // TODO: Logging
-            print("An error occurred while writing the environment state to \(fileUrl):\n\(error.localizedDescription)")
+            HeapLogger.shared.logDev("An error occurred while writing the environment state to \(fileUrl).")
+            HeapLogger.shared.logDebug("Write error: \(error.localizedDescription)")
         }
     }
     
@@ -51,8 +51,8 @@ class FileBasedStateStore: StateStoreProtocol {
         do {
             try FileManager.default.removeItem(at: fileUrl)
         } catch {
-            // TODO: Logging
-            print("An error occurred while deleting the environment state at \(fileUrl):\n\(error.localizedDescription)")
+            HeapLogger.shared.logDev("An error occurred while deleting the environment state at \(fileUrl).")
+            HeapLogger.shared.logDebug("Delete error: \(error.localizedDescription)")
         }
     }
 }

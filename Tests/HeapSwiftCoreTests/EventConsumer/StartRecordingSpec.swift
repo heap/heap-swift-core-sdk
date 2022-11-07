@@ -14,6 +14,11 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
             beforeEach {
                 dataStore = InMemoryDataStore()
                 consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
+                HeapLogger.shared.logLevel = .debug
+            }
+            
+            afterEach {
+                HeapLogger.shared.logLevel = .prod
             }
 
             context("without an existing persisted state") {

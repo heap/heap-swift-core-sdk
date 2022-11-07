@@ -14,6 +14,11 @@ final class EventConsumer_AddUserPropertiesSpec: HeapSpec {
             beforeEach {
                 dataStore = InMemoryDataStore()
                 consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
+                HeapLogger.shared.logLevel = .debug
+            }
+            
+            afterEach {
+                HeapLogger.shared.logLevel = .prod
             }
             
             it("doesn't do anything before `startRecording` is called") {

@@ -35,7 +35,10 @@ struct iOSWidgetEntryView : View {
     var entry: Provider.Entry
     
     func rendered() {
-        print("Heap Widget Rendered")
+        
+        HeapLogger.shared.logLevel = .debug
+        HeapLogger.shared.logDebug("👍 Widget was rendered, and tracked",
+                                source: "SwiftCoreiOSExample")
         Heap.shared.startRecording("11")
         Heap.shared.track("Widget Rendered")
     }

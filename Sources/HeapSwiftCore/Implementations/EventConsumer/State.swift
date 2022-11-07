@@ -12,9 +12,13 @@ struct State {
         struct Outcomes {
             var previousStopped = false
             var currentStarted = false
+            var alreadyRecording = false
             var userCreated = false
             var sessionCreated = false
             var identitySet = false
+            var identityReset = false
+            var wasAlreadyUnindentified = false
+            var wasAlreadyIdentified = false
         }
 
         let previous: State?
@@ -69,15 +73,22 @@ extension State {
     mutating func resetIdentity(at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
         
         // Don't do anything if Heap isn't running or the user isn't identified.
-        guard environment.hasIdentity else { return }
+        guard environment.hasIdentity else {
+            outcomes.wasAlreadyUnindentified = true
+            return
+        }
         
+        outcomes.identityReset = true
         createUserAndSession(identity: nil, at: timestamp, outcomes: &outcomes)
     }
     
     mutating func identify(_ identity: String, at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
         
         // Don't do anything if the identity isn't changing.
-        if environment.hasIdentity && environment.identity == identity { return }
+        if environment.hasIdentity && environment.identity == identity {
+            outcomes.wasAlreadyIdentified = true
+            return
+        }
         
         // Don't set an empty identity
         if identity.isEmpty { return }
@@ -100,7 +111,9 @@ extension Optional where Wrapped == State {
         if case .some(let state) = self {
             
             guard state.environment.envID != loadedEnvironment.envID || !state.options.matches(sanitizedOptions) else {
-                return // Do nothing since nothing since we'd be switching to the same environment.
+                // Do nothing since nothing since we'd be switching to the same environment.
+                outcomes.alreadyRecording = true
+                return
             }
 
             outcomes.previousStopped = true

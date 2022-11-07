@@ -14,6 +14,11 @@ final class EventConsumer_IdentifySpec: HeapSpec {
             beforeEach {
                 dataStore = InMemoryDataStore()
                 consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
+                HeapLogger.shared.logLevel = .debug
+            }
+            
+            afterEach {
+                HeapLogger.shared.logLevel = .prod
             }
             
             context("identity is not set") {

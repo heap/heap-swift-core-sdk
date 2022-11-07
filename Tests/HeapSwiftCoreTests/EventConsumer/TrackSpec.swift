@@ -14,6 +14,11 @@ final class EventConsumer_TrackSpec: HeapSpec {
             beforeEach {
                 dataStore = InMemoryDataStore()
                 consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
+                HeapLogger.shared.logLevel = .debug
+            }
+            
+            afterEach {
+                HeapLogger.shared.logLevel = .prod
             }
             
             it("doesn't track an event before `startRecording` is called") {
@@ -248,14 +253,14 @@ final class EventConsumer_TrackSpec: HeapSpec {
                 }
                 
                 it("sends events where the event name is the maximum length") {
-                    let name = String(repeating: "あ", count: 1024)
+                    let name = String(repeating: "あ", count: 512)
                     consumer.track(name)
                     let user = try dataStore.assertOnlyOneUserToUpload()
                     try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
                 }
                 
                 it("does not send event where the event name is above the maximum length") {
-                    let name = String(repeating: "あ", count: 1025)
+                    let name = String(repeating: "あ", count: 513)
                     consumer.track(name)
                     let user = try dataStore.assertOnlyOneUserToUpload()
                     try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 2)
@@ -263,6 +268,9 @@ final class EventConsumer_TrackSpec: HeapSpec {
 
                 it("records events sequentially on the main thread") {
 
+                    // Disable logging for this test because it's a lot of messages and slows things down.
+                    HeapLogger.shared.logLevel = .prod
+                    
                     for n in 1...1000 {
                         consumer.track("event-\(n)")
                     }
@@ -281,6 +289,9 @@ final class EventConsumer_TrackSpec: HeapSpec {
                 }
                 
                 it("records events sequentially from a background thread") {
+                    
+                    // Disable logging for this test because it's a lot of messages and slows things down.
+                    HeapLogger.shared.logLevel = .prod
                     
                     Thread.detachNewThread {
                         expect(Thread.isMainThread).to(beFalse(), description: "PRECONDITION: Expected work to happen in a background queue")
