@@ -4,6 +4,7 @@ protocol EventConsumerProtocol {
     func startRecording(_ environmentId: String, with options: [Option: Any], timestamp: Date)
     func stopRecording(timestamp: Date)
     func track(_ event: String, properties: [String: HeapPropertyValue], timestamp: Date, sourceInfo: SourceInfo?)
+    func trackPageview(_ properties: PageviewProperties, timestamp: Date, sourceInfo: SourceInfo?, bridge: RuntimeBridge?, userInfo: Any?) -> Pageview?
     func identify(_ identity: String, timestamp: Date)
     func resetIdentity(timestamp: Date)
     func addUserProperties(_ properties: [String: HeapPropertyValue])

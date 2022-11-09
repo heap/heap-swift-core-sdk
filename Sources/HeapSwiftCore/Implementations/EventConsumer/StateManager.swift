@@ -65,6 +65,12 @@ extension StateManager {
         }
     }
     
+    func extendSessionAndSetLastPageview(_ pageviewInfo: PageviewInfo) -> State.UpdateResults {
+        update { state, outcomes in
+            state?.extendSessionAndSetLastPageview(pageviewInfo, outcomes: &outcomes)
+        }
+    }
+    
     func identify(_ identity: String, at timestamp: Date) -> State.UpdateResults {
         update { state, outcomes in
             state?.identify(identity, at: timestamp, outcomes: &outcomes)

@@ -4,7 +4,19 @@ struct State {
     var environment: EnvironmentState
     var options: [Option: Any]
     var sessionInfo: SessionInfo
+    
+    /// A synthetic pageview created at the start of the session.
+    ///
+    /// This event should be used when tracking with `Pageview.none` to signal that the event
+    /// doesn't belong to a pageview.
+    var unattributedPageviewInfo: PageviewInfo
+    
+    /// The `pageviewInfo` for the last pageview tracked in the session.
+    ///
+    /// Events will be attributed to this if tracked without a pageview or if the appropriate
+    /// pageview cannot be resolved.
     var lastPageviewInfo: PageviewInfo
+    
     var sessionExpirationDate: Date
     
     struct UpdateResults {
@@ -32,7 +44,7 @@ extension State {
     init(loadedEnvironment: EnvironmentState, sanitizedOptions: [Option: Any], at timestamp: Date, outcomes: inout State.UpdateResults.Outcomes) {
         
         // Init with placeholder data while we get started. Otherwise, we have to recreaet logic here.
-        self.init(environment: loadedEnvironment, options: sanitizedOptions, sessionInfo: .init(), lastPageviewInfo: .init(), sessionExpirationDate: .init(timeIntervalSince1970: 0))
+        self.init(environment: loadedEnvironment, options: sanitizedOptions, sessionInfo: .init(), unattributedPageviewInfo: .init(), lastPageviewInfo: .init(), sessionExpirationDate: .init(timeIntervalSince1970: 0))
         
         if !environment.hasUserID {
             createUserAndSession(identity: nil, at: timestamp, outcomes: &outcomes)
@@ -42,8 +54,10 @@ extension State {
     }
     
     mutating func createSession(at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
+        let initialPageviewInfo = PageviewInfo(newPageviewAt: timestamp)
         sessionInfo = .init(newSessionAt: timestamp)
-        lastPageviewInfo = .init(newPageviewAt: timestamp)
+        unattributedPageviewInfo = initialPageviewInfo
+        lastPageviewInfo = initialPageviewInfo
         sessionExpirationDate = timestamp.advancedBySessionExpirationTimeout()
         outcomes.sessionCreated = true
     }
@@ -68,6 +82,11 @@ extension State {
         outcomes.userCreated = true
 
         createSession(at: timestamp, outcomes: &outcomes)
+    }
+    
+    mutating func extendSessionAndSetLastPageview(_ pageviewInfo: PageviewInfo, outcomes: inout UpdateResults.Outcomes) {
+        createSessionIfExpired(extendIfNotExpired: true, at: pageviewInfo.time.date, outcomes: &outcomes)
+        lastPageviewInfo = pageviewInfo
     }
     
     mutating func resetIdentity(at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {

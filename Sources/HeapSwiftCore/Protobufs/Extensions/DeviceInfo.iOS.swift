@@ -14,12 +14,8 @@ extension DeviceInfo {
            let carrier = getCarrier() {
             deviceInfo.carrier = carrier
         }
-        if let identifierForVendor = device.identifierForVendor {
-            deviceInfo.vendorID = identifierForVendor.uuidString
-        }
-        if let advertisingIdentifier = getAdvertisingIdentifier() {
-            deviceInfo.advertiserID = advertisingIdentifier.uuidString
-        }
+        deviceInfo.setIfNotNil(\.vendorID, device.identifierForVendor?.uuidString)
+        deviceInfo.setIfNotNil(\.advertiserID, getAdvertisingIdentifier()?.uuidString)
         return deviceInfo
     }
     

@@ -9,12 +9,8 @@ extension DeviceInfo {
         var deviceInfo = DeviceInfo()
         deviceInfo.type = .desktop
         deviceInfo.platform = getPlatform()
-        if let model = getMacModel() {
-            deviceInfo.model = model
-        }
-        if let advertisingIdentifier = getAdvertisingIdentifier() {
-            deviceInfo.advertiserID = advertisingIdentifier.uuidString
-        }
+        deviceInfo.setIfNotNil(\.model, getMacModel())
+        deviceInfo.setIfNotNil(\.advertiserID, getAdvertisingIdentifier()?.uuidString)
         return deviceInfo
     }
     

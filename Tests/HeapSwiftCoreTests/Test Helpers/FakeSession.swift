@@ -9,7 +9,7 @@ struct FakeSession {
     init(environmentId: String, userId: String, sessionId: String, timestamp: Date = Date()) {
         state = State(environmentId: environmentId, userId: userId, sessionId: sessionId, timestamp: timestamp)
         sessionMessage = .init(forSessionIn: state)
-        pageviewMessage = .init(forPageviewWith: state.lastPageviewInfo, in: state)
+        pageviewMessage = .init(forPageviewWith: state.unattributedPageviewInfo, sourceLibrary: nil, in: state)
     }
     
     func customEventMessage(name: String, properties: [String: Value] = [:], timestamp: Date? = nil) -> Message {

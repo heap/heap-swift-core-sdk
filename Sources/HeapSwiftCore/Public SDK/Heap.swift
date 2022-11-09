@@ -44,6 +44,10 @@ public class Heap: NSObject {
     public func track(_ event: String, properties: [String: HeapPropertyValue] = [:], timestamp: Date = Date(), sourceInfo: SourceInfo? = nil) {
         consumer.track(event, properties: properties, timestamp: timestamp, sourceInfo: sourceInfo)
     }
+    
+    public func trackPageview(_ properties: PageviewProperties, timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, bridge: RuntimeBridge? = nil, userInfo: Any? = nil) -> Pageview? {
+        consumer.trackPageview(properties, timestamp: timestamp, sourceInfo: sourceInfo, bridge: bridge, userInfo: userInfo)
+    }
 
     public func identify(_ identity: String) {
         consumer.identify(identity, timestamp: Date())

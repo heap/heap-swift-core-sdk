@@ -46,7 +46,7 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
 
         if updateResults.outcomes.sessionCreated {
             dataStore.createSessionIfNeeded(with: .init(forSessionIn: state))
-            dataStore.insertPendingMessage(.init(forPageviewWith: state.lastPageviewInfo, in: state))
+            dataStore.insertPendingMessage(.init(forPageviewWith: state.unattributedPageviewInfo, sourceLibrary: nil, in: state))
         }
 
         if updateResults.outcomes.currentStarted {
@@ -129,6 +129,48 @@ extension EventConsumer: EventConsumerProtocol {
         pendingEvent.setKind(.custom(name: event, properties: sanitizedProperties.mapValues(\.protoValue)))
         pendingEvent.setPageviewInfo(state.lastPageviewInfo)
         HeapLogger.shared.logDev("Tracked event named \(event).")
+    }
+    
+    func trackPageview(_ properties: PageviewProperties, timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, bridge: RuntimeBridge? = nil, userInfo: Any? = nil) -> Pageview? {
+        
+        guard stateManager.current != nil else {
+            if let sourceName = sourceInfo?.name {
+                HeapLogger.shared.logDev("Heap.trackPageview was called before Heap.startRecording and will not be recorded. It is possible that the \(sourceName) library was not properly configured.")
+            } else {
+                HeapLogger.shared.logDev("Heap.trackPageview was called before Heap.startRecording and will not be recorded.")
+            }
+            
+            return nil
+        }
+        
+        // TODO: Need to validate what truncation rules to use.
+        let truncatedTitle = properties.title?.truncatedLoggingToDev(message: "trackPageview: Pageview title was truncated because the value exceeded 1024 utf-16 code units.")
+        
+        let (sanitizedSourceProperties, omittedKeys, truncatedValues) = properties.sourceProperties.sanitized()
+        logSanitizedProperties("trackPageview", omittedKeys, truncatedValues)
+        
+        let sourceLibrary = sourceInfo?.libraryInfo
+        var pageviewInfo = PageviewInfo(newPageviewAt: timestamp)
+        pageviewInfo.setIfNotNil(\.componentOrClassName, properties.componentOrClassName)
+        pageviewInfo.setIfNotNil(\.title, truncatedTitle)
+        pageviewInfo.setIfNotNil(\.url, properties.url?.pageviewUrl)
+        pageviewInfo.sourceProperties = sanitizedSourceProperties.mapValues(\.protoValue)
+        
+        let results = stateManager.extendSessionAndSetLastPageview(pageviewInfo)
+        handleChanges(results, timestamp: timestamp)
+        guard let state = results.current else { return nil }
+        
+        let message = Message(forPageviewWith: pageviewInfo, sourceLibrary: sourceLibrary, in: state)
+        
+        dataStore.insertPendingMessage(message)
+        if let sourceName = sourceInfo?.name {
+            HeapLogger.shared.logDev("Tracked pageview from \(sourceName).")
+        } else {
+            HeapLogger.shared.logDev("Tracked pageview.")
+        }
+        HeapLogger.shared.logDebug("Committed event message:\n\(message)")
+        
+        return .init(sessionInfo: state.sessionInfo, pageviewInfo: pageviewInfo, sourceLibrary: sourceLibrary, bridge: bridge, properties: properties, userInfo: userInfo)
     }
 
     func identify(_ identity: String, timestamp: Date = Date()) {
@@ -337,6 +379,20 @@ extension String {
         } else {
             return (String(self[..<minEndIndex]), true)
         }
+    }
+    
+    /// Truncates a string so it fits in a utf-16 count, without splitting characters,
+    /// logging a message to dev if the value changed.
+    /// - Parameters:
+    ///   - count: The number of code units to truncate to.
+    ///   - message: The message to log if the length was exceeded.
+    /// - Returns: The truncated string.
+    func truncatedLoggingToDev(toUtf16Count count: Int = 1024, message: @autoclosure () -> String) -> String {
+        let (result, wasTruncated) = truncated(toUtf16Count: count)
+        if wasTruncated {
+            HeapLogger.shared.logDev(message())
+        }
+        return result
     }
     
     /// Determines if the runtime will skip beyond the current character if the truncation index is

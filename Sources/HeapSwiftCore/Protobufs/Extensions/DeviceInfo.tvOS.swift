@@ -8,12 +8,8 @@ extension DeviceInfo {
         deviceInfo.type = .tv
         deviceInfo.platform = "tvOS \(device.systemVersion)"
         deviceInfo.model = device.model
-        if let identifierForVendor = device.identifierForVendor {
-            deviceInfo.vendorID = identifierForVendor.uuidString
-        }
-        if let advertisingIdentifier = getAdvertisingIdentifier() {
-            deviceInfo.advertiserID = advertisingIdentifier.uuidString
-        }
+        deviceInfo.setIfNotNil(\.vendorID, device.identifierForVendor?.uuidString)
+        deviceInfo.setIfNotNil(\.advertiserID, getAdvertisingIdentifier()?.uuidString)
         return deviceInfo
     }
 }

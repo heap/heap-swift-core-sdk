@@ -24,11 +24,12 @@ extension Message {
         self.kind = .session(.init())
     }
     
-    init(forPageviewWith pageviewInfo: PageviewInfo, in state: State) {
+    init(forPageviewWith pageviewInfo: PageviewInfo, sourceLibrary: LibraryInfo?, in state: State) {
         self.init(baseMessageIn: state)
         self.id = pageviewInfo.id
         self.time = pageviewInfo.time
         self.pageviewInfo = pageviewInfo
+        self.setIfNotNil(\.sourceLibrary, sourceLibrary)
         self.kind = .pageview(.init())
     }
     

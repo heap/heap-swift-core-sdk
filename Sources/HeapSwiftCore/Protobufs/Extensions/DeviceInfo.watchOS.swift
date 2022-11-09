@@ -9,14 +9,10 @@ extension DeviceInfo {
         deviceInfo.type = .watch
         deviceInfo.platform = "watchOS \(device.systemVersion)"
         if #available(watchOS 6.2, *) {
-            if let identifierForVendor = device.identifierForVendor {
-                deviceInfo.vendorID = identifierForVendor.uuidString
-            }
+            deviceInfo.setIfNotNil(\.vendorID, device.identifierForVendor?.uuidString)
         }
         deviceInfo.model = device.model
-        if let advertisingIdentifier = getAdvertisingIdentifier() {
-            deviceInfo.advertiserID = advertisingIdentifier.uuidString
-        }
+        deviceInfo.setIfNotNil(\.advertiserID, getAdvertisingIdentifier()?.uuidString)
         return deviceInfo
     }
 }
