@@ -7,6 +7,7 @@
 
 import Foundation
 import HeapSwiftCore
+import Nimble
 
 #if canImport(UIKit) && !os(watchOS)
 import UIKit
@@ -57,6 +58,19 @@ class CountingRuntimeBridge: NSObject, RuntimeBridge {
     
     func reissuePageview(_ pageview: HeapSwiftCore.Pageview, sessionId: String, timestamp: Date, complete: @escaping (Pageview?) -> Void) {
         calls.append(.reissuePageview)
-        complete(nil)
+        
+        expect(self.reissuePageviewCallback).to(beNil(), description: "reissuePageview was called while a pending call was waiting.  Resolve this with resolveReissuePageview.")
+        
+        reissuePageviewCallback?(nil)
+        reissuePageviewCallback = complete
+    }
+    
+    private var reissuePageviewCallback: ((Pageview?) -> Void)?
+    
+    func resolveReissuePageview(_ pageview: Pageview?) {
+        expect(self.reissuePageviewCallback).notTo(beNil(), description: "resolveReissuePageview was called even though it wasn't requested with reissuePageview.")
+        
+        reissuePageviewCallback?(pageview)
+        reissuePageviewCallback = nil
     }
 }

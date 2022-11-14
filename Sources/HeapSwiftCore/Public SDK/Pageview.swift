@@ -10,7 +10,8 @@ final public class Pageview {
     internal let sessionInfo: SessionInfo
     internal let pageviewInfo: PageviewInfo
     internal let sourceLibrary: LibraryInfo?
-    internal let bridge: RuntimeBridge?
+    internal weak var bridge: RuntimeBridge?
+    internal let isFromBridge: Bool
     
     /// A unique string representing the session that the pageview originated in.
     public var sessionId: String { sessionInfo.id }
@@ -60,6 +61,7 @@ final public class Pageview {
         self.pageviewInfo = pageviewInfo
         self.sourceLibrary = sourceLibrary
         self.bridge = bridge
+        self.isFromBridge = bridge != nil
         self.properties = properties
         self.userInfo = userInfo
         self.isNone = isNone

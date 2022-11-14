@@ -354,9 +354,16 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     expect(pageview?.pageviewInfo).to(equal(consumer.stateManager.current?.lastPageviewInfo))
                     expect(pageview?.sourceLibrary).to(equal(sourceInfo.libraryInfo))
                     expect(pageview?.bridge as? CountingRuntimeBridge).to(equal(bridge))
+                    expect(pageview?.isFromBridge).to(beTrue())
                     expect(pageview?.sessionId).to(equal(consumer.getSessionId()))
                     expect(pageview?.properties.title).to(equal(properties.title))
                     expect(pageview?.userInfo as? NSObject).to(equal(userInfo))
+                }
+                
+                it("does not retrain the bridge") {
+                    let pageview = consumer.trackPageview(.init(), bridge: CountingRuntimeBridge())
+                    expect(pageview?.bridge).toEventually(beNil())
+                    expect(pageview?.isFromBridge).to(beTrue())
                 }
             }
         }

@@ -1,10 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Brian Nickel on 11/8/22.
-//
-
 import Foundation
 
 class DelegateManager {
@@ -122,7 +115,9 @@ class DelegateManager {
         }
     }
     
-    var current: (sources: [String: Source], defaultSource: Source?, runtimeBridges: [RuntimeBridge]) {
+    typealias Snapshot = (sources: [String: Source], defaultSource: Source?, runtimeBridges: [RuntimeBridge])
+    
+    var current: Snapshot {
         _delegateLock.wait()
         defer { _delegateLock.signal() }
         return (_sources, _defaultSource, _runtimeBridges)

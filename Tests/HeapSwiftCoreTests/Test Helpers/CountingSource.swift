@@ -7,6 +7,7 @@
 
 import Foundation
 import HeapSwiftCore
+import Nimble
 
 #if canImport(UIKit) && !os(watchOS)
 import UIKit
@@ -79,11 +80,37 @@ class CountingSource: NSObject, Source {
     
     func activePageview(sessionId: String, timestamp: Date, complete: @escaping (HeapSwiftCore.Pageview?) -> Void) {
         calls.append(.activePageview)
-        complete(nil)
+        
+        expect(self.activePageviewCallback).to(beNil(), description: "activePageview was called while a pending call was waiting.  Resolve this with activePageviewCallback.")
+        
+        activePageviewCallback?(nil)
+        activePageviewCallback = complete
+    }
+    
+    private var activePageviewCallback: ((Pageview?) -> Void)?
+    
+    func resolveActivePageview(_ pageview: Pageview?) {
+        expect(self.activePageviewCallback).notTo(beNil(), description: "activePageviewCallback was called even though it wasn't requested with activePageview.")
+        
+        activePageviewCallback?(pageview)
+        activePageviewCallback = nil
     }
     
     func reissuePageview(_ pageview: HeapSwiftCore.Pageview, sessionId: String, timestamp: Date, complete: @escaping (HeapSwiftCore.Pageview?) -> Void) {
         calls.append(.reissuePageview)
-        complete(nil)
+        
+        expect(self.reissuePageviewCallback).to(beNil(), description: "reissuePageview was called while a pending call was waiting.  Resolve this with resolveReissuePageview.")
+        
+        reissuePageviewCallback?(nil)
+        reissuePageviewCallback = complete
+    }
+    
+    private var reissuePageviewCallback: ((Pageview?) -> Void)?
+    
+    func resolveReissuePageview(_ pageview: Pageview?) {
+        expect(self.reissuePageviewCallback).notTo(beNil(), description: "resolveReissuePageview was called even though it wasn't requested with reissuePageview.")
+        
+        reissuePageviewCallback?(pageview)
+        reissuePageviewCallback = nil
     }
 }

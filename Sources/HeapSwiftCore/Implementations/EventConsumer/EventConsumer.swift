@@ -103,7 +103,7 @@ extension EventConsumer: EventConsumerProtocol {
         if !values.isEmpty { HeapLogger.shared.logDev("\(functionName): The following properties were truncated because the value exceeded 1024 utf-16 code units:\n\(values)") }
     }
 
-    func track(_ event: String, properties: [String: HeapPropertyValue] = [:], timestamp: Date = Date(), sourceInfo: SourceInfo? = nil) {
+    func track(_ event: String, properties: [String: HeapPropertyValue] = [:], timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, pageview: Pageview? = nil) {
         
         if event.utf16.count > 512 {
             HeapLogger.shared.logDev("Event \(event) was not logged because its name exceeds 512 UTF-16 code units")
@@ -128,7 +128,11 @@ extension EventConsumer: EventConsumerProtocol {
         
         let pendingEvent = PendingEvent(partialEventMessage: message, toBeCommittedTo: dataStore)
         pendingEvent.setKind(.custom(name: event, properties: sanitizedProperties.mapValues(\.protoValue)))
-        pendingEvent.setPageviewInfo(state.lastPageviewInfo)
+        
+        PageviewResolver.resolvePageviewInfo(requestedPageview: pageview, eventSourceName: sourceInfo?.name, timestamp: timestamp, delegates: delegateManager.current, state: state) {
+            pendingEvent.setPageviewInfo($0)
+        }
+        
         HeapLogger.shared.logDev("Tracked event named \(event).")
     }
     
