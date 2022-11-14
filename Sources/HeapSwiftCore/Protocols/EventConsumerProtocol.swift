@@ -14,4 +14,10 @@ protocol EventConsumerProtocol {
     var userId: String? { get }
     var identity: String? { get }
     func getSessionId(timestamp: Date) -> String?
+    
+    func addSource(_ source: Source, isDefault: Bool, timestamp: Date)
+    func removeSource(_ name: String)
+    
+    func addRuntimeBridge(_ bridge: RuntimeBridge, timestamp: Date)
+    func removeRuntimeBridge(_ bridge: RuntimeBridge)
 }

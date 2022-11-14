@@ -4,6 +4,7 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
     
     let dataStore: DataStore
     let stateManager: StateManager<StateStore>
+    let delegateManager = DelegateManager()
 
     init(stateStore: StateStore, dataStore: DataStore) {
         self.dataStore = dataStore
@@ -319,6 +320,22 @@ extension EventConsumer: EventConsumerProtocol {
         handleChanges(results, timestamp: timestamp)
         
         return results.current?.sessionInfo.id
+    }
+    
+    func addSource(_ source: Source, isDefault: Bool = false, timestamp: Date = Date()) {
+        delegateManager.addSource(source, isDefault: isDefault, timestamp: timestamp, currentState: stateManager.current)
+    }
+    
+    func removeSource(_ name: String) {
+        delegateManager.removeSource(name, currentState: stateManager.current)
+    }
+    
+    func addRuntimeBridge(_ bridge: RuntimeBridge, timestamp: Date = Date()) {
+        delegateManager.addRuntimeBridge(bridge, timestamp: timestamp, currentState: stateManager.current)
+    }
+    
+    func removeRuntimeBridge(_ bridge: RuntimeBridge) {
+        delegateManager.removeRuntimeBridge(bridge, currentState: stateManager.current)
     }
 }
 

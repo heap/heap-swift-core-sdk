@@ -339,7 +339,7 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                 it("returns a fully configured Pageview") {
                     
                     let sourceInfo = SourceInfo(name: "heap-turbo-pascal", version: "0.0.0-beta.10", platform: "comadore 64", properties: ["a": 1, "b": false])
-                    let bridge = NoopRuntimeBridge()
+                    let bridge = CountingRuntimeBridge()
                     let userInfo = NSObject()
 
                     let properties = PageviewProperties.with({
@@ -353,37 +353,11 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     expect(pageview?.sessionInfo).to(equal(consumer.stateManager.current?.sessionInfo))
                     expect(pageview?.pageviewInfo).to(equal(consumer.stateManager.current?.lastPageviewInfo))
                     expect(pageview?.sourceLibrary).to(equal(sourceInfo.libraryInfo))
-                    expect(pageview?.bridge as? NoopRuntimeBridge).to(equal(bridge))
+                    expect(pageview?.bridge as? CountingRuntimeBridge).to(equal(bridge))
                     expect(pageview?.sessionId).to(equal(consumer.getSessionId()))
                     expect(pageview?.properties.title).to(equal(properties.title))
                     expect(pageview?.userInfo as? NSObject).to(equal(userInfo))
                 }
-            }
-        }
-        
-        class NoopRuntimeBridge: NSObject, RuntimeBridge {
-            func didStartRecording(options: [HeapSwiftCore.Option : Any], complete: @escaping () -> Void) {
-                complete()
-            }
-            
-            func didStopRecording(complete: @escaping () -> Void) {
-                complete()
-            }
-            
-            func sessionDidStart(sessionId: String, timestamp: Date, foregrounded: Bool, complete: @escaping () -> Void) {
-                complete()
-            }
-            
-            func applicationDidEnterForeground(timestamp: Date, complete: @escaping () -> Void) {
-                complete()
-            }
-            
-            func applicationDidEnterBackground(timestamp: Date, complete: @escaping () -> Void) {
-                complete()
-            }
-            
-            func reissuePageview(_ pageview: HeapSwiftCore.Pageview, sessionId: String, timestamp: Date, complete: @escaping (Pageview?) -> Void) {
-                complete(nil)
             }
         }
     }

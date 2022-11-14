@@ -16,12 +16,8 @@ class PendingEvent {
         _needsKind = partialEventMessage.event.kind == nil
         _needsPageviewInfo = !partialEventMessage.hasPageviewInfo
         
-        if Thread.isMainThread {
-            setAppVisibilityState(.current)
-        } else {
-            DispatchQueue.main.async { [self] in
-                setAppVisibilityState(.current)
-            }
+        onMainThread {
+            self.setAppVisibilityState(.current)
         }
     }
     
