@@ -5,10 +5,12 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
     let dataStore: DataStore
     let stateManager: StateManager<StateStore>
     let delegateManager = DelegateManager()
-
+    let notificationManager: NotificationManager
+    
     init(stateStore: StateStore, dataStore: DataStore) {
         self.dataStore = dataStore
         self.stateManager = StateManager(stateStore: stateStore)
+        notificationManager = NotificationManager(delegateManager)
     }
 
     /// For testing, returns the last set session ID without attempting to extend the session.
@@ -84,6 +86,8 @@ extension EventConsumer: EventConsumerProtocol {
             HeapLogger.shared.logDev("Heap.startRecording was called multiple times with the same parameters. The duplicate call will have no effect.")
         }
         
+        notificationManager.addForegroundAndBackgroundObservers()
+        
         handleChanges(results, timestamp: timestamp)
     }
 
@@ -94,6 +98,8 @@ extension EventConsumer: EventConsumerProtocol {
         if results.outcomes.previousStopped {
             HeapLogger.shared.logProd("Heap has stopped recording.")
         }
+        
+        notificationManager.removeForegroundAndBackgroundObservers()
         
         handleChanges(results, timestamp: timestamp)
     }

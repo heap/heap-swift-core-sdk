@@ -1,7 +1,8 @@
 import Foundation
-
 #if canImport(UIKit) && !os(watchOS)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
 #endif
 
 /// A Source SDK delegate, allowing autocapture SDKs to respond to Heap SDK events.
@@ -108,6 +109,32 @@ public protocol Source: AnyObject {
     ///                   the notification.
     @available(iOS 13.0, tvOS 13.0, *)
     func windowSceneDidEnterBackground(scene: UIWindowScene, timestamp: Date, complete: @escaping () -> Void)
+    
+#elseif canImport(AppKit)
+    /// Notifies the Source SDK that an NSWindow did become main.
+    ///
+    /// The Source SDK may choose to respond by issuing new pageviews for pages that are visible,
+    /// or by starting up pageview reporting for the scene.
+    ///
+    /// - Parameters:
+    ///   - window:       The NSWindow that became main.
+    ///   - timestamp:    The date at which the window scene entered the foreground.  If events are
+    ///                   generated as a result of the scene becoming visibile, this timestamp may
+    ///                   be used in generating them.
+    ///   - complete:     A callback indicating that the source has completed all work related to
+    ///                   the notification.
+    func windowDidBecomeMain(window: NSWindow, timestamp: Date, complete: @escaping () -> Void)
+    
+    /// Notifies the Source SDK that an NSWindow did resign main.
+    ///
+    /// The Source SDK may choose to respond by suspending pageview tracking for that scene.
+    ///
+    /// - Parameters:
+    ///   - window:       The NSWindow that resigned main.
+    ///   - timestamp:    The date at which the window scene entered the background.
+    ///   - complete:     A callback indicating that the source has completed all work related to
+    ///                   the notification.
+    func windowDidResignMain(window: NSWindow, timestamp: Date, complete: @escaping () -> Void)
 #endif
     
     /// Requests the active pageview from the Source SDK, for use in an event that is being
@@ -164,7 +191,6 @@ public protocol Source: AnyObject {
 }
 
 // Default implementations of platform-specific methods to make it optional.
-
 #if canImport(UIKit) && !os(watchOS)
 public extension Source {
     @available(iOS 13.0, tvOS 13.0, *)
@@ -174,6 +200,16 @@ public extension Source {
     
     @available(iOS 13.0, tvOS 13.0, *)
     func windowSceneDidEnterBackground(scene: UIWindowScene, timestamp: Date, complete: @escaping () -> Void) {
+        complete()
+    }
+}
+#elseif canImport(AppKit)
+public extension Source {
+    func windowDidBecomeMain(window: NSWindow, timestamp: Date, complete: @escaping () -> Void) {
+        complete()
+    }
+    
+    func windowDidResignMain(window: NSWindow, timestamp: Date, complete: @escaping () -> Void) {
         complete()
     }
 }

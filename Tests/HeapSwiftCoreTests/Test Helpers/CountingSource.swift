@@ -11,6 +11,8 @@ import Nimble
 
 #if canImport(UIKit) && !os(watchOS)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
 #endif
 
 enum DelegateCall: Equatable {
@@ -21,6 +23,8 @@ enum DelegateCall: Equatable {
     case applicationDidEnterBackground
     case windowSceneDidEnterForeground
     case windowSceneDidEnterBackground
+    case windowDidBecomeMain
+    case windowDidResignMain
     case activePageview
     case reissuePageview
 
@@ -76,11 +80,21 @@ class CountingSource: NSObject, Source {
         calls.append(.windowSceneDidEnterBackground)
         complete()
     }
+#elseif canImport(AppKit)
+    func windowDidBecomeMain(window: NSWindow, timestamp: Date, complete: @escaping () -> Void) {
+        calls.append(.windowDidBecomeMain)
+        complete()
+    }
+    
+    func windowDidResignMain(window: NSWindow, timestamp: Date, complete: @escaping () -> Void) {
+        calls.append(.windowDidResignMain)
+        complete()
+    }
 #endif
     
     func activePageview(sessionId: String, timestamp: Date, complete: @escaping (HeapSwiftCore.Pageview?) -> Void) {
         calls.append(.activePageview)
-        
+
         expect(self.activePageviewCallback).to(beNil(), description: "activePageview was called while a pending call was waiting.  Resolve this with activePageviewCallback.")
         
         activePageviewCallback?(nil)

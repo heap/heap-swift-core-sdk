@@ -2,6 +2,8 @@ import Foundation
 
 #if canImport(UIKit) && !os(watchOS)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
 #endif
 
 /// A runtime bridge delegate, allowing non-native runtimes to forward events to Source SDK
@@ -110,6 +112,38 @@ public protocol RuntimeBridge: AnyObject {
     ///                   the notification.
     @available(iOS 13.0, tvOS 13.0, *)
     func windowSceneDidEnterBackground(scene: UIWindowScene, timestamp: Date, complete: @escaping () -> Void)
+
+#elseif canImport(AppKit)
+    
+    /// Notifies the runtime bridge that an NSWindow did become main.
+    ///
+    /// The runtime bridge should use this notification to notify any of its `Source`
+    /// implementations that an NSWindow has become main.
+    ///
+    /// When all `Source` implementations have called their `complete` callbacks, this method
+    /// must call `complete` so the Heap SDK is aware that the source is running.
+    ///
+    /// - Parameters:
+    ///   - window:       The window scene that entered the background.
+    ///   - timestamp:    The date at which the window scene entered the background.
+    ///   - complete:     A callback indicating that the source has completed all work related to
+    ///                   the notification.
+    func windowDidBecomeMain(window: NSWindow, timestamp: Date, complete: @escaping () -> Void)
+    
+    /// Notifies the runtime bridge that an NSWindow did resign main.
+    ///
+    /// The runtime bridge should use this notification to notify any of its `Source`
+    /// implementations that an NSWindow has resigned main.
+    ///
+    /// When all `Source` implementations have called their `complete` callbacks, this method
+    /// must call `complete` so the Heap SDK is aware that the source is running.
+    ///
+    /// - Parameters:
+    ///   - window:        The window scene that entered the background.
+    ///   - timestamp:    The date at which the window scene entered the background.
+    ///   - complete:     A callback indicating that the source has completed all work related to
+    ///                   the notification.
+    func windowDidResignMain(window: NSWindow, timestamp: Date, complete: @escaping () -> Void)
 #endif
 
     /// Requests a new instance of pageview from the runtime bridge, for use in an event that is
@@ -137,7 +171,6 @@ public protocol RuntimeBridge: AnyObject {
 }
 
 // Default implementations of platform-specific methods to make it optional.
-
 #if canImport(UIKit) && !os(watchOS)
 public extension RuntimeBridge {
     @available(iOS 13.0, tvOS 13.0, *)
@@ -147,6 +180,16 @@ public extension RuntimeBridge {
     
     @available(iOS 13.0, tvOS 13.0, *)
     func windowSceneDidEnterBackground(scene: UIWindowScene, timestamp: Date, complete: @escaping () -> Void) {
+        complete()
+    }
+}
+#elseif canImport(AppKit)
+public extension RuntimeBridge {
+    func windowDidBecomeMain(window: NSWindow, timestamp: Date, complete: @escaping () -> Void) {
+        complete()
+    }
+    
+    func windowDidResignMain(window: NSWindow, timestamp: Date, complete: @escaping () -> Void) {
         complete()
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-#if os(iOS) || os(tvOS)
+#if canImport(UIKit) && !os(watchOS)
 
 import UIKit
 
@@ -30,7 +30,7 @@ extension Event.AppVisibility {
     }
 }
 
-#elseif os(macOS)
+#elseif canImport(AppKit)
 
 import Cocoa
 

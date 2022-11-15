@@ -11,6 +11,8 @@ import Nimble
 
 #if canImport(UIKit) && !os(watchOS)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
 #endif
 
 class CountingRuntimeBridge: NSObject, RuntimeBridge {
@@ -54,6 +56,18 @@ class CountingRuntimeBridge: NSObject, RuntimeBridge {
         calls.append(.windowSceneDidEnterBackground)
         complete()
     }
+
+#elseif canImport(AppKit)
+    func windowDidBecomeMain(window: NSWindow, timestamp: Date, complete: @escaping () -> Void) {
+        calls.append(.windowDidBecomeMain)
+        complete()
+    }
+    
+    func windowDidResignMain(window: NSWindow, timestamp: Date, complete: @escaping () -> Void) {
+        calls.append(.windowDidResignMain)
+        complete()
+    }
+
 #endif
     
     func reissuePageview(_ pageview: HeapSwiftCore.Pageview, sessionId: String, timestamp: Date, complete: @escaping (Pageview?) -> Void) {
