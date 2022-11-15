@@ -25,9 +25,21 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
     
     /// Performs actions as a result of state changes.
     func handleChanges(_ updateResults: State.UpdateResults, timestamp: Date) {
+        
+        let snapshot = delegateManager.current
+        if updateResults.outcomes.previousStopped && !updateResults.outcomes.currentStarted {
+            
+            for (sourceName, source) in snapshot.sources {
+                source.didStopRecording {
+                    HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to stopRecording.")
+                }
+            }
 
-        if updateResults.outcomes.previousStopped {
-            // Nothing to do yet
+            for bridge in snapshot.runtimeBridges {
+                bridge.didStopRecording {
+                    HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to stopRecording.")
+                }
+            }
         }
         
         guard let state = updateResults.current else {
@@ -48,11 +60,24 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
         }
 
         if updateResults.outcomes.sessionCreated {
+
             dataStore.createSessionIfNeeded(with: .init(forSessionIn: state))
             dataStore.insertPendingMessage(.init(forPageviewWith: state.unattributedPageviewInfo, sourceLibrary: nil, in: state))
         }
 
         if updateResults.outcomes.currentStarted {
+            
+            for (sourceName, source) in snapshot.sources {
+                source.didStartRecording(options: state.options) {
+                    HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to startRecording.")
+                }
+            }
+            for bridge in snapshot.runtimeBridges {
+                bridge.didStartRecording(options:  state.options) {
+                    HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to startRecording.")
+                }
+            }
+            
             dataStore.pruneOldData(
                 activeEnvironmentId: environment.envID,
                 activeUserId: environment.userID,
@@ -60,6 +85,21 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
                 minLastMessageDate: timestamp.addingTimeInterval(-86_400 * 6),
                 minUserCreationDate: timestamp.addingTimeInterval(-86_400 * 6)
             )
+            
+            if updateResults.outcomes.sessionCreated {
+                let sessionID = sessionInfo.id
+                for (sourceName, source) in snapshot.sources {
+                    source.sessionDidStart(sessionId: sessionID, timestamp: timestamp, foregrounded: Event.AppVisibility.current == .foregrounded) {
+                        HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to session initialization.")
+                    }
+                }
+                
+                for bridge in snapshot.runtimeBridges {
+                    bridge.sessionDidStart(sessionId: sessionID, timestamp: timestamp, foregrounded: Event.AppVisibility.current == .foregrounded) {
+                        HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to session initialization.")
+                    }
+                }
+            }
         }
     }
 }
@@ -74,6 +114,7 @@ extension EventConsumer: EventConsumerProtocol {
         }
         
         let sanitizedOptions = options.sanitizedCopy()
+        
         let results = stateManager.start(environmentId: environmentId, sanitizedOptions: sanitizedOptions, at: timestamp)
         
         if results.outcomes.currentStarted {
@@ -85,9 +126,9 @@ extension EventConsumer: EventConsumerProtocol {
         } else if results.outcomes.alreadyRecording {
             HeapLogger.shared.logDev("Heap.startRecording was called multiple times with the same parameters. The duplicate call will have no effect.")
         }
-        
+
         notificationManager.addForegroundAndBackgroundObservers()
-        
+
         handleChanges(results, timestamp: timestamp)
     }
 

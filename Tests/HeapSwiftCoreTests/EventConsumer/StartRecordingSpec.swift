@@ -156,6 +156,72 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
 
                 expect(dataStore.usersToUpload()).to(haveCount(1), description: "Data store should have purged three users and created one more")
             }
+            
+            context("with a source and bridge added") {
+                
+                var bridge: CountingRuntimeBridge!
+                var source: CountingSource!
+
+                beforeEach {
+                    bridge = CountingRuntimeBridge()
+                    source = CountingSource(name: "A", version: "1")
+                    
+                    consumer.addRuntimeBridge(bridge)
+                    consumer.addSource(source, isDefault: false)
+                    
+                    consumer.startRecording("11")
+                }
+                
+                it("calls .didStartRecording and .sessionDidStart on sources and bridges") {
+
+                    expect(bridge.calls).to(equal([
+                        .didStartRecording,
+                        .sessionDidStart,
+                    ]))
+                    
+                    expect(source.calls).to(equal([
+                        .didStartRecording,
+                        .sessionDidStart,
+                    ]))
+                }
+                
+                it("calls .didStopRecording on sources and bridges") {
+
+                    consumer.stopRecording()
+                    
+                    expect(bridge.calls).to(equal([
+                        .didStartRecording,
+                        .sessionDidStart,
+                        .didStopRecording
+                    ]))
+                    
+                    expect(source.calls).to(equal([
+                        .didStartRecording,
+                        .sessionDidStart,
+                        .didStopRecording
+                    ]))
+                }
+                
+                it("does not call .didStopRecording on sources and bridges when called twice") {
+
+                    consumer.startRecording("12")
+                    
+                    expect(bridge.calls).to(equal([
+                        .didStartRecording,
+                        .sessionDidStart,
+                        .didStartRecording,
+                        .sessionDidStart,
+                    ]))
+                    
+                    expect(source.calls).to(equal([
+                        .didStartRecording,
+                        .sessionDidStart,
+                        .didStartRecording,
+                        .sessionDidStart,
+                    ]))
+                }
+            }
+            
         }
     }
 
