@@ -85,19 +85,19 @@ public class Heap: NSObject {
         consumer.getSessionId(timestamp: Date())
     }
     
-    func addSource(_ source: Source, isDefault: Bool = false, timestamp: Date = Date()) {
-        consumer.addSource(source, isDefault: isDefault, timestamp: timestamp)
+    public func addSource(_ source: Source, isDefault: Bool = false) {
+        consumer.addSource(source, isDefault: isDefault, timestamp: Date())
     }
     
-    func removeSource(_ name: String) {
+    public func removeSource(_ name: String) {
         consumer.removeSource(name)
     }
     
-    func addRuntimeBridge(_ bridge: RuntimeBridge, timestamp: Date = Date()) {
-        consumer.addRuntimeBridge(bridge, timestamp: timestamp)
+    public func addRuntimeBridge(_ bridge: RuntimeBridge) {
+        consumer.addRuntimeBridge(bridge, timestamp: Date())
     }
     
-    func removeRuntimeBridge(_ bridge: RuntimeBridge) {
+    public func removeRuntimeBridge(_ bridge: RuntimeBridge) {
         consumer.removeRuntimeBridge(bridge)
     }
 }
