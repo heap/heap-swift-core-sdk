@@ -2,6 +2,7 @@ import XCTest
 import Quick
 import Nimble
 @testable import HeapSwiftCore
+@testable import HeapSwiftCoreTestSupport
 
 private enum MyEnum: String {
     case val1 = "VALUE 1"

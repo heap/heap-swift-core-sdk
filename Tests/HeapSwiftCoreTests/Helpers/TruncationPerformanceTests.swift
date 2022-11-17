@@ -1,5 +1,6 @@
 import XCTest
 @testable import HeapSwiftCore
+@testable import HeapSwiftCoreTestSupport
 
 /// Tests to measure the performance of String.truncated(toUtf16Count:).
 final class TruncationPerformanceTests: XCTestCase {

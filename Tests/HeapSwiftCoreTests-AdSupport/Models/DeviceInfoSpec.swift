@@ -4,6 +4,7 @@ import Quick
 import Nimble
 import AdSupport
 @testable import HeapSwiftCore
+@testable import HeapSwiftCoreTestSupport
 
 final class DeviceInfoSpec: QuickSpec {
     

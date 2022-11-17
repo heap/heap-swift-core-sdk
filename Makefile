@@ -21,7 +21,7 @@ define run_unit_tests
 	-rm build/.success
 
 	-(xcodebuild \
-		-scheme HeapSwiftCore \
+		-scheme HeapSwiftCore-Package \
 		$(2) \
 		-resultBundlePath build/reports/$(1).xcresult \
 		clean test \

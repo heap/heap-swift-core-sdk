@@ -1,6 +1,7 @@
 import Foundation
 import Quick
 @testable import HeapSwiftCore
+@testable import HeapSwiftCoreTestSupport
 
 class DataStoreSpec: HeapSpec {
 

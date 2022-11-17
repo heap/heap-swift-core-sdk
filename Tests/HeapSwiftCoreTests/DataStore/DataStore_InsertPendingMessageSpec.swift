@@ -2,6 +2,7 @@ import Quick
 import Nimble
 import Foundation
 @testable import HeapSwiftCore
+@testable import HeapSwiftCoreTestSupport
 
 final class DataStore_InsertPendingMessageSpec: DataStoreSpec {
 

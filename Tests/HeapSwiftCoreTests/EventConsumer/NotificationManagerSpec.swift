@@ -10,6 +10,7 @@ import WatchKit
 #endif
 
 @testable import HeapSwiftCore
+@testable import HeapSwiftCoreTestSupport
 
 final class NotificationManagerSpec: HeapSpec {
     

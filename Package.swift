@@ -16,6 +16,9 @@ let package = Package(
         .library(
             name: "HeapSwiftCore",
             targets: ["HeapSwiftCore"]),
+        .library(
+            name: "HeapSwiftCoreTestSupport",
+            targets: ["HeapSwiftCoreTestSupport"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
@@ -30,10 +33,18 @@ let package = Package(
             dependencies: [
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
             ]),
+        .target(
+            name: "HeapSwiftCoreTestSupport",
+            dependencies: [
+                "HeapSwiftCore",
+                "Quick",
+                "Nimble",
+            ]),
         .testTarget(
             name: "HeapSwiftCoreTests",
             dependencies: [
                 "HeapSwiftCore",
+                "HeapSwiftCoreTestSupport",
                 "Quick",
                 "Nimble",
             ]),
@@ -41,6 +52,7 @@ let package = Package(
             name: "HeapSwiftCoreTests-AdSupport",
             dependencies: [
                 "HeapSwiftCore",
+                "HeapSwiftCoreTestSupport",
                 "Quick",
                 "Nimble",
             ]),

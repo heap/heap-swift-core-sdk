@@ -1,10 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Brian Nickel on 11/8/22.
-//
-
 import Foundation
 import HeapSwiftCore
 import Nimble

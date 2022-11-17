@@ -2,6 +2,7 @@ import XCTest
 import Quick
 import Nimble
 @testable import HeapSwiftCore
+@testable import HeapSwiftCoreTestSupport
 
 final class EventConsumer_AddUserPropertiesSpec: HeapSpec {
     
