@@ -3,6 +3,8 @@ import Foundation
 /// An operation to upload data to Heap.
 final class UploadOperation: AsynchronousOperation {
     
+    private static let baseUrl = URL(string: "https://heapanalytics.com/")
+    
     private var callback: ((UploadResult) -> Void)?
     private var task: URLSessionDataTask?
     public private(set) var result: UploadResult?
@@ -79,7 +81,7 @@ extension UploadOperation {
     ///   - complete: A callback to execute while prior to the completion of the operation.
     convenience init(userProperties: UserProperties, options: [Option : Any], in urlSession: URLSession, complete: @escaping (UploadResult) -> Void) {
         self.init(
-            urlString: "https://heapanalytics.com/api/integrations/capture/2/add-user-properties",
+            path: "api/capture/v2/add_user_properties",
             bodyBuilder: { try userProperties.serializedData() },
             options: options,
             in: urlSession,
@@ -95,7 +97,7 @@ extension UploadOperation {
     ///   - complete: A callback to execute while prior to the completion of the operation.
     convenience init(userIdentification: UserIdentification, options: [Option : Any], in urlSession: URLSession, complete: @escaping (UploadResult) -> Void) {
         self.init(
-            urlString: "https://heapanalytics.com/api/integrations/capture/2/identify",
+            path: "api/capture/v2/identify",
             bodyBuilder: { try userIdentification.serializedData() },
             options: options,
             in: urlSession,
@@ -104,7 +106,7 @@ extension UploadOperation {
     
     convenience init(encodedMessages: [Data], options: [Option : Any], in urlSession: URLSession, complete: @escaping (UploadResult) -> Void) {
         self.init(
-            urlString: "https://heapanalytics.com/api/integrations/capture/2/track",
+            path: "api/capture/v2/track",
             bodyBuilder: {
                 try MessageBatch.with {
                     $0.events = try encodedMessages.map({ try Message(serializedData: $0) })
@@ -115,9 +117,12 @@ extension UploadOperation {
             complete: complete)
     }
     
-    private convenience init(urlString: String, bodyBuilder: () throws -> Data, options: [Option : Any], in urlSession: URLSession, complete: @escaping (UploadResult) -> Void) {
+    private convenience init(path: String, bodyBuilder: () throws -> Data, options: [Option : Any], in urlSession: URLSession, complete: @escaping (UploadResult) -> Void) {
         
-        guard let url = URL(string: urlString) else {
+        guard
+            let baseUrl = options.url(at: .baseUrl) ?? UploadOperation.baseUrl,
+            let url = URL(string: path, relativeTo: baseUrl)
+        else {
             self.init(result: .failure(.badRequest), complete: complete)
             return
         }

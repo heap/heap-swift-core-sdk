@@ -131,6 +131,14 @@ final class Uploader_ScheduleSpec: UploaderSpec {
                 expect(APIProtocol.addUserPropertyPayloads).toEventually(haveCount(2), description: "Given the spacing, we should have uploaded one user per upload cycle time")
                 expect(APIProtocol.addUserPropertyPayloads).toEventually(haveCount(3), description: "Given the spacing, we should have uploaded one user per upload cycle time")
             }
+            
+            it("uses the baseUrl option") {
+                let baseUrl = URL(string: "https://example.com:123/foo/bar/")!
+                APIProtocol.baseUrlOverride = baseUrl
+                dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: Date())
+                uploader.startScheduledUploads(with: [ .baseUrl: baseUrl ])
+                expect(APIProtocol.addUserPropertyPayloads).toEventually(haveCount(1), description: "The user should have been uploaded to the custom location")
+            }
         }
         
         describe("Uploader.stopScheduledUploads") {

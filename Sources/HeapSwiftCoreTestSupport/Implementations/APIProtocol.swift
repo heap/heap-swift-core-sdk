@@ -50,6 +50,10 @@ enum APIResponse {
 
 class APIProtocol: URLProtocol {
     
+    static var baseUrlOverride: URL? = nil
+    
+    var baseUrl: URL { APIProtocol.baseUrlOverride ?? URL(string: "https://heapanalytics.com/")! }
+    
     static var requests: [APIRequest] = []
     
     static var addUserPropertiesResponse: APIResponse = .success
@@ -61,6 +65,7 @@ class APIProtocol: URLProtocol {
         addUserPropertiesResponse = .success
         identifyResponse = .success
         trackResponse = .success
+        baseUrlOverride = nil
     }
     
     static var ephemeralUrlSessionConfig: URLSessionConfiguration {
@@ -86,8 +91,7 @@ class APIProtocol: URLProtocol {
             return
         }
         
-        guard request.httpMethod == "POST",
-              url.host == "heapanalytics.com"
+        guard request.httpMethod == "POST"
         else {
             complete(with: 404)
             return
@@ -102,21 +106,21 @@ class APIProtocol: URLProtocol {
         
         let response: APIResponse
         
-        if url.path == "/api/integrations/capture/2/add-user-properties" {
+        if url == URL(string: "api/capture/v2/add_user_properties", relativeTo: baseUrl)?.absoluteURL {
             response = APIProtocol.addUserPropertiesResponse
             do {
                 APIProtocol.requests.append(.addUserProperties(.success(try UserProperties(serializedData: httpBody))))
             } catch {
                 APIProtocol.requests.append(.addUserProperties(.failure(error)))
             }
-        } else if url.path == "/api/integrations/capture/2/identify" {
+        } else if url == URL(string: "api/capture/v2/identify", relativeTo: baseUrl)?.absoluteURL {
             response = APIProtocol.identifyResponse
             do {
                 APIProtocol.requests.append(.identify(.success(try UserIdentification(serializedData: httpBody))))
             } catch {
                 APIProtocol.requests.append(.identify(.failure(error)))
             }
-        } else if url.path == "/api/integrations/capture/2/track" {
+        } else if url == URL(string: "api/capture/v2/track", relativeTo: baseUrl)?.absoluteURL {
             response = APIProtocol.trackResponse
             do {
                 APIProtocol.requests.append(.track(.success(try MessageBatch(serializedData: httpBody))))
