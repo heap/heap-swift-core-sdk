@@ -3,6 +3,7 @@ import Quick
 import Nimble
 import XCTest
 @testable import HeapSwiftCore
+@testable import HeapSwiftCoreTestSupport
 
 extension Option {
     static let something = register(name: "something", type: .string)
