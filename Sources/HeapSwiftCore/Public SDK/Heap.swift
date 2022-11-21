@@ -31,6 +31,7 @@ public class Heap: NSObject {
         self.uploader = uploader
     }
 
+    @objc
     public func startRecording(_ environmentId: String, with options: [Option: Any] = [:]) {
         let sanitizedOptions = options.sanitizedCopy()
         consumer.startRecording(environmentId, with: sanitizedOptions, timestamp: Date())

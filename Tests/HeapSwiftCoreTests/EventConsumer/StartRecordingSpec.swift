@@ -4,6 +4,10 @@ import Nimble
 @testable import HeapSwiftCore
 @testable import HeapSwiftCoreTestSupport
 
+extension Option {
+    static let myOption = Option.register(name: "myOption", type: .boolean)
+}
+
 final class EventConsumer_StartRecordingSpec: HeapSpec {
     
     override func spec() {
@@ -112,17 +116,17 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
             }
 
             it("only runs once when called repeatedly with the same options") {
-                consumer.startRecording("11", with: [ .debug: true ])
-                consumer.startRecording("11", with: [ .debug: true ])
-                consumer.startRecording("11", with: [ .debug: true ])
+                consumer.startRecording("11", with: [ .myOption: true ])
+                consumer.startRecording("11", with: [ .myOption: true ])
+                consumer.startRecording("11", with: [ .myOption: true ])
 
                 let user = try dataStore.assertOnlyOneUserToUpload()
                 expect(user.sessionIds).to(haveCount(1))
             }
 
             it("reinitializes with a new session when called with different options") {
-                consumer.startRecording("11", with: [ .debug: true ])
-                consumer.startRecording("11", with: [ .debug: false ])
+                consumer.startRecording("11", with: [ .myOption: true ])
+                consumer.startRecording("11", with: [ .myOption: false ])
 
                 let user = try dataStore.assertOnlyOneUserToUpload(message: "Calling the method multiple times, even with different options, should not have produced multiple users.")
                 expect(user.sessionIds).to(haveCount(2))

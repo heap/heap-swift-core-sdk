@@ -1,6 +1,7 @@
 import Foundation
 
-public enum OptionType: Equatable, Hashable {
+@objc
+public enum OptionType: Int {
     case string
     case boolean
     case timeInterval
@@ -10,26 +11,72 @@ public enum OptionType: Equatable, Hashable {
     case object
 }
 
-public struct Option: Equatable, Hashable {
-
-    public let name: String
-    public let type: OptionType
-
-    public init(name: String, type: OptionType) {
-        self.name = name
-        self.type = type
+extension OptionType: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .string: return "string"
+        case .boolean: return "boolean"
+        case .timeInterval: return "timeInterval"
+        case .integer: return "integer"
+        case .url: return "url"
+        case .data: return "data"
+        case .object: return "object"
+        }
     }
 }
 
-public extension Option {
-    static let debug = Option(name: "debug", type: .boolean)
-    static let uploadInterval = Option(name: "uploadInterval", type: .timeInterval)
-    static let baseUrl = Option(name: "baseUrl", type: .url)
-    static let messageBatchByteLimit = Option(name: "messageBatchByteLimit", type: .integer)
-    static let messageBatchMessageLimit = Option(name: "messageBatchMessageLimit", type: .integer)
+@objc
+public class Option: NSObject {
+    public let name: String
+    public let type: OptionType
+
+    private init(name: String, type: OptionType) {
+        self.name = name
+        self.type = type
+    }
+    
+    public override func isEqual(_ object: Any?) -> Bool {
+        guard let other = object as? Option else { return false }
+        return (name, type) == (other.name, other.type)
+    }
+    
+    public override var hash: Int {
+        self.name.hashValue
+    }
+    
+    private static var registeredOptions: [String: Option] = [:]
+    
+    @objc
+    public static func register(name: String, type: OptionType) -> Option {
+        let option = Option(name: name, type: type)
+        if let existing = registeredOptions[name] {
+            
+            if existing != option {
+                HeapLogger.shared.logCritical("Attempted to overwrite option \(name) of type \(existing.type) with \(option.type). This may result in unexpected behavior as options of the wrong type are ignored.")
+            }
+            
+            return existing
+        }
+        
+        registeredOptions[name] = option
+        return option
+    }
+    
+    @objc
+    public static func named(_ name: String) -> Option? {
+        registeredOptions[name]
+    }
 }
 
-extension Dictionary where Key == Option, Value == Any {
+@objc
+public extension Option {
+    static let uploadInterval = register(name: "uploadInterval", type: .timeInterval)
+    static let baseUrl = register(name: "baseUrl", type: .url)
+    static let messageBatchByteLimit = register(name: "messageBatchByteLimit", type: .integer)
+    static let messageBatchMessageLimit = register(name: "messageBatchMessageLimit", type: .integer)
+}
+
+public extension Dictionary where Key == Option, Value == Any {
 
     func string(at key: Option) -> String? {
         self[key] as? String
