@@ -8,7 +8,10 @@
 		watchos_unit_tests \
 		macos_sample_app \
 		ios_sample_app \
-		ios_sample_extension
+		ios_sample_extension \
+		add_prerelease_pod_repo \
+		remove_prerelease_pod_repo \
+		push_prerelease_podspec
 
 
 # 1 - test name, 2 - xcodebuild parameters
@@ -183,3 +186,22 @@ ios_sample_extension:
 		clean build \
 	| xcbeautify
 
+add_prerelease_pod_repo:
+
+	@if [ ! -d ~/.cocoapods/repos/pre-release-cocoapods ]; then \
+		pod repo add pre-release-cocoapods git@github.com:heap/pre-release-cocoapods.git main; \
+	else \
+		echo "Repo pre-release-cocoapods was already added."; \
+	fi
+
+remove_prerelease_pod_repo:
+
+	@if [ -d ~/.cocoapods/repos/pre-release-cocoapods ]; then \
+		pod repo remove pre-release-cocoapods; \
+	else \
+		echo "Repo pre-release-cocoapods was already removed."; \
+	fi
+
+push_prerelease_podspec: add_prerelease_pod_repo
+
+	pod repo push pre-release-cocoapods HeapSwiftCore.podspec

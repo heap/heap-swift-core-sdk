@@ -11,7 +11,7 @@ struct Version {
     static let revision = 0
 
     /// Optional pre-release version
-    static let prerelease: String? = "alpha.0"
+    static let prerelease: String? = nil
 
     /// String form of the version number.
     public static var versionString: String {
