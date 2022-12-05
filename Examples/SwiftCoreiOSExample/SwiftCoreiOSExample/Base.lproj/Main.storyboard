@@ -1,41 +1,107 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="21225" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="21507" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="7lW-hv-oVQ">
     <device id="retina6_0" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21207"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21505"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
+        <!--Example App-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="SwiftCoreiOSExample" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="wAE-Fl-eNF">
-                                <rect key="frame" x="157.66666666666666" y="411" width="75" height="35"/>
-                                <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" title="Button"/>
-                                <connections>
-                                    <action selector="butonClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="zwl-ET-Hv6"/>
-                                </connections>
-                            </button>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="iUZ-8X-0b8">
+                                <rect key="frame" x="106.66666666666667" y="387.66666666666669" width="176.66666666666663" height="68.666666666666686"/>
+                                <subviews>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="wAE-Fl-eNF">
+                                        <rect key="frame" x="0.0" y="0.0" width="176.66666666666666" height="34.333333333333336"/>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="plain" title="Track Custom Event"/>
+                                        <connections>
+                                            <action selector="butonClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="zwl-ET-Hv6"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4Df-IP-ShF">
+                                        <rect key="frame" x="0.0" y="34.333333333333314" width="176.66666666666666" height="34.333333333333343"/>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="plain" title="Show Web View"/>
+                                        <connections>
+                                            <segue destination="BA2-FX-M7h" kind="show" id="hSR-oE-u2F"/>
+                                        </connections>
+                                    </button>
+                                </subviews>
+                            </stackView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="wAE-Fl-eNF" firstAttribute="centerX" secondItem="6Tk-OE-BBY" secondAttribute="centerX" id="A2k-i5-Yev"/>
-                            <constraint firstItem="wAE-Fl-eNF" firstAttribute="centerY" secondItem="6Tk-OE-BBY" secondAttribute="centerY" id="FIm-nV-Pp0"/>
+                            <constraint firstItem="iUZ-8X-0b8" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="Nj2-1X-fKs"/>
+                            <constraint firstItem="iUZ-8X-0b8" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="pss-Nq-4Vy"/>
                         </constraints>
                     </view>
+                    <navigationItem key="navigationItem" title="Example App" id="pWG-ja-NNM"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="95" y="4"/>
+            <point key="canvasLocation" x="591" y="4"/>
+        </scene>
+        <!--Hybrid View-->
+        <scene sceneID="w20-md-Aci">
+            <objects>
+                <viewController id="BA2-FX-M7h" customClass="HybridViewController" customModule="SwiftCoreiOSExample" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="VaL-xe-AN5">
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <wkWebView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hIF-Fa-YDZ">
+                                <rect key="frame" x="0.0" y="91" width="390" height="719"/>
+                                <color key="backgroundColor" red="0.36078431370000003" green="0.38823529410000002" blue="0.4039215686" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <wkWebViewConfiguration key="configuration">
+                                    <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
+                                    <wkPreferences key="preferences"/>
+                                </wkWebViewConfiguration>
+                            </wkWebView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="NvW-Bs-IZa"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="hIF-Fa-YDZ" firstAttribute="leading" secondItem="NvW-Bs-IZa" secondAttribute="leading" id="88b-f8-Dqe"/>
+                            <constraint firstItem="NvW-Bs-IZa" firstAttribute="trailing" secondItem="hIF-Fa-YDZ" secondAttribute="trailing" id="LvB-Y3-nTp"/>
+                            <constraint firstItem="hIF-Fa-YDZ" firstAttribute="top" secondItem="NvW-Bs-IZa" secondAttribute="top" id="The-7k-NWG"/>
+                            <constraint firstItem="NvW-Bs-IZa" firstAttribute="bottom" secondItem="hIF-Fa-YDZ" secondAttribute="bottom" id="gx8-DC-GOE"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" title="Hybrid View" id="WaJ-Pi-trc"/>
+                    <connections>
+                        <outlet property="webview" destination="hIF-Fa-YDZ" id="yrc-Rm-ywi"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="sAu-HQ-ecK" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1368" y="4"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="iGw-P5-xU8">
+            <objects>
+                <navigationController id="7lW-hv-oVQ" sceneMemberID="viewController">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="okH-G7-kAK">
+                        <rect key="frame" x="0.0" y="47" width="390" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <connections>
+                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="rootViewController" id="01k-zd-v3C"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ayS-Fn-KDM" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-149" y="4"/>
         </scene>
     </scenes>
     <resources>

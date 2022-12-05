@@ -19,6 +19,8 @@
 		D6664EDB28DD059F00AC0814 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D6664EDA28DD059F00AC0814 /* Assets.xcassets */; };
 		D6664EDF28DD059F00AC0814 /* iOSWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D6664ED228DD059F00AC0814 /* iOSWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D6664EE528DD0CCB00AC0814 /* HeapSwiftCore in Frameworks */ = {isa = PBXBuildFile; productRef = D6664EE428DD0CCB00AC0814 /* HeapSwiftCore */; };
+		EBA9A90C2922DC72001756EB /* HybridViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA9A90B2922DC72001756EB /* HybridViewController.swift */; };
+		EBA9A90E2922DF1E001756EB /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = EBA9A90D2922DF1E001756EB /* index.html */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -60,6 +62,8 @@
 		D6664ED828DD059F00AC0814 /* iOSWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSWidget.swift; sourceTree = "<group>"; };
 		D6664EDA28DD059F00AC0814 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D6664EDC28DD059F00AC0814 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		EBA9A90B2922DC72001756EB /* HybridViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridViewController.swift; sourceTree = "<group>"; };
+		EBA9A90D2922DF1E001756EB /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,6 +117,8 @@
 				D6258EFD28D8805E00E81D63 /* Assets.xcassets */,
 				D6258EFF28D8805E00E81D63 /* LaunchScreen.storyboard */,
 				D6258F0228D8805E00E81D63 /* Info.plist */,
+				EBA9A90B2922DC72001756EB /* HybridViewController.swift */,
+				EBA9A90D2922DF1E001756EB /* index.html */,
 			);
 			path = SwiftCoreiOSExample;
 			sourceTree = "<group>";
@@ -232,6 +238,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D6258F0128D8805E00E81D63 /* LaunchScreen.storyboard in Resources */,
+				EBA9A90E2922DF1E001756EB /* index.html in Resources */,
 				D6258EFE28D8805E00E81D63 /* Assets.xcassets in Resources */,
 				D6258EF928D8805E00E81D63 /* Main.storyboard in Resources */,
 			);
@@ -252,6 +259,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EBA9A90C2922DC72001756EB /* HybridViewController.swift in Sources */,
 				D6258EF628D8805E00E81D63 /* ViewController.swift in Sources */,
 				D6258EF228D8805E00E81D63 /* AppDelegate.swift in Sources */,
 			);

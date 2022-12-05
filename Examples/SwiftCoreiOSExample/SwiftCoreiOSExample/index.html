@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            html, body {
+                height: 100%;
+                font-family: sans-serif;
+            }
+            .centerer {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="centerer">
+            <button type="button" id="track">Track from HTML</button>
+            <button type="button" id="getUserId">Get User Id</button>
+            <div id="userId">UserId: ...</div>
+        </div>
+        
+        <script type="text/javascript">
+            
+            var _cbCounter = 0;
+            
+            function nextCallbackId() {
+                return "cb:" + (_cbCounter ++);
+            }
+            
+            var callbacks = {};
+            
+            var Heap = {
+                
+                track(event, properties) {
+                    webkit.messageHandlers.HeapSwiftBridge.postMessage({
+                        type: 'invocation',
+                        method: 'track',
+                        arguments: { event, properties, }
+                    });
+                },
+                
+                getUserId() {
+                    const callbackId = nextCallbackId();
+                    const promise = new Promise((resolve, reject) => {
+                        callbacks[callbackId] = (payload) => {
+                            if (payload.error) {
+                                reject(payload.error);
+                            } else {
+                                resolve(payload.data);
+                            }
+                        };
+                    });
+                    
+                    webkit.messageHandlers.HeapSwiftBridge.postMessage({
+                        type: 'invocation',
+                        method: 'userId',
+                        arguments: {},
+                        callbackId,
+                    });
+                    
+                    return promise;
+                },
+                
+                nativeMessage(payload) {
+                    console.debug("Native message received", payload);
+                    if (payload.type == 'result' && payload.callbackId) {
+                        const callback = callbacks[payload.callbackId];
+                        if (callback) { callback(payload); }
+                        delete callbacks[payload.callbackId];
+                    }
+                }
+            };
+            
+            document.getElementById('track').addEventListener('click', function () {
+                Heap.track('HTML Button Clicked', {
+                    'propa': 'a',
+                    'propb': true,
+                    'propc': 6.02e23,
+                    'propd': 5,
+                    'propf': 5.5,
+                });
+            });
+            
+            document.getElementById('getUserId').addEventListener('click', async function () {
+                document.getElementById('userId').textContent = "UserId: " + await Heap.getUserId();
+            });
+        </script>
+    </body>
+</html>

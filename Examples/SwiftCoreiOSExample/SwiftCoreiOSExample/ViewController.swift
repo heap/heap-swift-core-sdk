@@ -9,11 +9,6 @@ import HeapSwiftCore
 
 class ViewController: UIViewController {
     
-    override func viewDidLoad() {
-        
-        super.viewDidLoad()
-    }
-
     @IBAction func butonClicked(_ sender: Any?) {
         
         HeapLogger.shared.logDebug("👍 Button was clicked, and tracked",

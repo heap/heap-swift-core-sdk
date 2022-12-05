@@ -3,7 +3,7 @@ import Foundation
 @objc
 public class Heap: NSObject {
 
-    private var consumer: any EventConsumerProtocol
+    internal var consumer: any EventConsumerProtocol
     private var uploader: any UploaderProtocol
 
     private static let heapDirectory: URL = {
