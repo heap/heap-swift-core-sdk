@@ -224,6 +224,47 @@ extension EventConsumer: EventConsumerProtocol {
         
         return .init(sessionInfo: state.sessionInfo, pageviewInfo: pageviewInfo, sourceLibrary: sourceLibrary, bridge: bridge, properties: properties, userInfo: userInfo)
     }
+    
+    func uncommittedInteractionEvent(timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, pageview: Pageview? = nil) -> InteractionEventProtocol? {
+
+        guard stateManager.current != nil else {
+            if let sourceName = sourceInfo?.name {
+                HeapLogger.shared.logDev("Heap.uncommitedInteractionEvent was called before Heap.startRecording and the event will not be recorded. It is possible that the \(sourceName) library was not properly configured.")
+            } else {
+                HeapLogger.shared.logDev("Heap.uncommitedInteractionEvent was called before Heap.startRecording and the event will not be recorded.")
+            }
+            return nil
+        }
+        
+        let results = stateManager.createSessionIfExpired(extendIfNotExpired: true, at: timestamp)
+ 
+        handleChanges(results, timestamp: timestamp)
+        
+        guard let state = results.current else { return nil }
+        let sourceLibrary = sourceInfo?.libraryInfo
+
+        let message = Message(forPartialEventAt: timestamp, sourceLibrary: sourceLibrary, in: state)
+        let pendingEvent = PendingEvent(partialEventMessage: message, toBeCommittedTo: dataStore)
+        
+        let interactionEvent = InteractionEvent(pendingEvent: pendingEvent)
+
+        PageviewResolver.resolvePageviewInfo(requestedPageview: pageview, eventSourceName: sourceInfo?.name, timestamp: timestamp, delegates: delegateManager.current, state: state) {
+            pendingEvent.setPageviewInfo($0)
+        }
+        
+        return interactionEvent
+    }
+    
+    func trackInteraction(interaction: Interaction, nodes: [InteractionNode], callbackName: String? = nil, timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, pageview: Pageview? = nil) {
+
+        guard let event = uncommittedInteractionEvent(timestamp: timestamp, sourceInfo: sourceInfo, pageview: pageview) else { return }
+
+        event.kind = interaction
+        event.nodes = nodes
+        event.callbackName = callbackName
+        
+        event.commit()
+    }
 
     func identify(_ identity: String, timestamp: Date = Date()) {
         

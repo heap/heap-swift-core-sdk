@@ -35,12 +35,21 @@ struct Event {
     set {kind = .custom(newValue)}
   }
 
+  var interaction: Event.Interaction {
+    get {
+      if case .interaction(let v)? = kind {return v}
+      return Event.Interaction()
+    }
+    set {kind = .interaction(newValue)}
+  }
+
   var appVisibilityState: Event.AppVisibility = .unknown
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   enum OneOf_Kind: Equatable {
     case custom(Event.Custom)
+    case interaction(Event.Interaction)
 
   #if !swift(>=4.1)
     static func ==(lhs: Event.OneOf_Kind, rhs: Event.OneOf_Kind) -> Bool {
@@ -52,6 +61,11 @@ struct Event {
         guard case .custom(let l) = lhs, case .custom(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
+      case (.interaction, .interaction): return {
+        guard case .interaction(let l) = lhs, case .interaction(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      default: return false
       }
     }
   #endif
@@ -110,6 +124,105 @@ struct Event {
     init() {}
   }
 
+  struct Interaction {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var kind: Event.Interaction.OneOf_Kind? = nil
+
+    var custom: String {
+      get {
+        if case .custom(let v)? = kind {return v}
+        return String()
+      }
+      set {kind = .custom(newValue)}
+    }
+
+    var builtin: Event.Interaction.BuiltinKind {
+      get {
+        if case .builtin(let v)? = kind {return v}
+        return .click
+      }
+      set {kind = .builtin(newValue)}
+    }
+
+    var nodes: [Node] = []
+
+    var callbackName: String {
+      get {return _callbackName ?? String()}
+      set {_callbackName = newValue}
+    }
+    /// Returns true if `callbackName` has been explicitly set.
+    var hasCallbackName: Bool {return self._callbackName != nil}
+    /// Clears the value of `callbackName`. Subsequent reads from it will return its default value.
+    mutating func clearCallbackName() {self._callbackName = nil}
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    enum OneOf_Kind: Equatable {
+      case custom(String)
+      case builtin(Event.Interaction.BuiltinKind)
+
+    #if !swift(>=4.1)
+      static func ==(lhs: Event.Interaction.OneOf_Kind, rhs: Event.Interaction.OneOf_Kind) -> Bool {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch (lhs, rhs) {
+        case (.custom, .custom): return {
+          guard case .custom(let l) = lhs, case .custom(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        case (.builtin, .builtin): return {
+          guard case .builtin(let l) = lhs, case .builtin(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        default: return false
+        }
+      }
+    #endif
+    }
+
+    enum BuiltinKind: SwiftProtobuf.Enum {
+      typealias RawValue = Int
+      case click // = 0
+      case touch // = 1
+      case change // = 2
+      case submit // = 3
+      case UNRECOGNIZED(Int)
+
+      init() {
+        self = .click
+      }
+
+      init?(rawValue: Int) {
+        switch rawValue {
+        case 0: self = .click
+        case 1: self = .touch
+        case 2: self = .change
+        case 3: self = .submit
+        default: self = .UNRECOGNIZED(rawValue)
+        }
+      }
+
+      var rawValue: Int {
+        switch self {
+        case .click: return 0
+        case .touch: return 1
+        case .change: return 2
+        case .submit: return 3
+        case .UNRECOGNIZED(let i): return i
+        }
+      }
+
+    }
+
+    init() {}
+
+    fileprivate var _callbackName: String? = nil
+  }
+
   init() {}
 }
 
@@ -124,6 +237,16 @@ extension Event.AppVisibility: CaseIterable {
   ]
 }
 
+extension Event.Interaction.BuiltinKind: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static var allCases: [Event.Interaction.BuiltinKind] = [
+    .click,
+    .touch,
+    .change,
+    .submit,
+  ]
+}
+
 #endif  // swift(>=4.2)
 
 #if swift(>=5.5) && canImport(_Concurrency)
@@ -131,6 +254,9 @@ extension Event: @unchecked Sendable {}
 extension Event.OneOf_Kind: @unchecked Sendable {}
 extension Event.AppVisibility: @unchecked Sendable {}
 extension Event.Custom: @unchecked Sendable {}
+extension Event.Interaction: @unchecked Sendable {}
+extension Event.Interaction.OneOf_Kind: @unchecked Sendable {}
+extension Event.Interaction.BuiltinKind: @unchecked Sendable {}
 #endif  // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -139,6 +265,7 @@ extension Event: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase
   static let protoMessageName: String = "Event"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "custom"),
+    2: .same(proto: "interaction"),
     20: .standard(proto: "app_visibility_state"),
   ]
 
@@ -161,6 +288,19 @@ extension Event: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase
           self.kind = .custom(v)
         }
       }()
+      case 2: try {
+        var v: Event.Interaction?
+        var hadOneofValue = false
+        if let current = self.kind {
+          hadOneofValue = true
+          if case .interaction(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.kind = .interaction(v)
+        }
+      }()
       case 20: try { try decoder.decodeSingularEnumField(value: &self.appVisibilityState) }()
       default: break
       }
@@ -172,9 +312,17 @@ extension Event: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
-    try { if case .custom(let v)? = self.kind {
+    switch self.kind {
+    case .custom?: try {
+      guard case .custom(let v)? = self.kind else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    } }()
+    }()
+    case .interaction?: try {
+      guard case .interaction(let v)? = self.kind else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    }()
+    case nil: break
+    }
     if self.appVisibilityState != .unknown {
       try visitor.visitSingularEnumField(value: self.appVisibilityState, fieldNumber: 20)
     }
@@ -233,4 +381,85 @@ extension Event.Custom: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
+}
+
+extension Event.Interaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Event.protoMessageName + ".Interaction"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "custom"),
+    2: .same(proto: "builtin"),
+    3: .same(proto: "nodes"),
+    4: .standard(proto: "callback_name"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try {
+        var v: String?
+        try decoder.decodeSingularStringField(value: &v)
+        if let v = v {
+          if self.kind != nil {try decoder.handleConflictingOneOf()}
+          self.kind = .custom(v)
+        }
+      }()
+      case 2: try {
+        var v: Event.Interaction.BuiltinKind?
+        try decoder.decodeSingularEnumField(value: &v)
+        if let v = v {
+          if self.kind != nil {try decoder.handleConflictingOneOf()}
+          self.kind = .builtin(v)
+        }
+      }()
+      case 3: try { try decoder.decodeRepeatedMessageField(value: &self.nodes) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self._callbackName) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    switch self.kind {
+    case .custom?: try {
+      guard case .custom(let v)? = self.kind else { preconditionFailure() }
+      try visitor.visitSingularStringField(value: v, fieldNumber: 1)
+    }()
+    case .builtin?: try {
+      guard case .builtin(let v)? = self.kind else { preconditionFailure() }
+      try visitor.visitSingularEnumField(value: v, fieldNumber: 2)
+    }()
+    case nil: break
+    }
+    if !self.nodes.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.nodes, fieldNumber: 3)
+    }
+    try { if let v = self._callbackName {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 4)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Event.Interaction, rhs: Event.Interaction) -> Bool {
+    if lhs.kind != rhs.kind {return false}
+    if lhs.nodes != rhs.nodes {return false}
+    if lhs._callbackName != rhs._callbackName {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Event.Interaction.BuiltinKind: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "CLICK"),
+    1: .same(proto: "TOUCH"),
+    2: .same(proto: "CHANGE"),
+    3: .same(proto: "SUBMIT"),
+  ]
 }

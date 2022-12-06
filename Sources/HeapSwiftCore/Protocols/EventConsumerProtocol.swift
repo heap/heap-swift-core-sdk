@@ -5,6 +5,8 @@ protocol EventConsumerProtocol {
     func stopRecording(timestamp: Date)
     func track(_ event: String, properties: [String: HeapPropertyValue], timestamp: Date, sourceInfo: SourceInfo?, pageview: Pageview?)
     func trackPageview(_ properties: PageviewProperties, timestamp: Date, sourceInfo: SourceInfo?, bridge: RuntimeBridge?, userInfo: Any?) -> Pageview?
+    func uncommittedInteractionEvent(timestamp: Date, sourceInfo: SourceInfo?, pageview: Pageview?) -> InteractionEventProtocol?
+    func trackInteraction(interaction: Interaction, nodes: [InteractionNode], callbackName: String?, timestamp: Date, sourceInfo: SourceInfo?, pageview: Pageview?)
     func identify(_ identity: String, timestamp: Date)
     func resetIdentity(timestamp: Date)
     func addUserProperties(_ properties: [String: HeapPropertyValue])

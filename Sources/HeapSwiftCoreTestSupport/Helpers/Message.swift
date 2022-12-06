@@ -91,7 +91,7 @@ extension Message {
     @discardableResult
     func expectEventMessage(file: StaticString = #file, line: UInt = #line, user: UserToUpload, timestamp: Date? = nil, hasSourceLibrary: Bool = false, sourceLibrary: LibraryInfo? = nil, eventProperties: [String: Value]? = nil, pageviewMessage: Message? = nil) -> Event? {
 
-        guard case let .some(.event(event)) = kind else {
+        guard case let .event(event) = kind else {
             XCTFail("Expected a event message, got \(String(describing: kind))", file: file, line: line)
             return nil
         }
@@ -108,6 +108,30 @@ extension Message {
 
         return event
     }
+    
+    func expectInteractionEventMessage(file: StaticString = #file, line: UInt = #line, user: UserToUpload, timestamp: Date? = nil, hasSourceLibrary: Bool = false, sourceLibrary: LibraryInfo? = nil, eventProperties: [String: Value]? = nil, interaction: Event.Interaction.OneOf_Kind, nodes: [Node], callbackName: String?, pageviewMessage: Message? = nil) {
+        
+        guard case let .event(event) = kind else {
+            XCTFail("Expected a event message, got \(String(describing: kind))", file: file, line: line)
+            return
+        }
+        validateBaseMessage(file: file, line: line, user: user, id: nil, timestamp: timestamp, hasSourceLibrary: hasSourceLibrary, sourceLibrary: sourceLibrary, eventProperties: eventProperties)
+
+        expect(event.interaction.kind).to(equal(interaction), description: "The event does not match expected Kind")
+        expect(event.interaction.nodes).to(equal(nodes), description: "The event does not match expected Nodes")
+        if let callbackName = callbackName {
+            expect(event.interaction.callbackName).to(equal(callbackName), description: "The event does not match expected callbackName")
+        } else {
+            expect(event.interaction.hasCallbackName).to(beFalse(), description: "The event flag hasCallbackName for callbackName is mismatched, expected false flag for nil value")
+        }
+        
+        expect(file: file, line: line, hasPageviewInfo).to(beTrue(), description: "The event must have pageview info")
+
+        if let pageviewMessage = pageviewMessage {
+            expect(pageviewInfo).to(equal(pageviewMessage.pageviewInfo), description: "The event and pageview have matching pageviewInfo")
+        }
+    }
+    
 
     func assertEventMessage(file: StaticString = #file, line: UInt = #line, user: UserToUpload, timestamp: Date? = nil, hasSourceLibrary: Bool = false, sourceLibrary: LibraryInfo? = nil, eventProperties: [String: Value]? = nil, pageviewMessage: Message? = nil) throws -> Event {
         guard let event = expectEventMessage(file: file, line: line, user: user, timestamp: timestamp, hasSourceLibrary: hasSourceLibrary, sourceLibrary: sourceLibrary, eventProperties: eventProperties, pageviewMessage: pageviewMessage) else {

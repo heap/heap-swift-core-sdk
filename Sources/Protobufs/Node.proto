@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+import "Value.proto";
+
+// A node in the hierarchy of the app or web page.  This can represent a DOM
+// element, a UIResponder, a View, or something else entirely.
+message Node {
+  
+  // The element or component name for DOM elements, or the class name for views.
+  string node_name = 1;
+
+  // The on-screen text within the element, truncated to 1024 UTF-16 code-units.
+  optional string node_text = 2;
+  
+  // Traits that are applied to the element that can be used for filtering
+  // (e.g., individual class names on the web).
+  repeated string node_traits = 3;
+
+  // The unique ID for the node in its context (e.g., id in HTML, android:id on
+  // Android).
+  optional string id = 4;
+
+  // The developer-defined accessibility or testing identifier.
+  optional string accessibility_identifier = 5;
+
+  // The developer-defined accessibility label, truncated to 1024 UTF-16 code-units.
+  optional string accessibility_label = 6;
+  
+  // The name of a variable containing the node in the owning controller, if
+  // available.
+  optional string referencing_property_name = 7;
+
+  // Source-specific properties of the node that do not map to an above category.
+  // Keys limited to 512 UTF-16 code units.  Values limited to 1024 UTF-16 code
+  // units.
+  map<string, Value> source_properties = 20;
+
+  // Developer-defined attributes. (e.g., HTML or React Native attributes).
+  map<string, Value> attributes = 21;
+
+  // An optional representation of the bounding box with the origin in the top-left
+  // corner of the screen.
+  //
+  // This will be used for Event Visualizer in the future.
+  optional BoundingBox bounding_box = 22;
+}
+
+message Point {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+message Dimensions {
+  uint32 width = 1;
+  uint32 height = 2;
+}
+
+message BoundingBox {
+  Point position = 1;
+  Dimensions size = 2;
+}
