@@ -60,31 +60,49 @@ class InteractionEvent: InteractionEventProtocol {
     
     func commit() {
 
-            let kind: Interaction
-            do {
-                _lock.wait()
-                defer { _lock.signal() }
-                guard let unwrappedKind = _kind, !_needsNodes else { return }
-                kind = unwrappedKind
-            }
-
-            pendingEvent.setKind(.interaction(.with({
-                $0.kind = kind.kind
-                $0.nodes = _nodes.map(\.node)
-                $0.setIfNotNil(\.callbackName, callbackName)
-            })))
+        let kind: Interaction
+        let nodes: [InteractionNode]
+        do {
+            _lock.wait()
+            defer { _lock.signal() }
+            guard let unwrappedKind = _kind, !_needsNodes else { return }
+            kind = unwrappedKind
+            nodes = _nodes
         }
+        
+        pendingEvent.setKind(.interaction(.with({
+            $0.kind = kind.kind
+            $0.nodes = nodes.map(\.node)
+            $0.setIfNotNil(\.callbackName, callbackName)
+        })))
+        
+        if let firstNode = nodes.first {
+            HeapLogger.shared.logDev("Tracked \(kind) interaction event on node \(firstNode.nodeName).")
+        } else {
+            HeapLogger.shared.logDev("Tracked \(kind) interaction event with no nodes.")
+        }
+    }
 }
 
 extension Interaction {
 
     var kind: Event.Interaction.OneOf_Kind {
-
         switch self {
         case .custom(let name): return .custom(name)
         case .click: return .builtin(.click)
         case .touch: return .builtin(.touch)
         case .change: return .builtin(.change)
+        }
+    }
+}
+
+extension Interaction: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .custom(let name): return "\(name) (custom)"
+        case .click: return "click"
+        case .touch: return "touch"
+        case .change: return "change"
         }
     }
 }

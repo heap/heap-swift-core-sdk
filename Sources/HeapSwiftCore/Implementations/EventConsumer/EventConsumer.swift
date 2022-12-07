@@ -216,9 +216,9 @@ extension EventConsumer: EventConsumerProtocol {
         
         dataStore.insertPendingMessage(message)
         if let sourceName = sourceInfo?.name {
-            HeapLogger.shared.logDev("Tracked pageview from \(sourceName).")
+            HeapLogger.shared.logDev("Tracked pageview from \(sourceName) on \(properties.componentOrClassName ?? "an unknown component") titled \"\(properties.title ?? "")\".")
         } else {
-            HeapLogger.shared.logDev("Tracked pageview.")
+            HeapLogger.shared.logDev("Tracked pageview on \(properties.componentOrClassName ?? "an unknown component") titled \"\(properties.title ?? "")\".")
         }
         HeapLogger.shared.logDebug("Committed event message:\n\(message)")
         
