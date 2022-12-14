@@ -15,9 +15,11 @@ let package = Package(
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
             name: "HeapSwiftCore",
+            type: .dynamic,
             targets: ["HeapSwiftCore"]),
         .library(
             name: "HeapSwiftCoreTestSupport",
+            type: .dynamic,
             targets: ["HeapSwiftCoreTestSupport"]),
     ],
     dependencies: [

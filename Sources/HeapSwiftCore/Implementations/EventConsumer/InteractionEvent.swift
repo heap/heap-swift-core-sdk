@@ -112,11 +112,13 @@ extension InteractionNode {
     var node: Node {
         .with {
             $0.nodeName = nodeName
-            $0.setIfNotNil(\.nodeText, nodeText)
+            $0.setIfNotNil(\.nodeText, nodeText?.truncated().result)
             $0.setIfNotNil(\.id, id)
+            $0.nodeTraits = nodeTraits
             $0.setIfNotNil(\.accessibilityIdentifier, accessibilityIdentifier)
-            $0.setIfNotNil(\.accessibilityLabel, accessibilityLabel)
-            $0.sourceProperties = sourceProperties.mapValues(\.protoValue)
+            $0.setIfNotNil(\.accessibilityLabel, accessibilityLabel?.truncated().result)
+            $0.setIfNotNil(\.referencingPropertyName, referencingPropertyName)
+            $0.sourceProperties = sourceProperties.sanitized().result.mapValues(\.protoValue)
             $0.attributes = attributes.mapValues(\.protoValue)
             if let boundingBox = boundingBox {
                 $0.boundingBox = boundingBox.boundingBox

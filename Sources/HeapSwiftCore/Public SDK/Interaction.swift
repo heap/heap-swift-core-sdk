@@ -12,8 +12,12 @@ public struct InteractionNode {
     
     /// The on-screen text within the element, truncated to 1024 UTF-16 code-units.
     public var nodeText: String?
+    
+    /// Traits that are applied to the element that can be used for filtering
+    /// (e.g., individual class names on the web).
+    public var nodeTraits: [String] = []
 
-    /// The unique ID for the node in its context
+    /// The unique ID for the node in its context.
     public var id: String?
 
     /// The developer-defined accessibility or testing identifier.
@@ -21,6 +25,10 @@ public struct InteractionNode {
     
     /// The developer-defined accessibility label, truncated to 1024 UTF-16 code-units.
     public var accessibilityLabel: String?
+    
+    /// The name of a variable containing the node in the owning controller, if
+    /// available.
+    public var referencingPropertyName: String?
 
     /// Source-specific properties of the node that do not map to an above category.
     /// Keys limited to 512 UTF-16 code units.  Values limited to 1024 UTF-16 code units.
