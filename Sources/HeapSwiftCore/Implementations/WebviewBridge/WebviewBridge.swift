@@ -6,12 +6,10 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
     
     weak var webView: WKWebView?
     let origins: [Origin]
-    let eventConsumer: WebviewEventConsumer
 
-    init(webView: WKWebView, origins: Set<String>, eventConsumer: any EventConsumerProtocol) {
+    init(webView: WKWebView, origins: Set<String>) {
         self.webView = webView
         self.origins = origins.compactMap(Origin.init(rawValue:))
-        self.eventConsumer = WebviewEventConsumer(eventConsumer: eventConsumer)
     }
     
     func register() {
@@ -32,7 +30,7 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
             return
         }
         
-        HeapLogger.shared.logDev("Web view received the following message:\n\(message.body)")
+        HeapLogger.shared.logDebug("Web view received the following message:\n\(message.body)")
         
         if let body = message.body as? [String: Any],
            let type = body["type"] as? String {
@@ -44,8 +42,8 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
                 let callbackId = body["callbackId"] as? String
                 
                 do {
-                    let data = try eventConsumer.handleInvocation(method: method, arguments: arguments)
-                    replyWithData(data, to: message, callbackId: callbackId)
+                    let data = try HeapBridgeSupport.shared.handleInvocation(method: method, arguments: arguments)
+                    replyWithData(data?._toHeapJSON() ?? JSON.null, to: message, callbackId: callbackId)
                 } catch InvocationError.unknownMethod {
                     replyWithError("Unknown method: \(method)", to: message, callbackId: callbackId)
                 } catch InvocationError.invalidParameters {
@@ -58,7 +56,7 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
             }
         }
         
-        HeapLogger.shared.logDev("Web view received an unknown message over the JavaScript bridge.")
+        HeapLogger.shared.logDebug("Web view received an unknown message over the JavaScript bridge.")
     }
     
     func replyWithData(_ data: JSON, to message: WKScriptMessage, callbackId: String?) {

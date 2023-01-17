@@ -3,8 +3,8 @@ import Foundation
 @objc
 public class Heap: NSObject {
 
-    internal var consumer: any EventConsumerProtocol
-    private var uploader: any UploaderProtocol
+    internal let consumer: any EventConsumerProtocol
+    private let uploader: any UploaderProtocol
 
     private static let heapDirectory: URL = {
         // TODO: Need to validate that this works on all environments and places things where they need to go.

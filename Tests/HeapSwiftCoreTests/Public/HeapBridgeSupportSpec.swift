@@ -1,23 +1,21 @@
-#if canImport(WebKit)
-
 import XCTest
 import Quick
 import Nimble
 @testable import HeapSwiftCore
 @testable import HeapSwiftCoreTestSupport
 
-final class WebviewEventConsumerSpec: HeapSpec {
+final class HeapBridgeSupportSpec: HeapSpec {
     
     override func spec() {
         
         var dataStore: InMemoryDataStore!
         var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
-        var webConsumer: WebviewEventConsumer!
+        var webConsumer: HeapBridgeSupport!
 
         beforeEach {
             dataStore = InMemoryDataStore()
             consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
-            webConsumer = WebviewEventConsumer(eventConsumer: consumer)
+            webConsumer = HeapBridgeSupport(eventConsumer: consumer)
             HeapLogger.shared.logLevel = .debug
         }
         
@@ -132,7 +130,7 @@ final class WebviewEventConsumerSpec: HeapSpec {
                 _ = try webConsumer.handleInvocation(method: method, arguments: [
                     "event": "my-event",
                     "properties": [String: Any](),
-                    "sourceInfo": [
+                    "sourceLibrary": [
                         "name": "my source",
                         "version": "1.0.0",
                         "platform": "my platform",
@@ -145,7 +143,7 @@ final class WebviewEventConsumerSpec: HeapSpec {
                 _ = try webConsumer.handleInvocation(method: method, arguments: [
                     "event": "my-event",
                     "properties": [String: Any](),
-                    "sourceInfo": [
+                    "sourceLibrary": [
                         "name": "my source",
                         "version": "1.0.0",
                         "platform": "my platform",
@@ -153,7 +151,7 @@ final class WebviewEventConsumerSpec: HeapSpec {
                 ])
             }
             
-            it("does not throw when sourceInfo is omitted") {
+            it("does not throw when sourceLibrary is omitted") {
                 _ = try webConsumer.handleInvocation(method: method, arguments: [
                     "event": "my-event",
                     "properties": [String: Any](),
@@ -507,11 +505,11 @@ final class WebviewEventConsumerSpec: HeapSpec {
                 
                 it("returns the user id when Heap is recording") {
                     consumer.startRecording("11")
-                    expect(try webConsumer.handleInvocation(method: method, arguments: [:])).to(equal(.string(consumer.userId!)))
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(equal(consumer.userId))
                 }
                 
                 it("returns null when Heap is not recording") {
-                    expect(try webConsumer.handleInvocation(method: method, arguments: [:])).to(equal(.null))
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(beNil())
                 }
             }
             
@@ -520,12 +518,12 @@ final class WebviewEventConsumerSpec: HeapSpec {
                 it("returns the identity when identified") {
                     consumer.startRecording("11")
                     consumer.identify("user-1")
-                    expect(try webConsumer.handleInvocation(method: method, arguments: [:])).to(equal(.string("user-1")))
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(equal("user-1"))
                 }
                 
                 it("returns null when unidentified") {
                     consumer.startRecording("11")
-                    expect(try webConsumer.handleInvocation(method: method, arguments: [:])).to(equal(.null))
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(beNil())
                 }
             }
             
@@ -558,15 +556,185 @@ final class WebviewEventConsumerSpec: HeapSpec {
                 
                 it("returns the session id when Heap is recording") {
                     consumer.startRecording("11")
-                    expect(try webConsumer.handleInvocation(method: method, arguments: [:])).to(equal(.string(consumer.activeSession!.sessionId)))
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(equal(consumer.activeSession!.sessionId))
                 }
                 
                 it("returns null when Heap is not recording") {
-                    expect(try webConsumer.handleInvocation(method: method, arguments: [:])).to(equal(.null))
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(beNil())
+                }
+            }
+            
+            describeMethod("heapLogger_log") { method in
+                
+                it("does not throw when all options are provided") {
+                    _ = try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "debug",
+                        "message": "Message from the log test",
+                        "source": "test runner",
+                    ])
+                }
+                
+                it("does not throw when source is omitted") {
+                    _ = try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "debug",
+                        "message": "Message from the log test",
+                    ])
+                }
+                
+                it("throws when source is not a string") {
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "debug",
+                        "message": "Message from the log test",
+                        "source": ["foo": "bar"],
+                    ])).to(throwError(InvocationError.invalidParameters))
+                }
+                
+                it("throws when message is omitted") {
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "debug",
+                        "source": "test runner",
+                    ])).to(throwError(InvocationError.invalidParameters))
+                }
+                
+                it("throws when message is not a string") {
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "debug",
+                        "message": ["foo": "bar"],
+                        "source": "test runner",
+                    ])).to(throwError(InvocationError.invalidParameters))
+                }
+                
+                it("throws when message is empty") {
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "debug",
+                        "message": "",
+                        "source": "test runner",
+                    ])).to(throwError(InvocationError.invalidParameters))
+                }
+                
+                it("does not throw for the critical log level") {
+                    _ = try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "critical",
+                        "message": "Message from the log test",
+                        "source": "test runner",
+                    ])
+                }
+                
+                it("does not throw for the prod log level") {
+                    _ = try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "prod",
+                        "message": "Message from the log test",
+                        "source": "test runner",
+                    ])
+                }
+                
+                it("does not throw for the dev log level") {
+                    _ = try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "dev",
+                        "message": "Message from the log test",
+                        "source": "test runner",
+                    ])
+                }
+                
+                it("does not throw for the debug log level") {
+                    _ = try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "debug",
+                        "message": "Message from the log test",
+                        "source": "test runner",
+                    ])
+                }
+                
+                it("throws for an unknown log level") {
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "quack",
+                        "message": "Message from the log test",
+                        "source": "test runner",
+                    ])).to(throwError(InvocationError.invalidParameters))
+                }
+                
+                it("throws when log level is omitted") {
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [
+                        "message": "Message from the log test",
+                        "source": "test runner",
+                    ])).to(throwError(InvocationError.invalidParameters))
+                }
+            }
+            
+            describeMethod("heapLogger_setLogLevel") { method in
+                
+                it("can set the log level to critical") {
+                    _ = try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "critical",
+                    ])
+                    expect(HeapLogger.shared.logLevel).to(equal(.critical))
+                }
+                
+                it("can set the log level to prod") {
+                    _ = try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "prod",
+                    ])
+                    expect(HeapLogger.shared.logLevel).to(equal(.prod))
+                }
+                
+                it("can set the log level to dev") {
+                    _ = try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "dev",
+                    ])
+                    expect(HeapLogger.shared.logLevel).to(equal(.dev))
+                }
+                
+                it("can set the log level to debug") {
+                    _ = try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "debug",
+                    ])
+                    expect(HeapLogger.shared.logLevel).to(equal(.debug))
+                }
+                
+                it("can set the log level to none") {
+                    _ = try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "none",
+                    ])
+                    expect(HeapLogger.shared.logLevel).to(equal(LogLevel.none))
+                }
+                
+                it("throws when for an unknown log level") {
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [
+                        "logLevel": "quack",
+                    ])).to(throwError(InvocationError.invalidParameters))
+                }
+                
+                it("throws when log level is omitted") {
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [:])).to(throwError(InvocationError.invalidParameters))
+                }
+            }
+            
+            describeMethod("heapLogger_logLevel") { method in
+                
+                it("gets the critical log level") {
+                    HeapLogger.shared.logLevel = .critical
+                    expect (try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(equal("critical"))
+                }
+                
+                it("gets the prod log level") {
+                    HeapLogger.shared.logLevel = .prod
+                    expect (try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(equal("prod"))
+                }
+                
+                it("gets the dev log level") {
+                    HeapLogger.shared.logLevel = .dev
+                    expect (try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(equal("dev"))
+                }
+                
+                it("gets the debug log level") {
+                    HeapLogger.shared.logLevel = .debug
+                    expect (try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(equal("debug"))
+                }
+                
+                it("gets the none log level") {
+                    HeapLogger.shared.logLevel = .none
+                    expect (try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(equal("none"))
                 }
             }
         }
     }
 }
-
-#endif

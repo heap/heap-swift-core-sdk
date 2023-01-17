@@ -20,6 +20,7 @@
         <div class="centerer">
             <button type="button" id="track">Track from HTML</button>
             <button type="button" id="getUserId">Get User Id</button>
+            <button type="button" id="logProd">Log a message</button>
             <div id="userId">UserId: ...</div>
         </div>
         
@@ -75,6 +76,16 @@
                 }
             };
             
+            var HeapLogger = {
+                logProd(message, source) {
+                    webkit.messageHandlers.HeapSwiftBridge.postMessage({
+                        type: 'invocation',
+                        method: 'heapLogger_log',
+                        arguments: { logLevel: 'prod', message, source, }
+                    });
+                }
+            }
+            
             document.getElementById('track').addEventListener('click', function () {
                 Heap.track('HTML Button Clicked', {
                     'propa': 'a',
@@ -87,6 +98,10 @@
             
             document.getElementById('getUserId').addEventListener('click', async function () {
                 document.getElementById('userId').textContent = "UserId: " + await Heap.getUserId();
+            });
+            
+            document.getElementById('logProd').addEventListener('click', function () {
+                HeapLogger.logProd('This log message originated from a web view.', 'Just a source');
             });
         </script>
     </body>
