@@ -18,6 +18,7 @@ import AppKit
 class CountingRuntimeBridge: NSObject, RuntimeBridge {
     
     var calls: [DelegateCall] = []
+    var sessions: [String] = []
 
     func didStartRecording(options: [HeapSwiftCore.Option : Any], complete: @escaping () -> Void) {
         calls.append(.didStartRecording)
@@ -31,6 +32,7 @@ class CountingRuntimeBridge: NSObject, RuntimeBridge {
     
     func sessionDidStart(sessionId: String, timestamp: Date, foregrounded: Bool, complete: @escaping () -> Void) {
         calls.append(.sessionDidStart)
+        sessions.append(sessionId)
         complete()
     }
     

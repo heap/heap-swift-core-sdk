@@ -11,15 +11,16 @@ final class EventConsumer_GetSessionIdSpec: HeapSpec {
             
             var dataStore: InMemoryDataStore!
             var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
+            var bridge: CountingRuntimeBridge!
+            var source: CountingSource!
+            var restoreState: StateRestorer!
 
             beforeEach {
-                dataStore = InMemoryDataStore()
-                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
-                HeapLogger.shared.logLevel = .debug
+                (dataStore, consumer, bridge, source, restoreState) = prepareEventConsumerWithCountingDelegates()
             }
             
             afterEach {
-                HeapLogger.shared.logLevel = .prod
+                restoreState()
             }
             
             it("returns nil before `startRecording` is called") {
@@ -103,6 +104,11 @@ final class EventConsumer_GetSessionIdSpec: HeapSpec {
 
                         let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 2)
                         messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: getSessionIdTimestamp, eventProperties: consumer.eventProperties)
+                    }
+                    
+                    it("notifies bridges and sources about the new session") {
+                        expect(bridge.sessions).to(haveCount(2))
+                        expect(source.sessions).to(equal(bridge.sessions))
                     }
 
                     it("extends the session") {

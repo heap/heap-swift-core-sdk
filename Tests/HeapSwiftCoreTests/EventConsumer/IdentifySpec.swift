@@ -11,15 +11,16 @@ final class EventConsumer_IdentifySpec: HeapSpec {
             
             var dataStore: InMemoryDataStore!
             var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
+            var bridge: CountingRuntimeBridge!
+            var source: CountingSource!
+            var restoreState: StateRestorer!
 
             beforeEach {
-                dataStore = InMemoryDataStore()
-                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
-                HeapLogger.shared.logLevel = .debug
+                (dataStore, consumer, bridge, source, restoreState) = prepareEventConsumerWithCountingDelegates()
             }
             
             afterEach {
-                HeapLogger.shared.logLevel = .prod
+                restoreState()
             }
             
             context("identity is not set") {
@@ -164,6 +165,11 @@ final class EventConsumer_IdentifySpec: HeapSpec {
                             messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: identifyTimestamp, eventProperties: consumer.eventProperties)
                         }
                         
+                        it("notifies bridges and sources about the new session") {
+                            expect(bridge.sessions).to(haveCount(2))
+                            expect(source.sessions).to(equal(bridge.sessions))
+                        }
+                        
                         it("extends the session") {
                             try consumer.assertSessionWasExtended(from: identifyTimestamp)
                         }
@@ -283,6 +289,11 @@ final class EventConsumer_IdentifySpec: HeapSpec {
                             let user = try dataStore.assertUserToUploadExists(with: consumer.userId!)
                             let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 2)
                             messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: identifyTimestamp, eventProperties: consumer.eventProperties)
+                        }
+                        
+                        it("notifies bridges and sources about the new session") {
+                            expect(bridge.sessions).to(haveCount(2))
+                            expect(source.sessions).to(equal(bridge.sessions))
                         }
                         
                         it("extends the session") {

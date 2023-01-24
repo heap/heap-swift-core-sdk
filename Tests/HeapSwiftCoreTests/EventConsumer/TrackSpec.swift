@@ -11,15 +11,16 @@ final class EventConsumer_TrackSpec: HeapSpec {
             
             var dataStore: InMemoryDataStore!
             var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
+            var bridge: CountingRuntimeBridge!
+            var source: CountingSource!
+            var restoreState: StateRestorer!
 
             beforeEach {
-                dataStore = InMemoryDataStore()
-                consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
-                HeapLogger.shared.logLevel = .debug
+                (dataStore, consumer, bridge, source, restoreState) = prepareEventConsumerWithCountingDelegates()
             }
             
             afterEach {
-                HeapLogger.shared.logLevel = .prod
+                restoreState()
             }
             
             it("doesn't track an event before `startRecording` is called") {
@@ -111,6 +112,11 @@ final class EventConsumer_TrackSpec: HeapSpec {
                         expect(consumer.activeOrExpiredSessionId).notTo(equal(originalSessionId))
                         let user = try dataStore.assertOnlyOneUserToUpload()
                         expect(user.sessionIds.count).to(equal(2))
+                    }
+                    
+                    it("notifies bridges and sources about the new session") {
+                        expect(bridge.sessions).to(haveCount(2))
+                        expect(source.sessions).to(equal(bridge.sessions))
                     }
 
                     it("extends the session") {

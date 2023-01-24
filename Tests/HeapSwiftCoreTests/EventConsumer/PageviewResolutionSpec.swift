@@ -105,6 +105,7 @@ final class PageviewResolutionSpec: HeapSpec {
                             expect(defaultSource.calls).toEventually(equal([
                                 .didStartRecording,
                                 .sessionDidStart,
+                                .sessionDidStart,
                                 .activePageview,
                             ]))
                         }
@@ -119,6 +120,7 @@ final class PageviewResolutionSpec: HeapSpec {
                             
                             expect(defaultSource.calls).toEventually(equal([
                                 .didStartRecording,
+                                .sessionDidStart,
                                 .sessionDidStart,
                                 .activePageview,
                             ]))
@@ -141,11 +143,13 @@ final class PageviewResolutionSpec: HeapSpec {
                             expect(defaultSource.calls).toEventually(equal([
                                 .didStartRecording,
                                 .sessionDidStart,
+                                .sessionDidStart,
                                 .activePageview,
                             ]))
                             
                             expect(source.calls).to(equal([
                                 .didStartRecording,
+                                .sessionDidStart,
                                 .sessionDidStart,
                             ]))
                         }
@@ -167,11 +171,13 @@ final class PageviewResolutionSpec: HeapSpec {
                             expect(defaultSource.calls).toEventually(equal([
                                 .didStartRecording,
                                 .sessionDidStart,
+                                .sessionDidStart,
                                 .activePageview,
                             ]))
                             
                             expect(source.calls).to(equal([
                                 .didStartRecording,
+                                .sessionDidStart,
                                 .sessionDidStart,
                             ]))
                         }
@@ -193,11 +199,13 @@ final class PageviewResolutionSpec: HeapSpec {
                             expect(defaultSource.calls).toEventually(equal([
                                 .didStartRecording,
                                 .sessionDidStart,
+                                .sessionDidStart,
                                 .activePageview,
                             ]))
                             
                             expect(source.calls).to(equal([
                                 .didStartRecording,
+                                .sessionDidStart,
                                 .sessionDidStart,
                             ]))
                         }
@@ -229,6 +237,7 @@ final class PageviewResolutionSpec: HeapSpec {
                             expect(pageviewSource.calls).toEventually(equal([
                                 .didStartRecording,
                                 .sessionDidStart,
+                                .sessionDidStart,
                                 .reissuePageview,
                             ]))
                         }
@@ -259,6 +268,7 @@ final class PageviewResolutionSpec: HeapSpec {
                             expect(eventSource.calls).toEventually(equal([
                                 .didStartRecording,
                                 .sessionDidStart,
+                                .sessionDidStart,
                                 .activePageview,
                             ]))
                         }
@@ -275,6 +285,7 @@ final class PageviewResolutionSpec: HeapSpec {
                             expect(eventSource.calls).toEventually(equal([
                                 .didStartRecording,
                                 .sessionDidStart,
+                                .sessionDidStart,
                                 .activePageview,
                             ]))
                         }
@@ -289,6 +300,7 @@ final class PageviewResolutionSpec: HeapSpec {
                             
                             expect(eventSource.calls).toEventually(equal([
                                 .didStartRecording,
+                                .sessionDidStart,
                                 .sessionDidStart,
                                 .activePageview,
                             ]))
@@ -362,6 +374,7 @@ final class PageviewResolutionSpec: HeapSpec {
                         
                         expect(defaultSource.calls).toEventually(equal([
                             .didStartRecording,
+                            .sessionDidStart,
                             .sessionDidStart,
                             .activePageview,
                         ]))

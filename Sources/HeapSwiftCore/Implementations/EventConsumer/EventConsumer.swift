@@ -85,17 +85,23 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
                 minLastMessageDate: timestamp.addingTimeInterval(-86_400 * 6),
                 minUserCreationDate: timestamp.addingTimeInterval(-86_400 * 6)
             )
-            
-            if updateResults.outcomes.sessionCreated {
-                let sessionID = sessionInfo.id
+        }
+        
+        if updateResults.outcomes.sessionCreated {
+            // Switch to the main thread so we can check Event.AppVisibility.current.
+            onMainThread {
+                
+                let sessionId = sessionInfo.id
+                let foregrounded = Event.AppVisibility.current == .foregrounded
+                
                 for (sourceName, source) in snapshot.sources {
-                    source.sessionDidStart(sessionId: sessionID, timestamp: timestamp, foregrounded: Event.AppVisibility.current == .foregrounded) {
+                    source.sessionDidStart(sessionId: sessionId, timestamp: timestamp, foregrounded: foregrounded) {
                         HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to session initialization.")
                     }
                 }
                 
                 for bridge in snapshot.runtimeBridges {
-                    bridge.sessionDidStart(sessionId: sessionID, timestamp: timestamp, foregrounded: Event.AppVisibility.current == .foregrounded) {
+                    bridge.sessionDidStart(sessionId: sessionId, timestamp: timestamp, foregrounded: foregrounded) {
                         HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to session initialization.")
                     }
                 }

@@ -29,6 +29,7 @@ class CountingSource: NSObject, Source {
     let version: String
     
     var calls: [DelegateCall] = []
+    var sessions: [String] = []
     
     init(name: String, version: String) {
         self.name = name
@@ -48,6 +49,7 @@ class CountingSource: NSObject, Source {
     
     func sessionDidStart(sessionId: String, timestamp: Date, foregrounded: Bool, complete: @escaping () -> Void) {
         calls.append(.sessionDidStart)
+        sessions.append(sessionId)
         complete()
     }
     
