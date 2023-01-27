@@ -10,7 +10,7 @@ final class LibraryInfoInfoSpec: QuickSpec {
         describe("LibraryInfo.baseInfo") {
             
             it("has the right name") {
-                expect(LibraryInfo.baseInfo(with: .init()).name).to(equal("HeapSwiftCore"))
+                expect(LibraryInfo.baseInfo(with: .init()).name).to(equal("swift"))
             }
 
             it("gets the platfrom from device info") {
