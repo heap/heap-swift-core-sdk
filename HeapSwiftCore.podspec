@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name = 'HeapSwiftCore'
-  s.version = '0.0.0'
+  s.version = '0.0.1'
   s.license = { :type => 'Commercial', :text => 'See https://heapanalytics.com/terms' }
   s.summary = 'The core Heap library used for apps on Apple platforms.'
   s.homepage = 'https://heap.io'
