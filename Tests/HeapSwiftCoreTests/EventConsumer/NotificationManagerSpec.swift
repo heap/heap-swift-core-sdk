@@ -55,13 +55,13 @@ final class NotificationManagerSpec: HeapSpec {
                 NotificationCenter.default.post(name: WKExtension.applicationWillEnterForegroundNotification, object: nil)
 #endif
                 
-                expect(sourceA1.calls).to(equal([
+                expect(sourceA1.calls).toEventually(equal([
                     .didStartRecording,
                     .sessionDidStart,
                     .applicationDidEnterForeground,
                 ]))
                 
-                expect(bridge1.calls).to(equal([
+                expect(bridge1.calls).toEventually(equal([
                     .didStartRecording,
                     .sessionDidStart,
                     .applicationDidEnterForeground,
@@ -210,13 +210,13 @@ final class NotificationManagerSpec: HeapSpec {
                 NotificationCenter.default.post(name: WKExtension.applicationWillEnterForegroundNotification, object: nil)
 #endif
 
-                expect(sourceA1.calls).to(equal([
+                expect(sourceA1.calls).toEventually(equal([
                     .didStartRecording,
                     .sessionDidStart,
                     .applicationDidEnterForeground
                 ]))
                 
-                expect(bridge1.calls).to(equal([
+                expect(bridge1.calls).toEventually(equal([
                     .didStartRecording,
                     .sessionDidStart,
                     .applicationDidEnterForeground

@@ -32,7 +32,7 @@ class NotificationManager {
 
         if #available(iOS 13.0, tvOS 13.0, *) {
             
-            notificationCenter.addObserver(self, selector: #selector(windowSceneDidEnterForeground(_:)),
+            notificationCenter.addObserver(self, selector: #selector(windowSceneWillEnterForeground(_:)),
                 name: UIScene.willEnterForegroundNotification, object: nil)
             
             notificationCenter.addObserver(self, selector: #selector(windowSceneDidEnterBackground(_:)),
@@ -109,17 +109,21 @@ class NotificationManager {
         
         HeapLogger.shared.logDebug("applicationWillEnterForeground")
         
-        let (sources, _, bridges) = delegateManager.current
-        let timestamp = Date()
-        for (sourceName, source) in sources {
-            source.applicationDidEnterForeground(timestamp: timestamp) {
-                HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to the applicationDidEnterForeground notification.")
+        // Delay until the next cycle so "willEnterForeground" becomes "didEnterForeground".
+        DispatchQueue.main.async { [self] in
+            
+            let (sources, _, bridges) = delegateManager.current
+            let timestamp = Date()
+            for (sourceName, source) in sources {
+                source.applicationDidEnterForeground(timestamp: timestamp) {
+                    HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to the applicationDidEnterForeground notification.")
+                }
             }
-        }
-
-        for bridge in bridges {
-            bridge.applicationDidEnterForeground(timestamp: timestamp) {
-                HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to the applicationDidEnterForeground notification.")
+            
+            for bridge in bridges {
+                bridge.applicationDidEnterForeground(timestamp: timestamp) {
+                    HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to the applicationDidEnterForeground notification.")
+                }
             }
         }
     }
@@ -145,22 +149,25 @@ class NotificationManager {
     
 #if canImport(UIKit) && !os(watchOS)
     @available(iOS 13.0, tvOS 13.0, *)
-    @objc func windowSceneDidEnterForeground(_ notification: NSNotification) {
+    @objc func windowSceneWillEnterForeground(_ notification: NSNotification) {
         
         guard let scene = notification.object as? UIWindowScene else { return }
-        HeapLogger.shared.logDebug("windowSceneDidEnterForeground: \(scene)")
+        HeapLogger.shared.logDebug("windowSceneWillEnterForeground: \(scene)")
         
-        let (sources, _, bridges) = delegateManager.current
-        let timestamp = Date()
-        for (sourceName, source) in sources {
-            source.windowSceneDidEnterForeground(scene: scene, timestamp: timestamp) {
-                HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to the windowSceneDidEnterForeground notification.")
+        // Delay until the next cycle so "willEnterForeground" becomes "didEnterForeground".
+        DispatchQueue.main.async { [self] in
+            let (sources, _, bridges) = delegateManager.current
+            let timestamp = Date()
+            for (sourceName, source) in sources {
+                source.windowSceneDidEnterForeground(scene: scene, timestamp: timestamp) {
+                    HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to the windowSceneDidEnterForeground notification.")
+                }
             }
-        }
-        
-        for bridge in bridges {
-            bridge.windowSceneDidEnterForeground(scene: scene, timestamp: timestamp) {
-                HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to the windowSceneDidEnterForeground notification.")
+            
+            for bridge in bridges {
+                bridge.windowSceneDidEnterForeground(scene: scene, timestamp: timestamp) {
+                    HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to the windowSceneDidEnterForeground notification.")
+                }
             }
         }
     }
