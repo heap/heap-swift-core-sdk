@@ -72,7 +72,7 @@ public class HeapBridgeSupport
     }
     
     func track(arguments: [String: Any]) throws -> JSONEncodable? {
-        let event = try getRequiredString(named: "event", from: arguments, message: "HeapBridgeSupport.track received an invalid event name will not complete the bridged method call.")
+        let event = try getRequiredString(named: "event", from: arguments, message: "HeapBridgeSupport.track received an invalid event name and will not complete the bridged method call.")
         let timestamp = try getOptionalTimestamp(arguments, methodName: "track")
         let sourceInfo = try getOptionalSourceLibrary(arguments, methodName: "track")
         let properties = try getOptionalParameterDictionary(named: "properties", from: arguments, message: "HeapBridgeSupport.track received invalid properties and will not complete the bridged method call.")
