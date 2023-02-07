@@ -18,73 +18,17 @@
     </head>
     <body>
         <div class="centerer">
-            <button type="button" id="track">Track from HTML</button>
-            <button type="button" id="getUserId">Get User Id</button>
-            <button type="button" id="logProd">Log a message</button>
-            <div id="userId">UserId: ...</div>
+            <button type="button" id="track">Track an event</button>
+            <button type="button" id="logProd">Log a prod message</button>
+            <button type="button" id="getInfo">Show Heap properties</button>
+            <pre id="details">
+                
+                
+                
+            </pre>
         </div>
         
         <script type="text/javascript">
-            
-            var _cbCounter = 0;
-            
-            function nextCallbackId() {
-                return "cb:" + (_cbCounter ++);
-            }
-            
-            var callbacks = {};
-            
-            var Heap = {
-                
-                track(event, properties) {
-                    webkit.messageHandlers.HeapSwiftBridge.postMessage({
-                        type: 'invocation',
-                        method: 'track',
-                        arguments: { event, properties, }
-                    });
-                },
-                
-                getUserId() {
-                    const callbackId = nextCallbackId();
-                    const promise = new Promise((resolve, reject) => {
-                        callbacks[callbackId] = (payload) => {
-                            if (payload.error) {
-                                reject(payload.error);
-                            } else {
-                                resolve(payload.data);
-                            }
-                        };
-                    });
-                    
-                    webkit.messageHandlers.HeapSwiftBridge.postMessage({
-                        type: 'invocation',
-                        method: 'userId',
-                        arguments: {},
-                        callbackId,
-                    });
-                    
-                    return promise;
-                },
-                
-                nativeMessage(payload) {
-                    console.debug("Native message received", payload);
-                    if (payload.type == 'result' && payload.callbackId) {
-                        const callback = callbacks[payload.callbackId];
-                        if (callback) { callback(payload); }
-                        delete callbacks[payload.callbackId];
-                    }
-                }
-            };
-            
-            var HeapLogger = {
-                logProd(message, source) {
-                    webkit.messageHandlers.HeapSwiftBridge.postMessage({
-                        type: 'invocation',
-                        method: 'heapLogger_log',
-                        arguments: { logLevel: 'prod', message, source, }
-                    });
-                }
-            }
             
             document.getElementById('track').addEventListener('click', function () {
                 Heap.track('HTML Button Clicked', {
@@ -96,12 +40,17 @@
                 });
             });
             
-            document.getElementById('getUserId').addEventListener('click', async function () {
-                document.getElementById('userId').textContent = "UserId: " + await Heap.getUserId();
-            });
-            
             document.getElementById('logProd').addEventListener('click', function () {
                 HeapLogger.logProd('This log message originated from a web view.', 'Just a source');
+            });
+            
+            document.getElementById('getInfo').addEventListener('click', async function () {
+                document.getElementById('details').textContent = `
+User Id:    ${await Heap.getUserId()}
+Identity:   ${await Heap.getIdentity()}
+Session Id: ${await Heap.getSessionId()}
+Log Level:  ${await HeapLogger.getLogLevel()}
+`.trim();
             });
         </script>
     </body>

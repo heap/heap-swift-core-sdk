@@ -9,7 +9,7 @@ class HybridViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        Heap.shared.attachWebView(webview, origins: ["https://example.com"])
+        Heap.shared.attachWebView(webview, origins: ["https://example.com"], injectHeapJavaScript: true)
 
         let htmlFile = Bundle.main.url(forResource: "index", withExtension: "html")
         let html = try! String(contentsOf: htmlFile!)
