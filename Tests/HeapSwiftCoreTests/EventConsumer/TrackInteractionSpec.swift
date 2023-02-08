@@ -128,14 +128,12 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
 
                     // Populate Test Node Data
                     testNode.nodeText = "fooText"
-                    testNode.id = "fooID"
-                    testNode.nodeTraits = ["a", "b", "c"]
-                    testNode.accessibilityIdentifier = "fooAID"
+                    testNode.nodeId = "fooID"
+                    testNode.nodeHtmlClass = "a b c"
+                    testNode.href = "/example.html"
                     testNode.accessibilityLabel = "fooAL"
                     testNode.referencingPropertyName = "A.b"
-                    testNode.sourceProperties = ["fooPropertyKey": "fooValue"]
                     testNode.attributes = ["fooAttributeKey": "fooAttributeValue"]
-                    testNode.boundingBox = CGRect(x: 11, y: 15, width: 55, height: 88)
                     
                     interactionEvent.kind = .click
                     interactionEvent.nodes = [testNode]
@@ -143,18 +141,13 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                     
                     expect(testNode.node.nodeName).to(equal("TestNode"))
                     expect(testNode.node.nodeText).to(equal("fooText"))
-                    expect(testNode.node.id).to(equal("fooID"))
-                    expect(testNode.node.nodeTraits).to(equal(["a", "b", "c"]))
-                    expect(testNode.node.accessibilityIdentifier).to(equal("fooAID"))
+                    expect(testNode.node.nodeID).to(equal("fooID"))
+                    expect(testNode.node.nodeHtmlClass).to(equal("a b c"))
+                    expect(testNode.node.href).to(equal("/example.html"))
                     expect(testNode.node.accessibilityLabel).to(equal("fooAL"))
                     expect(testNode.node.referencingPropertyName).to(equal("A.b"))
                     
-                    expect(testNode.node.sourceProperties["fooPropertyKey"]).to(equal(.init(value: "fooValue")))
                     expect(testNode.node.attributes["fooAttributeKey"]).to(equal(.init(value: "fooAttributeValue")))
-                    expect(testNode.node.boundingBox.position.x).to(equal(11))
-                    expect(testNode.node.boundingBox.position.y).to(equal(15))
-                    expect(testNode.node.boundingBox.size.width).to(equal(55))
-                    expect(testNode.node.boundingBox.size.height).to(equal(88))
                 }
             }
         }

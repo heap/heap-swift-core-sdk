@@ -86,12 +86,15 @@ class InteractionEvent: InteractionEventProtocol {
 
 extension Interaction {
 
-    var kind: Event.Interaction.OneOf_Kind {
+    var kind: EventInteraction.OneOf_Kind {
         switch self {
         case .custom(let name): return .custom(name)
+        case .unspecified: return .builtin(.unspecified)
         case .click: return .builtin(.click)
         case .touch: return .builtin(.touch)
         case .change: return .builtin(.change)
+        case .submit: return .builtin(.submit)
+        case .builtin(let value): return .builtin(.UNRECOGNIZED(value))
         }
     }
 }
@@ -100,41 +103,28 @@ extension Interaction: CustomStringConvertible {
     public var description: String {
         switch self {
         case .custom(let name): return "\(name) (custom)"
+        case .unspecified: return "unspecified"
         case .click: return "click"
         case .touch: return "touch"
         case .change: return "change"
+        case .submit: return "submit"
+        case .builtin(let value): return "\(value) (unknown built-in)"
         }
     }
 }
 
 extension InteractionNode {
 
-    var node: Node {
+    var node: ElementNode {
         .with {
             $0.nodeName = nodeName
             $0.setIfNotNil(\.nodeText, nodeText?.truncated().result)
-            $0.setIfNotNil(\.id, id)
-            $0.nodeTraits = nodeTraits
-            $0.setIfNotNil(\.accessibilityIdentifier, accessibilityIdentifier)
+            $0.setIfNotNil(\.nodeID, nodeId)
+            $0.setIfNotNil(\.nodeHtmlClass, nodeHtmlClass)
+            $0.setIfNotNil(\.href, href)
             $0.setIfNotNil(\.accessibilityLabel, accessibilityLabel?.truncated().result)
             $0.setIfNotNil(\.referencingPropertyName, referencingPropertyName)
-            $0.sourceProperties = sourceProperties.sanitized().result.mapValues(\.protoValue)
             $0.attributes = attributes.mapValues(\.protoValue)
-            if let boundingBox = boundingBox {
-                $0.boundingBox = boundingBox.boundingBox
-            }
         }
     }
 }
-
-extension CGRect {
-    var boundingBox: BoundingBox {
-        var boundingBox = BoundingBox()
-        boundingBox.position.x = Int32(self.minX)
-        boundingBox.position.y = Int32(self.minY)
-        boundingBox.size.width = UInt32(self.width)
-        boundingBox.size.height = UInt32(self.height)
-        return boundingBox
-    }
-}
-

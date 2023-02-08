@@ -11,7 +11,8 @@
 		ios_sample_extension \
 		add_prerelease_pod_repo \
 		remove_prerelease_pod_repo \
-		push_prerelease_podspec
+		push_prerelease_podspec \
+		protobufs
 
 
 # 1 - test name, 2 - xcodebuild parameters
@@ -193,6 +194,11 @@ add_prerelease_pod_repo:
 	else \
 		echo "Repo pre-release-cocoapods was already added."; \
 	fi
+
+protobufs:
+
+	-rm Sources/HeapSwiftCore/Protobufs/*.pb.swift
+	cd Sources/Protobufs && protoc --swift_out=../HeapSwiftCore/Protobufs *.proto
 
 remove_prerelease_pod_repo:
 

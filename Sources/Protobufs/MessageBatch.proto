@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-import "Message.proto";
-
-message MessageBatch {
-  repeated Message events = 1;
-}

@@ -1,0 +1,65 @@
+syntax = "proto3";
+package core_sdk.v1;
+
+option java_package = "com.heap.core_sdk.v1";
+option go_package = "core_sdk/v1";
+
+message Value {
+   // A string-encoded value.
+  string string = 1;
+}
+// A representation of a library used in to produce an event.
+message LibraryInfo {
+  // The library name as known by the server.
+  string name = 1;
+  // The library version
+  string version = 2;
+  // The specific platform and version the library targets.
+  string platform = 3;
+  // Library-specific properties.
+  map<string, Value> properties = 4;
+}
+
+message ApplicationInfo {
+  // App name displayed to the user
+  optional string name = 1;
+  // Package or bundle identifier
+  optional string identifier = 2;
+  // Version string displayed to user, e.g. 10.0.
+  optional string version_string = 3;
+}
+
+message UserAgentClientHintsInfo {
+  // heapjs:ubv
+  string platform_version = 1;
+  // heapjs:upv 
+  string browser_version = 2;
+  // heapjs:umo
+  optional string model = 3; 
+}
+
+message DeviceInfo {
+  enum DeviceType {
+    DEVICE_TYPE_UNKNOWN_UNSPECIFIED = 0;
+    DEVICE_TYPE_MOBILE = 1;
+    DEVICE_TYPE_TABLET = 2;
+    DEVICE_TYPE_DESKTOP = 3;
+    DEVICE_TYPE_TV = 4;
+    DEVICE_TYPE_WATCH = 5;
+    DEVICE_TYPE_AUTOMOTIVE = 6;
+  }
+
+  // E.g., Samsung Galaxy S22, iPhone14,3
+  string model = 1;
+  // E.g., Android 13, iOS 16.0
+  string platform = 2;
+  // For web
+  optional string user_agent = 3;
+  DeviceType type = 4;
+  // E.g., AT&T
+  optional string carrier = 5;
+  optional string vendor_id = 6;
+  optional string advertiser_id = 7;
+  // UACH metadata, only chrome browsers
+  optional UserAgentClientHintsInfo uach = 13; 
+}

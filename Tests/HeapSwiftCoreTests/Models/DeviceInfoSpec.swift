@@ -24,7 +24,7 @@ final class DeviceInfoSpec: HeapSpec {
             }
             
             it("has a type") {
-                expect(current.type).toNot(equal(.unknown))
+                expect(current.type).toNot(equal(.unknownUnspecified))
             }
             
             #if os(macOS)

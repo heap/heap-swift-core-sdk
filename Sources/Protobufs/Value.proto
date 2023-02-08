@@ -1,6 +1,0 @@
-syntax = "proto3";
-
-// A potentially expandable data type for storing values in property dictionaries.
-message Value {
-  string string = 1; // A string-encoded value.
-}

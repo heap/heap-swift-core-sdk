@@ -10,7 +10,7 @@ extension UIApplication {
         case .active: return .foregrounded
         case .inactive: return .foregrounded
         case .background: return .backgrounded
-        default: return .unknown
+        default: return .unknownUnspecified
         }
     }
 
@@ -25,8 +25,8 @@ extension Event.AppVisibility {
     private static let application = UIApplication.sharedWithExtensionCheck
     
     static var current: Event.AppVisibility {
-        guard Thread.isMainThread else { return .unknown }
-        return application?.currentAppVisibility ?? .unknown
+        guard Thread.isMainThread else { return .unknownUnspecified }
+        return application?.currentAppVisibility ?? .unknownUnspecified
     }
 }
 
@@ -43,7 +43,7 @@ extension NSApplication {
 extension Event.AppVisibility {
     
     static var current: Event.AppVisibility {
-        guard Thread.isMainThread else { return .unknown }
+        guard Thread.isMainThread else { return .unknownUnspecified }
         return NSApplication.shared.currentAppVisibility
     }
 }
@@ -59,7 +59,7 @@ extension WKExtension {
         case .active: return .foregrounded
         case .inactive: return .foregrounded
         case .background: return .backgrounded
-        default: return .unknown
+        default: return .unknownUnspecified
         }
     }
 }
@@ -67,7 +67,7 @@ extension WKExtension {
 extension Event.AppVisibility {
     
     static var current: Event.AppVisibility {
-        guard Thread.isMainThread else { return .unknown }
+        guard Thread.isMainThread else { return .unknownUnspecified }
         return WKExtension.shared().currentAppVisibility
     }
 }
@@ -77,7 +77,7 @@ extension Event.AppVisibility {
 extension Event.AppVisibility {
     
     static var current: Event.AppVisibility {
-        .unknown
+        .unknownUnspecified
     }
 }
 

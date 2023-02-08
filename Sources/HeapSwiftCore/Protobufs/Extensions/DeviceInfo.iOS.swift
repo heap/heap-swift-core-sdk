@@ -54,7 +54,7 @@ extension DeviceInfo {
         case .pad: return .tablet
         case .phone: return .mobile
         case .tv: return .tv
-        default: return .unknown
+        default: return .unknownUnspecified
         }
 #endif
     }

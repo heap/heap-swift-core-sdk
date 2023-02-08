@@ -2,7 +2,8 @@ import Foundation
 
 public enum Interaction {
     case custom(String)
-    case click, touch, change
+    case unspecified, click, touch, change, submit
+    case builtin(Int)
 }
 
 public struct InteractionNode {
@@ -13,15 +14,15 @@ public struct InteractionNode {
     /// The on-screen text within the element, truncated to 1024 UTF-16 code-units.
     public var nodeText: String?
     
-    /// Traits that are applied to the element that can be used for filtering
-    /// (e.g., individual class names on the web).
-    public var nodeTraits: [String] = []
+    /// A space-separated list of HTML classes, e.g. HtmlElement.className on the web.
+    public var nodeHtmlClass: String?
 
     /// The unique ID for the node in its context.
-    public var id: String?
-
-    /// The developer-defined accessibility or testing identifier.
-    public var accessibilityIdentifier: String?
+    public var nodeId: String?
+    
+    /// The URL that the interacted element links to, e.g. HtmlAnchorElement.href on the
+    /// web.
+    public var href: String?
     
     /// The developer-defined accessibility label, truncated to 1024 UTF-16 code-units.
     public var accessibilityLabel: String?
@@ -30,16 +31,8 @@ public struct InteractionNode {
     /// available.
     public var referencingPropertyName: String?
 
-    /// Source-specific properties of the node that do not map to an above category.
-    /// Keys limited to 512 UTF-16 code units.  Values limited to 1024 UTF-16 code units.
-    public var sourceProperties: [String: HeapPropertyValue] = [:]
-
     /// Developer-defined attributes.
     public var attributes: [String: HeapPropertyValue] = [:]
-
-    /// An optional representation of the bounding box with the origin in the top-left
-    /// corner of the screen.
-    public var boundingBox: CGRect?
 
     public init(nodeName: String) {
         self.nodeName = nodeName

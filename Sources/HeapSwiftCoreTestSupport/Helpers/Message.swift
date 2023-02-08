@@ -39,7 +39,7 @@ extension Message {
         expect(file: file, line: line, hasDevice).to(beTrue(), description: "Missing device")
         expect(file: file, line: line, device.platform).notTo(beEmpty(), description: "All devices should have a platform")
         expect(file: file, line: line, device.model).notTo(beEmpty(), description: "All devices should have a model")
-        expect(file: file, line: line, device.type).notTo(equal(.unknown), description: "All devices should have a type")
+        expect(file: file, line: line, device.type).notTo(equal(.unknownUnspecified), description: "All devices should have a type")
         expect(file: file, line: line, device).to(equal(Self.testDeviceInfo), description: "Device should match the current device")
 
         expect(file: file, line: line, hasBaseLibrary).to(beTrue(), description: "Missing base library")
@@ -109,7 +109,7 @@ extension Message {
         return event
     }
     
-    func expectInteractionEventMessage(file: StaticString = #file, line: UInt = #line, user: UserToUpload, timestamp: Date? = nil, hasSourceLibrary: Bool = false, sourceLibrary: LibraryInfo? = nil, eventProperties: [String: Value]? = nil, interaction: Event.Interaction.OneOf_Kind, nodes: [Node], callbackName: String?, pageviewMessage: Message? = nil) {
+    func expectInteractionEventMessage(file: StaticString = #file, line: UInt = #line, user: UserToUpload, timestamp: Date? = nil, hasSourceLibrary: Bool = false, sourceLibrary: LibraryInfo? = nil, eventProperties: [String: Value]? = nil, interaction: EventInteraction.OneOf_Kind, nodes: [ElementNode], callbackName: String?, pageviewMessage: Message? = nil) {
         
         guard case let .event(event) = kind else {
             XCTFail("Expected a event message, got \(String(describing: kind))", file: file, line: line)

@@ -45,7 +45,7 @@ struct EnvironmentState {
   /// Clears the value of `identity`. Subsequent reads from it will return its default value.
   mutating func clearIdentity() {self._identity = nil}
 
-  var properties: Dictionary<String,Value> = [:]
+  var properties: Dictionary<String,CoreSdk_V1_Value> = [:]
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -79,7 +79,7 @@ extension EnvironmentState: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
       case 1: try { try decoder.decodeSingularStringField(value: &self.envID) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self._userID) }()
       case 3: try { try decoder.decodeSingularStringField(value: &self._identity) }()
-      case 4: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Value>.self, value: &self.properties) }()
+      case 4: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,CoreSdk_V1_Value>.self, value: &self.properties) }()
       default: break
       }
     }
@@ -100,7 +100,7 @@ extension EnvironmentState: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
       try visitor.visitSingularStringField(value: v, fieldNumber: 3)
     } }()
     if !self.properties.isEmpty {
-      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Value>.self, value: self.properties, fieldNumber: 4)
+      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,CoreSdk_V1_Value>.self, value: self.properties, fieldNumber: 4)
     }
     try unknownFields.traverse(visitor: &visitor)
   }

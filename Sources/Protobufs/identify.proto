@@ -1,7 +1,11 @@
 syntax = "proto3";
+package core_sdk.v1;
 
 import "google/protobuf/timestamp.proto";
-import "LibraryInfo.proto";
+import "common.proto";
+
+option java_package = "com.heap.core_sdk.v1";
+option go_package = "core_sdk/v1";
 
 message UserIdentification {
   string env_id = 1;
