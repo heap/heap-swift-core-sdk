@@ -118,11 +118,11 @@ extension InteractionNode {
     var node: ElementNode {
         .with {
             $0.nodeName = nodeName
-            $0.setIfNotNil(\.nodeText, nodeText?.truncated().result)
+            $0.setIfNotNil(\.nodeText, nodeText?.truncated(toUtf16Count: 64).result)
             $0.setIfNotNil(\.nodeID, nodeId)
             $0.setIfNotNil(\.nodeHtmlClass, nodeHtmlClass)
             $0.setIfNotNil(\.href, href)
-            $0.setIfNotNil(\.accessibilityLabel, accessibilityLabel?.truncated().result)
+            $0.setIfNotNil(\.accessibilityLabel, accessibilityLabel?.truncated(toUtf16Count: 64).result)
             $0.setIfNotNil(\.referencingPropertyName, referencingPropertyName)
             $0.attributes = attributes.mapValues(\.protoValue)
         }

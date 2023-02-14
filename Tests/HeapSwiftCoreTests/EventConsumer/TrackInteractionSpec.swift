@@ -149,6 +149,20 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                     
                     expect(testNode.node.attributes["fooAttributeKey"]).to(equal(.init(value: "fooAttributeValue")))
                 }
+                
+                it ("truncates nodeText") {
+                    let value = String(repeating: "あ", count: 65)
+                    let expectedValue = String(repeating: "あ", count: 64)
+                    testNode.nodeText = value
+                    expect(testNode.node.nodeText).to(equal(expectedValue))
+                }
+                
+                it ("truncates accessibilityLabel") {
+                    let value = String(repeating: "あ", count: 65)
+                    let expectedValue = String(repeating: "あ", count: 64)
+                    testNode.accessibilityLabel = value
+                    expect(testNode.node.accessibilityLabel).to(equal(expectedValue))
+                }
             }
         }
     }
