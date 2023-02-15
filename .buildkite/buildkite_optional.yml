@@ -11,19 +11,17 @@
 # FOR SMALL REPOS, this file can directly contain build-steps.
 ---
 steps:
-  - label: ":pipeline: PLACEHOLDER FOR OPTIONAL STEPS FOR SMALL REPOS"
-    command: |
-      echo "Optional steps can be added here"
 
-  # - label: ":pipeline: PLACEHOLDER FOR FAN-OUT TO OPTIONAL PIPELINES FOR LARGE REPOS"
-  #   plugins:
-  #     - heap/monorepo-diff#v1.3.6:
-  #         diff: .buildkite/monorepo_diff.bash all
-  #         watch:
-  #           - path: something/
-  #             config:
-  #               trigger: "tbd-pipeline-here"
+  - label: "Push release tags to the public remote"
+    timeout_in_minutes: 10
+    if: build.tag =~ /^[0-9]+\.[0-9]+\.[0-9]+(?:-[a-z]+\.[1-9][0-9]*)?$$/
+    command:  "make push_tag_to_public"
+    agents:
+      queue: "macos"
 
-  #           - path: else/
-  #             config:
-  #               trigger: "tbd-another-pipeline-here"
+  - label: "Push the main branch to the public remote"
+    timeout_in_minutes: 10
+    if: build.branch =~ /^main$$/
+    command:  "make push_branch_to_public"
+    agents:
+      queue: "macos"

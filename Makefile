@@ -14,6 +14,9 @@
 		push_prerelease_podspec \
 		protobufs
 
+PUBLIC_REPO := git@github.com:heap/heap-swift-core-sdk.git
+INTERNAL_REPO := git@github.com:heap/heap-swift-core.git
+MAIN_BRANCH := main
 
 # 1 - test name, 2 - xcodebuild parameters
 define run_unit_tests
@@ -57,6 +60,19 @@ define delete_device
 
 	@echo "--- Deleting device"
 	-xcrun simctl delete "`cat build/.device_udid`"
+
+endef
+
+define set_public_repo
+
+	if [ "$$(git remote get-url --push origin)" != '${INTERNAL_REPO}' ]; then \
+		echo 'Incorrect origin. Aborting.'; \
+		exit 1; \
+	elif [ "$$(git remote get-url --push public)" = "" ]; then \
+		git remote add public '${PUBLIC_REPO}'; \
+	elif [ "$$(git remote get-url --push public)" != '${PUBLIC_REPO}' ]; then \
+		git remote set-url --push public '${PUBLIC_REPO}'; \
+	fi
 
 endef
 
@@ -211,3 +227,29 @@ remove_prerelease_pod_repo:
 push_prerelease_podspec: add_prerelease_pod_repo
 
 	pod repo push pre-release-cocoapods HeapSwiftCore.podspec
+
+push_branch_to_public:
+
+ifndef BUILDKITE_BRANCH
+	$(error BUILDKITE_BRANCH is not set)
+endif
+
+ifneq (${BUILDKITE_BRANCH},${MAIN_BRANCH})
+	$(error Current branch ${BUILDKITE_BRANCH} is not ${MAIN_BRANCH})
+endif
+
+	$(call set_public_repo)
+
+	git fetch origin '${MAIN_BRANCH}:${MAIN_BRANCH}'
+	git push public '${MAIN_BRANCH}'
+
+push_tag_to_public:
+
+ifndef BUILDKITE_TAG
+	$(error BUILDKITE_TAG is not set)
+endif
+
+	$(call set_public_repo)
+
+	git fetch origin --tags
+	git push public ${BUILDKITE_TAG}
