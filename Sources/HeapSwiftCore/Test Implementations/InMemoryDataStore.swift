@@ -1,5 +1,4 @@
 import Foundation
-@testable import HeapSwiftCore
 
 enum InMemoryError: Error {
     case userNotFound

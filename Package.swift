@@ -9,54 +9,22 @@ let package = Package(
         .macOS(.v10_14),
         .iOS(.v12),
         .watchOS(.v5),
-        .tvOS(.v12)
+        .tvOS(.v12),
     ],
     products: [
-        // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
             name: "HeapSwiftCore",
             type: .dynamic,
             targets: ["HeapSwiftCore"]),
-        .library(
-            name: "HeapSwiftCoreTestSupport",
-            type: .dynamic,
-            targets: ["HeapSwiftCoreTestSupport"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
-        .package(url: "https://github.com/Quick/Quick.git", from: "5.0.1"),
-        .package(url: "https://github.com/Quick/Nimble.git", from: "10.0.0"),
     ],
     targets: [
-        // Targets are the basic building blocks of a package. A target can define a module or a test suite.
-        // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "HeapSwiftCore",
             dependencies: [
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
-            ]),
-        .target(
-            name: "HeapSwiftCoreTestSupport",
-            dependencies: [
-                "HeapSwiftCore",
-                "Quick",
-                "Nimble",
-            ]),
-        .testTarget(
-            name: "HeapSwiftCoreTests",
-            dependencies: [
-                "HeapSwiftCore",
-                "HeapSwiftCoreTestSupport",
-                "Quick",
-                "Nimble",
-            ]),
-        .testTarget(
-            name: "HeapSwiftCoreTests-AdSupport",
-            dependencies: [
-                "HeapSwiftCore",
-                "HeapSwiftCoreTestSupport",
-                "Quick",
-                "Nimble",
             ]),
     ]
 )

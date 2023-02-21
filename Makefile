@@ -17,6 +17,7 @@
 PUBLIC_REPO := git@github.com:heap/heap-swift-core-sdk.git
 INTERNAL_REPO := git@github.com:heap/heap-swift-core.git
 MAIN_BRANCH := main
+MAKE_DIR := $(shell pwd)
 
 # 1 - test name, 2 - xcodebuild parameters
 define run_unit_tests
@@ -25,16 +26,18 @@ define run_unit_tests
 	@echo "$(2)"
 
 	-rm -rf build/reports/$(1).*
+	-rm -rf Development/build/reports/$(1).*
 	-rm build/.success
 
-	-(xcodebuild \
-		-scheme HeapSwiftCore-Package \
+	-(cd Development && xcodebuild \
+		-scheme HeapSwiftCoreTestSupport \
 		$(2) \
-		-resultBundlePath build/reports/$(1).xcresult \
+		-resultBundlePath ${MAKE_DIR}/build/reports/$(1).xcresult \
 		clean test \
-		&& echo "success" > build/.success \
+		&& echo "success" > ${MAKE_DIR}/build/.success \
 	) | xcbeautify --report junit --junit-report-filename $(1)-$$BUILDKITE_JOB_ID.xml
 	
+	-mv Development/build/$(1).* build/
 	-cd build/reports && tar -zcf $(1).xcresult.tgz $(1).xcresult
 	-rm -rf build/reports/$(1).xcresult
 
@@ -91,7 +94,7 @@ catalyst_unit_tests:
 	mkdir -p build
 	echo "platform=macOS,variant=Mac Catalyst" > build/.destination
 
-	$(call run_unit_tests,catalyst_unit_tests,-destination "`cat build/.destination`")
+	$(call run_unit_tests,catalyst_unit_tests,-destination "`cat ${MAKE_DIR}/build/.destination`")
 	@if [ ! -f build/.success ]; then exit 1; fi
 
 iphone_ios12_unit_tests:
@@ -104,7 +107,7 @@ iphone_ios12_unit_tests:
 	mkdir -p build
 	echo "platform=iOS Simulator,id=`cat build/.device_udid`" > build/.destination
 
-	$(call run_unit_tests,iphone_ios12_unit_tests,-destination "`cat build/.destination`")
+	$(call run_unit_tests,iphone_ios12_unit_tests,-destination "`cat ${MAKE_DIR}/build/.destination`")
 
 	$(call delete_device)
 
@@ -120,7 +123,7 @@ iphone_ios16_unit_tests:
 	mkdir -p build
 	echo "platform=iOS Simulator,id=`cat build/.device_udid`" > build/.destination
 
-	$(call run_unit_tests,iphone_ios16_unit_tests,-destination "`cat build/.destination`")
+	$(call run_unit_tests,iphone_ios16_unit_tests,-destination "`cat ${MAKE_DIR}/build/.destination`")
 
 	$(call delete_device)
 
@@ -136,7 +139,7 @@ ipad_unit_tests:
 	mkdir -p build
 	echo "platform=iOS Simulator,id=`cat build/.device_udid`" > build/.destination
 
-	$(call run_unit_tests,ipad_unit_tests,-destination "`cat build/.destination`")
+	$(call run_unit_tests,ipad_unit_tests,-destination "`cat ${MAKE_DIR}/build/.destination`")
 
 	$(call delete_device)
 
@@ -152,7 +155,7 @@ tvos_unit_tests:
 	mkdir -p build
 	echo "platform=tvOS Simulator,id=`cat build/.device_udid`" > build/.destination
 
-	$(call run_unit_tests,tvos_unit_tests,-destination "`cat build/.destination`")
+	$(call run_unit_tests,tvos_unit_tests,-destination "`cat ${MAKE_DIR}/build/.destination`")
 
 	$(call delete_device)
 
@@ -168,7 +171,7 @@ watchos_unit_tests:
 	mkdir -p build
 	echo "platform=watchOS Simulator,id=`cat build/.device_udid`" > build/.destination
 
-	$(call run_unit_tests,watchos_unit_tests,-destination "`cat build/.destination`")
+	$(call run_unit_tests,watchos_unit_tests,-destination "`cat ${MAKE_DIR}/build/.destination`")
 
 	$(call delete_device)
 
