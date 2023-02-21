@@ -10,12 +10,14 @@ final class HeapBridgeSupportSpec: HeapSpec {
         
         var dataStore: InMemoryDataStore!
         var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
+        var uploader: CountingUploader!
         var webConsumer: HeapBridgeSupport!
 
         beforeEach {
             dataStore = InMemoryDataStore()
             consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
-            webConsumer = HeapBridgeSupport(eventConsumer: consumer)
+            uploader = CountingUploader()
+            webConsumer = HeapBridgeSupport(eventConsumer: consumer, uploader: uploader)
             HeapLogger.shared.logLevel = .debug
         }
         
@@ -28,6 +30,13 @@ final class HeapBridgeSupportSpec: HeapSpec {
         }
         
         describeMethod("startRecording") { method in
+            
+            it("starts the uploader") {
+                _ = try webConsumer.handleInvocation(method: method, arguments: [
+                    "environmentId": "11",
+                ])
+                expect(uploader.isStarted).to(beTrue())
+            }
             
             it("does not throw when all options are provided") {
                 _ = try webConsumer.handleInvocation(method: method, arguments: [

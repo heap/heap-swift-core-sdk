@@ -8,13 +8,15 @@ public enum InvocationError: Error {
 public class HeapBridgeSupport
 {
     let eventConsumer: any EventConsumerProtocol
+    let uploader: any UploaderProtocol
     
-    init(eventConsumer: any EventConsumerProtocol)
+    init(eventConsumer: any EventConsumerProtocol, uploader: any UploaderProtocol)
     {
         self.eventConsumer = eventConsumer
+        self.uploader = uploader
     }
     
-    public static var shared: HeapBridgeSupport = HeapBridgeSupport(eventConsumer: Heap.shared.consumer)
+    public static var shared: HeapBridgeSupport = HeapBridgeSupport(eventConsumer: Heap.shared.consumer, uploader: Heap.shared.uploader)
     
     public func handleInvocation(method: String, arguments: [String: Any]) throws -> JSONEncodable? {
         
@@ -58,10 +60,12 @@ public class HeapBridgeSupport
     }
     
     func startRecording(arguments: [String: Any]) throws -> JSONEncodable? {
+        // Reminder: any change in the logic here should also be applied to startRecording in Heap.swift
         let environmentId = try getRequiredString(named: "environmentId", from: arguments, message: "HeapBridgeSupport.startRecording received an invalid environmentId and will not complete the bridged method call.")
         let options = try getOptionalOptionsDictionary(from: arguments)
         let timestamp = try getOptionalTimestamp(arguments, methodName: "startRecording")
         eventConsumer.startRecording(environmentId, with: options, timestamp: timestamp)
+        uploader.startScheduledUploads(with: options)
         return nil
     }
     

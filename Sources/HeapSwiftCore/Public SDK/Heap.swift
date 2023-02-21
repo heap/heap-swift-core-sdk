@@ -4,7 +4,7 @@ import Foundation
 public class Heap: NSObject {
 
     internal let consumer: any EventConsumerProtocol
-    private let uploader: any UploaderProtocol
+    internal let uploader: any UploaderProtocol
 
     private static let heapDirectory: URL = {
         // TODO: Need to validate that this works on all environments and places things where they need to go.
@@ -33,6 +33,7 @@ public class Heap: NSObject {
 
     @objc
     public func startRecording(_ environmentId: String, with options: [Option: Any] = [:]) {
+        // Reminder: any change in the logic here should also be applied to startRecording in HeapBridgeSupport.swift
         let sanitizedOptions = options.sanitizedCopy()
         consumer.startRecording(environmentId, with: sanitizedOptions, timestamp: Date())
         uploader.startScheduledUploads(with: sanitizedOptions)
