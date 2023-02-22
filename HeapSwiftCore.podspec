@@ -15,7 +15,7 @@ Pod::Spec.new do |s|
   
   s.cocoapods_version = '>= 1.7.0'
   
-  s.source_files = 'Sources/HeapSwiftCore/**/*.swift'
+  s.source_files = 'Development/Sources/HeapSwiftCore/**/*.swift'
   
   s.dependency 'SwiftProtobuf', "~> 1.6"
   

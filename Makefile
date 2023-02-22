@@ -30,7 +30,7 @@ define run_unit_tests
 	-rm build/.success
 
 	-(cd Development && xcodebuild \
-		-scheme HeapSwiftCoreTestSupport \
+		-scheme HeapSwiftCore \
 		$(2) \
 		-resultBundlePath ${MAKE_DIR}/build/reports/$(1).xcresult \
 		clean test \
@@ -216,8 +216,9 @@ add_prerelease_pod_repo:
 
 protobufs:
 
-	-rm Sources/HeapSwiftCore/Protobufs/*.pb.swift
-	cd Sources/Protobufs && protoc --swift_out=../HeapSwiftCore/Protobufs *.proto
+	-rm Development/Sources/HeapSwiftCore/Protobufs/*.pb.swift
+	cd Development/Sources/Protobufs && protoc --swift_out=../HeapSwiftCore/Protobufs *.proto
+	./DevTools/FixProtoImports.sh
 
 remove_prerelease_pod_repo:
 

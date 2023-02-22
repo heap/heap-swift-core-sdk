@@ -20,7 +20,7 @@ _VERSION_RE = re.compile(r'^(?P<major>\d+)\.(?P<minor>\d+)(.(?P<revision>\d+))?(
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _PODSPEC_PATH = os.path.join(_PROJECT_ROOT, 'HeapSwiftCore.podspec')
-_VERSION_SWIFT_PATH = os.path.join(_PROJECT_ROOT, 'Sources/HeapSwiftCore/Version.swift')
+_VERSION_SWIFT_PATH = os.path.join(_PROJECT_ROOT, 'Development/Sources/HeapSwiftCore/Version.swift')
 
 def Fail(message):
   sys.stderr.write('Error: %s\n' % message)
@@ -40,7 +40,7 @@ def ValidateFiles():
     Fail('Failed to extract a version from HeapSwiftCore.podspec')
   (major, minor, revision, prerelease) = ExtractVersion(match.group(1))
 
-  # Test Sources/HeapSwiftCore/Version.swift
+  # Test Development/Sources/HeapSwiftCore/Version.swift
   version_swift_content = open(_VERSION_SWIFT_PATH).read()
   major_line = 'static let major = %s\n' % major
   minor_line = 'static let minor = %s\n' % minor
@@ -55,7 +55,7 @@ def ValidateFiles():
   had_revision = revision_line in version_swift_content
   had_prerelease = prerelease_line in version_swift_content
   if not had_major or not had_minor or not had_revision or not had_prerelease:
-    Fail('Version in Sources/HeapSwiftCore/Version.swift did not match HeapSwiftCore.podspec')
+    Fail('Version in Development/Sources/HeapSwiftCore/Version.swift did not match HeapSwiftCore.podspec')
 
 
 def UpdateFiles(version_string):
@@ -72,7 +72,7 @@ def UpdateFiles(version_string):
                        pod_content)
   open(_PODSPEC_PATH, 'w').write(pod_content)
 
-  # Update Sources/HeapSwiftCore/Version.swift
+  # Update Development/Sources/HeapSwiftCore/Version.swift
   if prerelease:
     version_swift_prerelease = '"%s"' % prerelease
   else:

@@ -25,6 +25,15 @@ let package = Package(
             name: "HeapSwiftCore",
             dependencies: [
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
+            ],
+            path: "Development/Sources/HeapSwiftCore",
+            swiftSettings: [
+                // Emulate BUILD_LIBRARY_FOR_DISTRIBUTION to prevent culling of ABI used by
+                // compiled frameworks (e.g. heap-ios-autocapture-sdk).
+                .unsafeFlags([
+                    "-enable-library-evolution",
+                    "-emit-module-interface"
+                ]),
             ]),
     ]
 )

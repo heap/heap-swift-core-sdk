@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "HeapSwiftCoreTestSupport",
+    name: "HeapSwiftCore",
     platforms: [
         .macOS(.v10_14),
         .iOS(.v12),
@@ -13,16 +13,24 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "HeapSwiftCoreTestSupport",
+            name: "HeapSwiftCore",
             type: .dynamic,
-            targets: ["HeapSwiftCoreTestSupport"]),
+            targets: ["HeapSwiftCore"]),
     ],
     dependencies: [
-        .package(name: "HeapSwiftCore", path: "../"),
+        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
         .package(url: "https://github.com/Quick/Quick.git", from: "5.0.1"),
         .package(url: "https://github.com/Quick/Nimble.git", from: "10.0.0"),
     ],
     targets: [
+        .target(
+            name: "HeapSwiftCore",
+            dependencies: [
+                .product(name: "SwiftProtobuf", package: "swift-protobuf"),
+            ],
+            swiftSettings: [
+                .define("BUILD_HEAP_SWIFT_CORE_FOR_DEVELOPMENT"),
+            ]),
         .target(
             name: "HeapSwiftCoreTestSupport",
             dependencies: [
