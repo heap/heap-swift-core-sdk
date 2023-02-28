@@ -60,9 +60,14 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
         }
 
         if updateResults.outcomes.sessionCreated {
+            
+            let sessionMessage = Message(forSessionIn: state)
+            let pageviewMessage = Message(forPageviewWith: state.unattributedPageviewInfo, sourceLibrary: nil, in: state)
+            
+            HeapLogger.shared.logDebug("Starting new session with session event:\n\(sessionMessage)\nPageview:\n\(pageviewMessage)")
 
-            dataStore.createSessionIfNeeded(with: .init(forSessionIn: state))
-            dataStore.insertPendingMessage(.init(forPageviewWith: state.unattributedPageviewInfo, sourceLibrary: nil, in: state))
+            dataStore.createSessionIfNeeded(with: sessionMessage)
+            dataStore.insertPendingMessage(pageviewMessage)
         }
 
         if updateResults.outcomes.currentStarted {
@@ -440,7 +445,7 @@ extension EventConsumer: EventConsumerProtocol {
 extension EventConsumer: ActiveSessionProvider {
     var activeSession: ActiveSession? {
         guard let state = stateManager.current else { return nil }
-        return .init(environmentId: state.environment.envID, userId: state.environment.userID, sessionId: state.sessionInfo.id)
+        return .init(environmentId: state.environment.envID, userId: state.environment.userID, sessionId: state.sessionInfo.id, sdkInfo: state.sdkInfo)
     }
 }
 

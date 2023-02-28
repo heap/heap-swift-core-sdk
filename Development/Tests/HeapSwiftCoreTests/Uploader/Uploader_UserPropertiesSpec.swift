@@ -68,7 +68,7 @@ final class Uploader_UserPropertiesSpec: UploaderSpec {
                     "prop1": .init(value: "val1"),
                     "prop2": .init(value: "val2"),
                 ]))
-                expect(userProperties.library).to(equal(SDKInfo.current.libraryInfo))
+                expect(userProperties.library).to(equal(SDKInfo.withoutAdvertiserId.libraryInfo))
             }
             
             it("uploads properties each time they are changed") {

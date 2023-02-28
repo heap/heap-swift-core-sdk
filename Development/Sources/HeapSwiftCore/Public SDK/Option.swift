@@ -74,6 +74,7 @@ public extension Option {
     static let baseUrl = register(name: "baseUrl", type: .url)
     static let messageBatchByteLimit = register(name: "messageBatchByteLimit", type: .integer)
     static let messageBatchMessageLimit = register(name: "messageBatchMessageLimit", type: .integer)
+    static let captureAdvertiserId = register(name: "captureAdvertiserId", type: .boolean)
 }
 
 public extension Dictionary where Key == Option, Value == Any {

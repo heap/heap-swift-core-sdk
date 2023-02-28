@@ -1,21 +1,21 @@
 extension UserProperties {
     
-    init(withInitialPayloadFor user: UserToUpload) {
+    init(withInitialPayloadFor user: UserToUpload, sdkInfo: SDKInfo) {
         self.init()
         
         envID = user.environmentId
         userID = user.userId
-        initialDevice = SDKInfo.shared.deviceInfo
-        initialApplication = SDKInfo.shared.applicationInfo
-        library = SDKInfo.shared.libraryInfo
+        initialDevice = sdkInfo.deviceInfo
+        initialApplication = sdkInfo.applicationInfo
+        library = sdkInfo.libraryInfo
     }
     
-    init(withUserPropertiesFor user: UserToUpload) {
+    init(withUserPropertiesFor user: UserToUpload, sdkInfo: SDKInfo) {
         self.init()
         
         envID = user.environmentId
         userID = user.userId
         properties = user.pendingUserProperties.mapValues(Value.init(value:))
-        library = SDKInfo.shared.libraryInfo
+        library = sdkInfo.libraryInfo
     }
 }

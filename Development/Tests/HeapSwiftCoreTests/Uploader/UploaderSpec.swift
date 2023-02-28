@@ -9,9 +9,10 @@ class TestActiveSessionProvider: ActiveSessionProvider {
     var environmentId: String = "11"
     var userId: String = "123"
     var sessionId: String = "456"
+    var sdkInfo: SDKInfo = .withoutAdvertiserId
     
     var activeSession: ActiveSession? {
-        .init(environmentId: environmentId, userId: userId, sessionId: sessionId)
+        .init(environmentId: environmentId, userId: userId, sessionId: sessionId, sdkInfo: sdkInfo)
     }
 }
 

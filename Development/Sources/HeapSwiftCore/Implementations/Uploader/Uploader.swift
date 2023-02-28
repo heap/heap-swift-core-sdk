@@ -311,7 +311,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         guard user.needsInitialUpload
         else { return nil }
         
-        return UploadOperation(userProperties: .init(withInitialPayloadFor: user), options: options, in: urlSession) { result in
+        return UploadOperation(userProperties: .init(withInitialPayloadFor: user, sdkInfo: activeSession.sdkInfo), options: options, in: urlSession) { result in
             
             user.needsInitialUpload = false
             
@@ -348,7 +348,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     func identityUploadOperation(_ user: UserToUpload, activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
         
         guard user.needsIdentityUpload,
-              let userIdentification = UserIdentification(forIdentificationOf: user, at: Date())
+              let userIdentification = UserIdentification(forIdentificationOf: user, at: Date(), sdkInfo: activeSession.sdkInfo)
         else { return nil }
         
         return UploadOperation(userIdentification: userIdentification, options: options, in: urlSession) { result in
@@ -386,7 +386,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         guard !properties.isEmpty
         else { return nil }
         
-        return UploadOperation(userProperties: .init(withUserPropertiesFor: user), options: options, in: urlSession) { result in
+        return UploadOperation(userProperties: .init(withUserPropertiesFor: user, sdkInfo: activeSession.sdkInfo), options: options, in: urlSession) { result in
             
             user.pendingUserProperties.removeAll()
             

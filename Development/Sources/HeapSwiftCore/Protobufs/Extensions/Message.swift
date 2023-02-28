@@ -8,10 +8,10 @@ extension Message {
         envID = state.environment.envID
         userID = state.environment.userID
         
-        baseLibrary = SDKInfo.shared.libraryInfo
-        application = SDKInfo.shared.applicationInfo
-        device = SDKInfo.shared.deviceInfo
-
+        baseLibrary = state.sdkInfo.libraryInfo
+        application = state.sdkInfo.applicationInfo
+        device = state.sdkInfo.deviceInfo
+        
         sessionInfo = state.sessionInfo
 
         properties = state.environment.properties

@@ -4,10 +4,8 @@ struct SDKInfo {
     let deviceInfo: DeviceInfo
     let libraryInfo: LibraryInfo
     
-    static var current: SDKInfo {
-        let deviceInfo = DeviceInfo.current(includeCarrier: true)
+    static func current(with options: [Option: Any]) -> SDKInfo {
+        let deviceInfo = DeviceInfo.current(with: options, includeCarrier: true)
         return .init(applicationInfo: .current, deviceInfo: deviceInfo, libraryInfo: .baseInfo(with: deviceInfo))
     }
-    
-    static let shared = current
 }

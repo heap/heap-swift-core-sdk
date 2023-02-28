@@ -6,7 +6,7 @@ import XCTest
 extension Message {
     
     /// Loading device info for each test is painfully slow on the iOS simulator and Catalyst.
-    private static let testDeviceInfo = DeviceInfo.current(includeCarrier: true)
+    private static let testDeviceInfo = DeviceInfo.current(with: [:], includeCarrier: true)
 
     private func validateBaseMessage(file: StaticString = #file, line: UInt = #line, user: UserToUpload, id: String?, timestamp: Date?, hasSourceLibrary: Bool, sourceLibrary: LibraryInfo?, eventProperties: [String: Value]?) {
 

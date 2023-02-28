@@ -12,7 +12,9 @@ final class DeviceInfoSpec: HeapSpec {
             var current: DeviceInfo!
             
             beforeEach {
-                current = .current(includeCarrier: false)
+                current = .current(with: [
+                    .captureAdvertiserId: true // Set to true so we can validate the on behavior (both will be nil)
+                ], includeCarrier: false)
             }
             
             it("has a model") {
@@ -46,7 +48,7 @@ final class DeviceInfoSpec: HeapSpec {
                 expect(current.hasUserAgent).to(beFalse())
             }
             
-            it("does not have an advertiserId when AdSupport is not linked") {
+            it("does not have an advertiserId when AdSupport is not linked, even if enabled") {
                 expect(current.hasAdvertiserID).to(beFalse(), description: "Should not have been set, but has \(current.advertiserID)")
             }
             

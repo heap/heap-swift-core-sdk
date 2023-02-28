@@ -11,7 +11,7 @@ public class Heap: NSObject {
         let fileManager = FileManager.default
         var url = fileManager.urls(for: .libraryDirectory, in: .userDomainMask).first!
         url.appendPathComponent("HeapSwiftCore", isDirectory: true)
-        url.appendPathComponent(SDKInfo.shared.applicationInfo.identifier, isDirectory: true)
+        url.appendPathComponent(ApplicationInfo.current.identifier, isDirectory: true)
         try! fileManager.createDirectory(at: url, withIntermediateDirectories: true)
         return url
     }()

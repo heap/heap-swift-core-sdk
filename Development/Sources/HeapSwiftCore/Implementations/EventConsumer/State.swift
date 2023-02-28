@@ -1,8 +1,10 @@
 import Foundation
 
 struct State {
+    let options: [Option: Any]
+    let sdkInfo: SDKInfo
+    
     var environment: EnvironmentState
-    var options: [Option: Any]
     var sessionInfo: SessionInfo
     
     /// A synthetic pageview created at the start of the session.
@@ -43,8 +45,8 @@ extension State {
     
     init(loadedEnvironment: EnvironmentState, sanitizedOptions: [Option: Any], at timestamp: Date, outcomes: inout State.UpdateResults.Outcomes) {
         
-        // Init with placeholder data while we get started. Otherwise, we have to recreaet logic here.
-        self.init(environment: loadedEnvironment, options: sanitizedOptions, sessionInfo: .init(), unattributedPageviewInfo: .init(), lastPageviewInfo: .init(), sessionExpirationDate: .init(timeIntervalSince1970: 0))
+        // Init with placeholder data while we get started. Otherwise, we have to recreate logic here.
+        self.init(options: sanitizedOptions, sdkInfo: .current(with: sanitizedOptions), environment: loadedEnvironment, sessionInfo: .init(), unattributedPageviewInfo: .init(), lastPageviewInfo: .init(), sessionExpirationDate: .init(timeIntervalSince1970: 0))
         
         if !environment.hasUserID {
             createUserAndSession(identity: nil, at: timestamp, outcomes: &outcomes)

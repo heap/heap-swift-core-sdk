@@ -38,14 +38,16 @@ final class Uploader_InitialUserSpec: UploaderSpec {
                 guard case .addUserProperties(.success(let userProperties)) = APIProtocol.requests.first
                 else { throw TestFailure("Could not get first user properties") }
                 
+                let sdkInfo = SDKInfo.withoutAdvertiserId
+                
                 expect(userProperties.envID).to(equal("11"))
                 expect(userProperties.userID).to(equal("123"))
                 expect(userProperties.hasInitialDevice).to(beTrue())
-                expect(userProperties.initialDevice).to(equal(SDKInfo.current.deviceInfo))
+                expect(userProperties.initialDevice).to(equal(sdkInfo.deviceInfo))
                 expect(userProperties.hasInitialApplication).to(beTrue())
-                expect(userProperties.initialApplication).to(equal(SDKInfo.current.applicationInfo))
+                expect(userProperties.initialApplication).to(equal(sdkInfo.applicationInfo))
                 expect(userProperties.hasLibrary).to(beTrue())
-                expect(userProperties.library).to(equal(SDKInfo.current.libraryInfo))
+                expect(userProperties.library).to(equal(sdkInfo.libraryInfo))
                 expect(userProperties.properties).to(beEmpty())
             }
             

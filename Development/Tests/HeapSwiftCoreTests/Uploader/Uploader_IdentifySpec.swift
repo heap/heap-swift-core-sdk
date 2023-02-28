@@ -53,7 +53,7 @@ final class Uploader_IdentifySpec: UploaderSpec {
                 expect(userIdentification.envID).to(equal("11"))
                 expect(userIdentification.userID).to(equal("123"))
                 expect(userIdentification.identity).to(equal("user-1"))
-                expect(userIdentification.library).to(equal(SDKInfo.current.libraryInfo))
+                expect(userIdentification.library).to(equal(SDKInfo.withoutAdvertiserId.libraryInfo))
             }
             
             context("multiple identities are present") {

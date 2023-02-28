@@ -5,6 +5,7 @@ struct ActiveSession {
     let environmentId: String
     let userId: String
     let sessionId: String
+    let sdkInfo: SDKInfo
 }
 
 /// The simplified set of failures that can be received from an upload request.
