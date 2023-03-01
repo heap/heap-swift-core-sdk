@@ -1,6 +1,7 @@
 import Foundation
 import OSLog
 
+@objc(HeapLogLevel)
 public enum LogLevel: Int, Comparable {
 
     /// Heap will not print any log messages.
@@ -107,9 +108,11 @@ class DefaultLogChannel: LogChannel {
 public class HeapLogger: NSObject {
 
     /// The shared HeapLogger instance.
+    @objc(sharedInstance)
     public static let shared = HeapLogger()
     
     /// The level of logging to be performed by the HeapLogger.
+    @objc
     public var logLevel: LogLevel = LogLevel.prod
     
     /// The logging channel to route all logs,

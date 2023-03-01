@@ -25,8 +25,9 @@ extension OptionType: CustomStringConvertible {
     }
 }
 
-@objc
+@objc(HeapOption)
 public class Option: NSObject {
+    
     public let name: String
     public let type: OptionType
 
@@ -68,6 +69,14 @@ public class Option: NSObject {
     }
 }
 
+// Expose NSCopying to enable use as an NSDictionary key.
+@objc
+extension Option: NSCopying {
+    public func copy(with zone: NSZone? = nil) -> Any {
+        return self
+    }
+}
+
 @objc
 public extension Option {
     static let uploadInterval = register(name: "uploadInterval", type: .timeInterval)
@@ -88,7 +97,7 @@ public extension Dictionary where Key == Option, Value == Any {
     }
 
     func timeInterval(at key: Option) -> TimeInterval? {
-        self[key] as? TimeInterval
+        self[key] as? TimeInterval ?? integer(at: key).map(TimeInterval.init(_:))
     }
 
     func integer(at key: Option) -> Int? {

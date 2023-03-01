@@ -57,8 +57,13 @@ final class OptionSpec: HeapSpec {
         
         describe("[Option: Any].string") {
             
-            it("returns the value if of the right type") {
+            it("returns the value if passed a String") {
                 let options: [Option: Any] = [.something: "val"]
+                expect(options.string(at: .something)).to(equal("val"))
+            }
+            
+            it("returns the value if passed an NSString") {
+                let options: [Option: Any] = [.something: "val" as NSString]
                 expect(options.string(at: .something)).to(equal("val"))
             }
             
@@ -70,8 +75,13 @@ final class OptionSpec: HeapSpec {
         
         describe("[Option: Any].boolean") {
             
-            it("returns the value if of the right type") {
+            it("returns the value if passed a Bool") {
                 let options: [Option: Any] = [.something: true]
+                expect(options.boolean(at: .something)).to(equal(true))
+            }
+            
+            it("returns the value if passed an Objective-C boolean") {
+                let options: [Option: Any] = [.something: true as NSNumber]
                 expect(options.boolean(at: .something)).to(equal(true))
             }
             
@@ -83,11 +93,26 @@ final class OptionSpec: HeapSpec {
         
         describe("[Option: Any].timeInterval") {
             
-            it("returns the value if of the right type") {
+            it("returns the value if passed a Double literal") {
                 let options: [Option: Any] = [.something: 0.25]
                 expect(options.timeInterval(at: .something)).to(equal(0.25))
             }
             
+            it("returns the value if passed an Int literal") {
+                let options: [Option: Any] = [.something: 2]
+                expect(options.timeInterval(at: .something)).to(equal(2))
+            }
+            
+            it("returns the value if passed an Objective-C double") {
+                let options: [Option: Any] = [.something: 0.25 as NSNumber]
+                expect(options.timeInterval(at: .something)).to(equal(0.25))
+            }
+            
+            it("returns the value if passed an Objective-C integer") {
+                let options: [Option: Any] = [.something: 2 as NSNumber]
+                expect(options.timeInterval(at: .something)).to(equal(2))
+            }
+
             it("returns nil if of the wrong type") {
                 let options: [Option: Any] = [.something: true]
                 expect(options.timeInterval(at: .something)).to(beNil())
@@ -96,8 +121,13 @@ final class OptionSpec: HeapSpec {
         
         describe("[Option: Any].integer") {
             
-            it("returns the value if of the right type") {
+            it("returns the value if passed an Int literal") {
                 let options: [Option: Any] = [.something: 1024]
+                expect(options.integer(at: .something)).to(equal(1024))
+            }
+            
+            it("returns the value if passed an Objective-C integer") {
+                let options: [Option: Any] = [.something: 1024 as NSNumber]
                 expect(options.integer(at: .something)).to(equal(1024))
             }
             

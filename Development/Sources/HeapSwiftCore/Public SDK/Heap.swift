@@ -31,7 +31,7 @@ public class Heap: NSObject {
         self.uploader = uploader
     }
 
-    @objc
+    @objc(startRecording:withOptions:)
     public func startRecording(_ environmentId: String, with options: [Option: Any] = [:]) {
         // Reminder: any change in the logic here should also be applied to startRecording in HeapBridgeSupport.swift
         let sanitizedOptions = options.sanitizedCopy()
@@ -39,6 +39,7 @@ public class Heap: NSObject {
         uploader.startScheduledUploads(with: sanitizedOptions)
     }
 
+    @objc
     public func stopRecording() {
         consumer.stopRecording(timestamp: Date())
     }
@@ -59,10 +60,12 @@ public class Heap: NSObject {
         consumer.trackInteraction(interaction: interaction, nodes: nodes, callbackName: callbackName, timestamp: timestamp, sourceInfo: sourceInfo, pageview: pageview)
     }
 
+    @objc
     public func identify(_ identity: String) {
         consumer.identify(identity, timestamp: Date())
     }
 
+    @objc
     public func resetIdentity() {
         consumer.resetIdentity(timestamp: Date())
     }
@@ -75,22 +78,27 @@ public class Heap: NSObject {
         consumer.addEventProperties(properties)
     }
 
+    @objc
     public func removeEventProperty(_ name: String) {
         consumer.removeEventProperty(name)
     }
 
+    @objc
     public func clearEventProperties() {
         consumer.clearEventProperties()
     }
 
+    @objc
     public var userId: String? {
         consumer.userId
     }
 
+    @objc
     public var identity: String? {
         consumer.identity
     }
 
+    @objc
     public var sessionId: String? {
         consumer.getSessionId(timestamp: Date())
     }
