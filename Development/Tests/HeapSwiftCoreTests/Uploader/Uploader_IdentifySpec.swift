@@ -56,6 +56,17 @@ final class Uploader_IdentifySpec: UploaderSpec {
                 expect(userIdentification.library).to(equal(SDKInfo.withoutAdvertiserId.libraryInfo))
             }
             
+            it("sets query properties and header") {
+                
+                let timestamp = Date()
+                dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "user-1", creationDate: timestamp)
+                dataStore.setHasSentInitialUser(environmentId: "11", userId: "123")
+                expectUploadAll(in: uploader).toEventually(beSuccess())
+                expect(APIProtocol.requests).to(haveCount(1), description: "PRECONDITION: There should only be one request")
+                
+                expect(APIProtocol.requests.first?.rawRequest).to(haveMetadata(environmentId: "11", userId: "123", identity: "user-1", library: SDKInfo.withoutAdvertiserId.libraryInfo.name))
+            }
+            
             context("multiple identities are present") {
                 
                 beforeEach {

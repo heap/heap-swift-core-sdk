@@ -78,16 +78,14 @@ extension UploadOperation {
     ///
     /// - Parameters:
     ///   - userProperties: The user properties to upload.
-    ///   - options: Any options passed while starting the scheduled upload.
-    ///   - urlSession: The URL session in which to perform the request.
+    ///   - configuration: The configuration for this operation.
     ///   - complete: A callback to execute while prior to the completion of the operation.
-    convenience init(userProperties: UserProperties, options: [Option : Any], in urlSession: URLSession, complete: @escaping (UploadResult) -> Void) {
+    convenience init(userProperties: UserProperties, configuration: Configuration, complete: @escaping (UploadResult) -> Void) {
         HeapLogger.shared.logDebug("Building add_user_properties request for:\n\(userProperties)")
         self.init(
             path: "api/capture/v2/add_user_properties",
             bodyBuilder: { try userProperties.serializedData() },
-            options: options,
-            in: urlSession,
+            configuration: configuration,
             complete: complete)
     }
     
@@ -95,20 +93,24 @@ extension UploadOperation {
     ///
     /// - Parameters:
     ///   - userIdentification: The user identification to upload.
-    ///   - options: Any options passed while starting the scheduled upload.
-    ///   - urlSession: The URL session in which to perform the request.
+    ///   - configuration: The configuration for this operation.
     ///   - complete: A callback to execute while prior to the completion of the operation.
-    convenience init(userIdentification: UserIdentification, options: [Option : Any], in urlSession: URLSession, complete: @escaping (UploadResult) -> Void) {
+    convenience init(userIdentification: UserIdentification, configuration: Configuration, complete: @escaping (UploadResult) -> Void) {
         HeapLogger.shared.logDebug("Building identify request for:\n\(userIdentification)")
         self.init(
             path: "api/capture/v2/identify",
             bodyBuilder: { try userIdentification.serializedData() },
-            options: options,
-            in: urlSession,
+            configuration: configuration,
             complete: complete)
     }
     
-    convenience init(encodedMessages: [Data], options: [Option : Any], in urlSession: URLSession, complete: @escaping (UploadResult) -> Void) {
+    /// Creates an operation to upload the provided encoded messages.
+    ///
+    /// - Parameters:
+    ///   - encodedMessages: An array of encoded message protobufs.
+    ///   - configuration: The configuration for this operation.
+    ///   - complete: A callback to execute while prior to the completion of the operation.
+    convenience init(encodedMessages: [Data], configuration: Configuration, complete: @escaping (UploadResult) -> Void) {
         HeapLogger.shared.logDebug("Building track request for \(encodedMessages.count) messages (contents previously logged).")
         self.init(
             path: "api/capture/v2/track",
@@ -117,38 +119,68 @@ extension UploadOperation {
                     $0.events = try encodedMessages.map({ try Message(serializedData: $0) })
                 }.serializedData()
             },
-            options: options,
-            in: urlSession,
+            configuration: configuration,
             complete: complete)
     }
     
-    private convenience init(path: String, bodyBuilder: () throws -> Data, options: [Option : Any], in urlSession: URLSession, complete: @escaping (UploadResult) -> Void) {
+    private convenience init(path: String, bodyBuilder: () throws -> Data, configuration: Configuration, complete: @escaping (UploadResult) -> Void) {
         
-        guard
-            let baseUrl = options.url(at: .baseUrl) ?? UploadOperation.baseUrl,
-            let url = URL(string: path, relativeTo: baseUrl)
-        else {
-            self.init(result: .failure(.badRequest), complete: complete)
-            return
-        }
-
         do {
-            var request = URLRequest(url: url)
-            let body = try bodyBuilder()
+            let request = try configuration.request(path: path, bodyBuilder: bodyBuilder)
             
-            request.httpMethod = "POST"
-            request.httpBody = body
-            request.addValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
-            
-            if body.count < 2048 {
-                HeapLogger.shared.logDebug("Sending serialized data to <\(url.absoluteString)>:\n\(body.base64EncodedString())")
-            } else {
-                HeapLogger.shared.logDebug("Sending serialized data of length \(body.count) to <\(url.absoluteString)>.")
+            if let url = request.url,
+               let body = request.httpBody {
+                if body.count < 2048 {
+                    HeapLogger.shared.logDebug("Sending serialized data to <\(url.absoluteString)>:\n\(body.base64EncodedString())")
+                } else {
+                    HeapLogger.shared.logDebug("Sending serialized data of length \(body.count) to <\(url.absoluteString)>.")
+                }
             }
             
-            self.init(request: request, in: urlSession, complete: complete)
+            self.init(request: request, in: configuration.urlSession, complete: complete)
         } catch {
             self.init(result: .failure(.badRequest), complete: complete)
         }
+    }
+    
+    struct Configuration {
+        let user: UserToUpload
+        let activeSession: ActiveSession
+        let urlSession: URLSession
+        let options: [Option: Any]
+        
+        func url(path: String) throws -> URL {
+            
+            // Apply a query string with properties to support log troubleshooting.
+            let relativeString = "\(path)?b=\(activeSession.sdkInfo.libraryInfo.name)&i=\(user.identity ?? "")&u=\(user.userId)&a=\(user.environmentId)"
+            
+            guard
+                let baseUrl = options.url(at: .baseUrl) ?? UploadOperation.baseUrl,
+                let url = URL(string: relativeString, relativeTo: baseUrl)
+            else {
+                throw UploadError.badRequest
+            }
+            
+            return url
+        }
+        
+        func request(path: String, bodyBuilder: () throws -> Data) throws -> URLRequest {
+            let url = try url(path: path)
+            let body = try bodyBuilder()
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.httpBody = body
+            request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+            request.setValue(user.environmentId, forHTTPHeaderField: "X-Heap-Env-Id")
+            return request
+        }
+        
+        var isUserActive: Bool {
+            user.isActive(in: activeSession)
+        }
+        
+        var messageLimit: Int { options.integer(at: .messageBatchMessageLimit) ?? 200 }
+        var byteLimit: Int { options.integer(at: .messageBatchByteLimit) ?? 1_000_000 }
     }
 }

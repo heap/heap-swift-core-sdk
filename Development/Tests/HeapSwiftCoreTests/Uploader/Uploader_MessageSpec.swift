@@ -64,6 +64,30 @@ final class Uploader_MessageSpec: UploaderSpec {
                 ]), description: "Expected a session and a pageview")
             }
             
+            it("sets query properties and header") {
+                let timestamp = Date()
+                dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
+                dataStore.setHasSentInitialUser(environmentId: "11", userId: "123")
+                dataStore.createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "456", timestamp: timestamp, includePageview: true)
+                expectUploadAll(in: uploader).toEventually(beSuccess())
+                expect(APIProtocol.requests).to(haveCount(1), description: "PRECONDITION: There should only be one request")
+
+                expect(APIProtocol.requests.first?.rawRequest).to(haveMetadata(environmentId: "11", userId: "123", identity: nil, library: SDKInfo.withoutAdvertiserId.libraryInfo.name))
+            }
+            
+            it("sets query properties and header when identity is set") {
+                
+                let timestamp = Date()
+                dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "user-1", creationDate: timestamp)
+                dataStore.setHasSentInitialUser(environmentId: "11", userId: "123")
+                dataStore.setHasSentIdentity(environmentId: "11", userId: "123")
+                dataStore.createSessionIfNeeded(environmentId: "11", userId: "123", sessionId: "456", timestamp: timestamp, includePageview: true)
+                expectUploadAll(in: uploader).toEventually(beSuccess())
+                expect(APIProtocol.requests).to(haveCount(1), description: "PRECONDITION: There should only be one request")
+                
+                expect(APIProtocol.requests.first?.rawRequest).to(haveMetadata(environmentId: "11", userId: "123", identity: "user-1", library: SDKInfo.withoutAdvertiserId.libraryInfo.name))
+            }
+            
             context("multiple users with messages are present") {
                 
                 beforeEach {

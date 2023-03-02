@@ -35,7 +35,7 @@ final class Uploader_InitialUserSpec: UploaderSpec {
                 dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
                 expectUploadAll(in: uploader).toEventually(beSuccess())
                 
-                guard case .addUserProperties(.success(let userProperties)) = APIProtocol.requests.first
+                guard case .addUserProperties(.success(let userProperties), _) = APIProtocol.requests.first
                 else { throw TestFailure("Could not get first user properties") }
                 
                 let sdkInfo = SDKInfo.withoutAdvertiserId
@@ -49,6 +49,27 @@ final class Uploader_InitialUserSpec: UploaderSpec {
                 expect(userProperties.hasLibrary).to(beTrue())
                 expect(userProperties.library).to(equal(sdkInfo.libraryInfo))
                 expect(userProperties.properties).to(beEmpty())
+            }
+            
+            it("sets query properties and header") {
+                
+                let timestamp = Date()
+                dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
+                expectUploadAll(in: uploader).toEventually(beSuccess())
+                expect(APIProtocol.requests).to(haveCount(1), description: "PRECONDITION: There should only be one request")
+                
+                expect(APIProtocol.requests.first?.rawRequest).to(haveMetadata(environmentId: "11", userId: "123", identity: nil, library: SDKInfo.withoutAdvertiserId.libraryInfo.name))
+            }
+            
+            it("sets query properties and header when identity is set") {
+                
+                let timestamp = Date()
+                dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "user-1", creationDate: timestamp)
+                dataStore.setHasSentIdentity(environmentId: "11", userId: "123")
+                expectUploadAll(in: uploader).toEventually(beSuccess())
+                expect(APIProtocol.requests).to(haveCount(1), description: "PRECONDITION: There should only be one request")
+                
+                expect(APIProtocol.requests.first?.rawRequest).to(haveMetadata(environmentId: "11", userId: "123", identity: "user-1", library: SDKInfo.withoutAdvertiserId.libraryInfo.name))
             }
             
             context("multiple new users are present") {

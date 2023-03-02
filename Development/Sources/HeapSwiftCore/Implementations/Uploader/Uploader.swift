@@ -272,19 +272,21 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     ///              queue.
     func nextOperation(for user: UserToUpload, activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
         
-        if let operation = initialUserUploadOperation(user, activeSession: activeSession, options: options) {
+        let configuration = UploadOperation.Configuration(user: user, activeSession: activeSession, urlSession: urlSession, options: options)
+        
+        if let operation = initialUserUploadOperation(configuration: configuration) {
             return operation
         }
         
-        if let operation = identityUploadOperation(user, activeSession: activeSession, options: options) {
+        if let operation = identityUploadOperation(configuration: configuration) {
             return operation
         }
         
-        if let operation = addUserPropertiesUploadOperation(user, activeSession: activeSession, options: options) {
+        if let operation = addUserPropertiesUploadOperation(configuration: configuration) {
             return operation
         }
         
-        if let operation = addMessageBatchUploadOperation(user, activeSession: activeSession, options: options) {
+        if let operation = addMessageBatchUploadOperation(configuration: configuration) {
             return operation
         }
         
@@ -298,25 +300,25 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     /// not represent the persisted state.
     ///
     /// - Parameters:
-    ///   - user: The user to upload.
-    ///   - activeSession: Information about the active session.
-    ///   - options: Any options passed while starting the scheduled upload.
+    ///   - configuration: The configuration for this operation.
     /// - Returns: An operation to upload the initial user data, or `nil` if it has already been
     ///            sent.
     ///
     /// - Important: This method and the returned operation **MUST** only be executed on the upload
     ///              queue.
-    func initialUserUploadOperation(_ user: UserToUpload, activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
+    func initialUserUploadOperation(configuration: UploadOperation.Configuration) -> UploadOperation? {
+        let user = configuration.user
+        let sdkInfo = configuration.activeSession.sdkInfo
         
         guard user.needsInitialUpload
         else { return nil }
         
-        return UploadOperation(userProperties: .init(withInitialPayloadFor: user, sdkInfo: activeSession.sdkInfo), options: options, in: urlSession) { result in
+        return UploadOperation(userProperties: .init(withInitialPayloadFor: user, sdkInfo: sdkInfo), configuration: configuration) { result in
             
             user.needsInitialUpload = false
             
             switch result {
-            case .failure(.badRequest) where user.isActive(in: activeSession):
+            case .failure(.badRequest) where configuration.isUserActive:
                 self.rejectedUsers.insert(.init(user))
                 user.markAsDone()
             case .failure(.badRequest):
@@ -337,21 +339,21 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     /// not represent the persisted state.
     ///
     /// - Parameters:
-    ///   - user: The user to upload.
-    ///   - activeSession: Information about the active session.
-    ///   - options: Any options passed while starting the scheduled upload.
+    ///   - configuration: The configuration for this operation.
     /// - Returns: An operation to upload the user pending user properties, or `nil` if it has
     ///            there are no pending properties.
     ///
     /// - Important: This method and the returned operation **MUST** only be executed on the upload
     ///              queue.
-    func identityUploadOperation(_ user: UserToUpload, activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
+    func identityUploadOperation(configuration: UploadOperation.Configuration) -> UploadOperation? {
+        let user = configuration.user
+        let sdkInfo = configuration.activeSession.sdkInfo
         
         guard user.needsIdentityUpload,
-              let userIdentification = UserIdentification(forIdentificationOf: user, at: Date(), sdkInfo: activeSession.sdkInfo)
+              let userIdentification = UserIdentification(forIdentificationOf: user, at: Date(), sdkInfo: sdkInfo)
         else { return nil }
         
-        return UploadOperation(userIdentification: userIdentification, options: options, in: urlSession) { result in
+        return UploadOperation(userIdentification: userIdentification, configuration: configuration) { result in
             
             user.needsIdentityUpload = false
             
@@ -371,22 +373,22 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     /// not represent the persisted state.
     ///
     /// - Parameters:
-    ///   - user: The user to upload.
-    ///   - activeSession: Information about the active session.
-    ///   - options: Any options passed while starting the scheduled upload.
+    ///   - configuration: The configuration for this operation.
     /// - Returns: An operation to upload the user identity data, or `nil` if it has already been
     ///            sent.
     ///
     /// - Important: This method and the returned operation **MUST** only be executed on the upload
     ///              queue.
-    func addUserPropertiesUploadOperation(_ user: UserToUpload, activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
-        
+    func addUserPropertiesUploadOperation(configuration: UploadOperation.Configuration) -> UploadOperation? {
+        let user = configuration.user
+        let activeSession = configuration.activeSession
+        let sdkInfo = activeSession.sdkInfo
         let properties = user.pendingUserProperties
         
         guard !properties.isEmpty
         else { return nil }
         
-        return UploadOperation(userProperties: .init(withUserPropertiesFor: user, sdkInfo: activeSession.sdkInfo), options: options, in: urlSession) { result in
+        return UploadOperation(userProperties: .init(withUserPropertiesFor: user, sdkInfo: sdkInfo), configuration: configuration) { result in
             
             user.pendingUserProperties.removeAll()
             
@@ -401,18 +403,21 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         }
     }
     
-    func addMessageBatchUploadOperation(_ user: UserToUpload, activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
-        let messageLimit = options.integer(at: .messageBatchMessageLimit) ?? 200
-        let byteLimit = options.integer(at: .messageBatchByteLimit) ?? 1_000_000
+    func addMessageBatchUploadOperation(configuration: UploadOperation.Configuration) -> UploadOperation? {
+        let user = configuration.user
+        let activeSession = configuration.activeSession
+        let messageLimit = configuration.messageLimit
+        let byteLimit = configuration.byteLimit
+        
         let (messageBatch, sessionId) = nextMessageBatch(user, activeSession: activeSession, messageLimit: messageLimit, byteLimit: byteLimit)
         
         guard !messageBatch.isEmpty
         else { return nil }
         
-        return UploadOperation(encodedMessages: messageBatch.map(\.1), options: options, in: urlSession) { result in
+        return UploadOperation(encodedMessages: messageBatch.map(\.1), configuration: configuration) { result in
             
             switch result {
-            case .failure(.badRequest) where user.isActive(in: activeSession) && sessionId == activeSession.sessionId:
+            case .failure(.badRequest) where configuration.isUserActive && sessionId == activeSession.sessionId:
                 self.rejectedSessions.insert(.init(user, sessionId: sessionId))
                 user.removeSession(withId: sessionId)
             case .failure(.badRequest):
