@@ -76,7 +76,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     fileprivate var rejectedSessions: Set<RejectedSession> = []
     
     var nextScheduledUploadDate: Date = Date()
-    fileprivate var scheduledUploadOptions: [Option: Any] = [:]
+    fileprivate var scheduledUploadSettings: UploaderSettings = .default
     fileprivate var nextUploadTimer: HeapTimer? = nil
     fileprivate var shouldScheduleUploads = false
     fileprivate var isPerformingScheduledUpload = false
@@ -87,11 +87,11 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         self.urlSession = URLSession(configuration: urlSessionConfiguration)
     }
 
-    func startScheduledUploads(with options: [Option : Any]) {
+    func startScheduledUploads(with settings: UploaderSettings) {
         OperationQueue.upload.addOperation { [self] in
             shouldScheduleUploads = true
             nextUploadTimer?.cancel()
-            scheduledUploadOptions = options
+            scheduledUploadSettings = settings
             repeatedlyPerformScheduledUploads()
         }
     }
@@ -141,16 +141,16 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
             guard let activeSession = activeSessionProvider.activeSession,
                   !isPerformingScheduledUpload
             else {
-                nextScheduledUploadDate = calculateNextScheduledUploadDate(with: .success(()), options: scheduledUploadOptions)
+                nextScheduledUploadDate = calculateNextScheduledUploadDate(with: .success(()), settings: scheduledUploadSettings)
                 complete(nextScheduledUploadDate)
                 return
             }
             
             isPerformingScheduledUpload = true
             
-            uploadAll(activeSession: activeSession, options: scheduledUploadOptions) { [weak self] result in
+            uploadAll(activeSession: activeSession, settings: scheduledUploadSettings) { [weak self] result in
                 if let self = self {
-                    self.nextScheduledUploadDate = self.calculateNextScheduledUploadDate(with: result, options: self.scheduledUploadOptions)
+                    self.nextScheduledUploadDate = self.calculateNextScheduledUploadDate(with: result, settings: self.scheduledUploadSettings)
                     complete(self.nextScheduledUploadDate)
                     self.isPerformingScheduledUpload = false
                 }
@@ -163,15 +163,14 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     ///
     /// - Parameters:
     ///   - result: The result of the last upload attempt.
-    ///   - options: Any options passed while starting the scheduled upload.
+    ///   - settings: Any settings passed while starting the scheduled upload.
     /// - Returns: The next time the uploader should run.
-    private func calculateNextScheduledUploadDate(with result: UploadResult, options: [Option: Any]) -> Date {
-        let uploadInterval = options.timeInterval(at: .uploadInterval) ?? 15
+    private func calculateNextScheduledUploadDate(with result: UploadResult, settings: UploaderSettings) -> Date {
         
         if result.canContinueUploading {
-            return Date().addingTimeInterval(uploadInterval)
+            return Date().addingTimeInterval(settings.uploadInterval)
         } else {
-            return Date().addingTimeInterval(uploadInterval * 4)
+            return Date().addingTimeInterval(settings.uploadInterval * 4)
         }
     }
     
@@ -179,9 +178,9 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     ///
     /// - Parameters:
     ///   - activeSession: Information about the active session.
-    ///   - options: Any options passed while starting the scheduled upload.
+    ///   - settings: Any settings passed while starting the scheduled upload.
     ///   - complete: A completion block that fires when the upload process completes.
-    func uploadAll(activeSession: ActiveSession, options: [Option : Any], complete: @escaping (UploadResult) -> Void) {
+    func uploadAll(activeSession: ActiveSession, settings: UploaderSettings, complete: @escaping (UploadResult) -> Void) {
         
         var users: [UserToUpload] = []
         var result: UploadResult = .success(())
@@ -193,7 +192,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         
         func doNextOperation() {
             guard result.canContinueUploading,
-                  let uploadOperation = nextOperation(for: &users, activeSession: activeSession, options: options)
+                  let uploadOperation = nextOperation(for: &users, activeSession: activeSession, settings: settings)
             else {
                 switch result {
                 case .failure(.networkFailure):
@@ -244,15 +243,15 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     /// - Parameters:
     ///   - users: A mutable array of users to upload.
     ///   - activeSession: Information about the active session.
-    ///   - options: Any options passed while starting the scheduled upload.
+    ///   - settings: Any settings passed while starting the scheduled upload.
     /// - Returns: The next upload operation for the list of users, or `nil` if all data has been
     ///            sent.
     ///
     /// - Important: This method and the returned operation **MUST** only be executed on the upload
     ///              queue.
-    func nextOperation(for users: inout [UserToUpload], activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
+    func nextOperation(for users: inout [UserToUpload], activeSession: ActiveSession, settings: UploaderSettings) -> UploadOperation? {
         while let user = users.first {
-            if let operation = nextOperation(for: user, activeSession: activeSession, options: options) {
+            if let operation = nextOperation(for: user, activeSession: activeSession, settings: settings) {
                 return operation
             } else {
                 users.removeFirst()
@@ -271,14 +270,14 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     /// - Parameters:
     ///   - user: The user to upload.
     ///   - activeSession: Information about the active session.
-    ///   - options: Any options passed while starting the scheduled upload.
+    ///   - settings: Any settings passed while starting the scheduled upload.
     /// - Returns: The next upload operation for the user, or `nil` if all data has been sent.
     ///
     /// - Important: This method and the returned operation **MUST** only be executed on the upload
     ///              queue.
-    func nextOperation(for user: UserToUpload, activeSession: ActiveSession, options: [Option : Any]) -> UploadOperation? {
+    func nextOperation(for user: UserToUpload, activeSession: ActiveSession, settings: UploaderSettings) -> UploadOperation? {
         
-        let configuration = UploadOperation.Configuration(user: user, activeSession: activeSession, urlSession: urlSession, options: options)
+        let configuration = UploadOperation.Configuration(user: user, activeSession: activeSession, urlSession: urlSession, settings: settings)
         
         if let operation = initialUserUploadOperation(configuration: configuration) {
             return operation
@@ -463,7 +462,7 @@ extension UserToUpload {
         userId == activeSession.userId && environmentId == activeSession.environmentId
     }
     
-    /// Marks all properties on the user as uploaded so `nextOperation(for:, activeSession:, options:)` will return `nil`.
+    /// Marks all properties on the user as uploaded so `nextOperation(for:, activeSession:, settings:)` will return `nil`.
     func markAsDone() {
         self.needsInitialUpload = false
         self.needsIdentityUpload = false

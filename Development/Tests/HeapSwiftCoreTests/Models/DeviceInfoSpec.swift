@@ -12,9 +12,9 @@ final class DeviceInfoSpec: HeapSpec {
             var current: DeviceInfo!
             
             beforeEach {
-                current = .current(with: [
+                current = .current(with: .init(with: [
                     .captureAdvertiserId: true // Set to true so we can validate the on behavior (both will be nil)
-                ], includeCarrier: false)
+                ]), includeCarrier: false)
             }
             
             it("has a model") {

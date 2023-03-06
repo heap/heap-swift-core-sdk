@@ -37,7 +37,7 @@ class UploaderSpec: HeapSpec {
 func expectUploadAll(file: StaticString = #file, line: UInt = #line, in uploader: TestableUploader, with options: [Option : Any] = [:]) -> Expectation<Result<Void, UploadError>> {
     
     var result: Result<Void, UploadError>? = nil
-    uploader.uploadAll(activeSession: uploader.activeSessionProvider.activeSession!, options: options) {
+    uploader.uploadAll(activeSession: uploader.activeSessionProvider.activeSession!, settings: .init(with: options)) {
         result = $0
     }
     

@@ -65,7 +65,7 @@ public class HeapBridgeSupport
         let options = try getOptionalOptionsDictionary(from: arguments)
         let timestamp = try getOptionalTimestamp(arguments, methodName: "startRecording")
         eventConsumer.startRecording(environmentId, with: options, timestamp: timestamp)
-        uploader.startScheduledUploads(with: options)
+        uploader.startScheduledUploads(with: .init(with: options))
         return nil
     }
     

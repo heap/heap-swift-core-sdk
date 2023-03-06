@@ -4,7 +4,7 @@ import UIKit
 import CoreTelephony
 
 extension DeviceInfo {
-    static func current(with options: [Option: Any], includeCarrier: Bool) -> DeviceInfo {
+    static func current(with settings: FieldSettings, includeCarrier: Bool) -> DeviceInfo {
         let device = UIDevice.current
         var deviceInfo = DeviceInfo()
         deviceInfo.type = getDeviceType(device)
@@ -15,7 +15,7 @@ extension DeviceInfo {
             deviceInfo.carrier = carrier
         }
         deviceInfo.setIfNotNil(\.vendorID, device.identifierForVendor?.uuidString)
-        deviceInfo.setIfNotNil(\.advertiserID, getAdvertisingIdentifier(with: options))
+        deviceInfo.setIfNotNil(\.advertiserID, getAdvertisingIdentifier(with: settings))
         
         return deviceInfo
     }

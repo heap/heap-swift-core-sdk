@@ -16,6 +16,8 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
         var testNodesC: [InteractionNode] = []
         var testNodesD: [InteractionNode] = []
         
+        func node(_ interactionNode: InteractionNode) -> ElementNode { interactionNode.node(with: .default) }
+        
         beforeEach {
             
             testNode = InteractionNode(nodeName: "TestNode")
@@ -66,7 +68,7 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
             }
 
             context("Heap is recording") {
-
+                
                 var sessionTimestamp: Date!
                 var originalSessionId: String?
                 var pageview: Pageview!
@@ -78,8 +80,8 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                     pageview = consumer.trackPageview(.with({ $0.title = "page 1" }), timestamp: sessionTimestamp)
                 }
                 
-                it ("tracks interactions") {
-
+                it("tracks interactions") {
+                    
                     consumer.trackInteraction(interaction: .custom("custom"),   nodes: testNodesA,  callbackName:"callbackA", timestamp: sessionTimestamp, pageview: pageview)
                     consumer.trackInteraction(interaction: .touch,              nodes: testNodesB,  callbackName:"callbackB", timestamp: sessionTimestamp, pageview: pageview)
                     consumer.trackInteraction(interaction: .change,             nodes: testNodesC,  callbackName:"callbackC", timestamp: sessionTimestamp, pageview: pageview)
@@ -87,17 +89,18 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                     consumer.trackInteraction(interaction: .custom("empty"),    nodes: [],          callbackName:nil,         timestamp: sessionTimestamp, pageview: pageview)
                     
                     let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-
+                    
+                    
                     let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: originalSessionId, count: 8)
-                    messages[3].expectInteractionEventMessage(user: user, interaction: .custom("custom"),   nodes: testNodesA.map(\.node),  callbackName: "callbackA", pageviewMessage: messages[2])
-                    messages[4].expectInteractionEventMessage(user: user, interaction: .builtin(.touch),    nodes: testNodesB.map(\.node),  callbackName: "callbackB", pageviewMessage: messages[2])
-                    messages[5].expectInteractionEventMessage(user: user, interaction: .builtin(.change),   nodes: testNodesC.map(\.node),  callbackName: "callbackC", pageviewMessage: messages[2])
-                    messages[6].expectInteractionEventMessage(user: user, interaction: .builtin(.click),    nodes: testNodesD.map(\.node),  callbackName: "callbackD", pageviewMessage: messages[2])
-                    messages[7].expectInteractionEventMessage(user: user, interaction: .custom("empty"),    nodes: [],                      callbackName: nil,         pageviewMessage: messages[2])
+                    messages[3].expectInteractionEventMessage(user: user, interaction: .custom("custom"),   nodes: testNodesA.map(node),  callbackName: "callbackA", pageviewMessage: messages[2])
+                    messages[4].expectInteractionEventMessage(user: user, interaction: .builtin(.touch),    nodes: testNodesB.map(node),  callbackName: "callbackB", pageviewMessage: messages[2])
+                    messages[5].expectInteractionEventMessage(user: user, interaction: .builtin(.change),   nodes: testNodesC.map(node),  callbackName: "callbackC", pageviewMessage: messages[2])
+                    messages[6].expectInteractionEventMessage(user: user, interaction: .builtin(.click),    nodes: testNodesD.map(node),  callbackName: "callbackD", pageviewMessage: messages[2])
+                    messages[7].expectInteractionEventMessage(user: user, interaction: .custom("empty"),    nodes: [],                    callbackName: nil,         pageviewMessage: messages[2])
                 }
                 
-                it ("adds interaction events to pending messages only when ready") {
-
+                it("adds interaction events to pending messages only when ready") {
+                    
                     guard let interactionEvent = consumer.uncommittedInteractionEvent(timestamp: sessionTimestamp, sourceInfo: nil, pageview: pageview)
                     else { throw TestFailure("Could not create interactionEvent") }
                     
@@ -119,13 +122,11 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                     interactionEvent.commit()
                     
                     let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: originalSessionId, count: 4)
-                    messages[3].expectInteractionEventMessage(user: user, interaction: .builtin(.click),  nodes: testNodesD.map(\.node), callbackName: "callbackD", pageviewMessage: messages[2])
+                    messages[3].expectInteractionEventMessage(user: user, interaction: .builtin(.click),  nodes: testNodesD.map(node), callbackName: "callbackD", pageviewMessage: messages[2])
                 }
                 
                 it ("preserves node data") {
-                    guard let interactionEvent = consumer.uncommittedInteractionEvent(timestamp: sessionTimestamp, sourceInfo: nil, pageview: pageview)
-                    else { throw TestFailure("Could not create interactionEvent") }
-
+                    
                     // Populate Test Node Data
                     testNode.nodeText = "fooText"
                     testNode.nodeId = "fooID"
@@ -135,33 +136,128 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                     testNode.referencingPropertyName = "A.b"
                     testNode.attributes = ["fooAttributeKey": "fooAttributeValue"]
                     
-                    interactionEvent.kind = .click
-                    interactionEvent.nodes = [testNode]
-                    interactionEvent.commit()
+                    consumer.trackInteraction(interaction: .click, nodes: [testNode])
                     
-                    expect(testNode.node.nodeName).to(equal("TestNode"))
-                    expect(testNode.node.nodeText).to(equal("fooText"))
-                    expect(testNode.node.nodeID).to(equal("fooID"))
-                    expect(testNode.node.nodeHtmlClass).to(equal("a b c"))
-                    expect(testNode.node.href).to(equal("/example.html"))
-                    expect(testNode.node.accessibilityLabel).to(equal("fooAL"))
-                    expect(testNode.node.referencingPropertyName).to(equal("A.b"))
+                    let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
+                    guard
+                        let node = try dataStore.getPendingMessages(for: user, sessionId: originalSessionId).last?.event.interaction.nodes.first
+                    else { throw TestFailure("PRECONDITION: Could not get node") }
                     
-                    expect(testNode.node.attributes["fooAttributeKey"]).to(equal(.init(value: "fooAttributeValue")))
+                    expect(node.nodeName).to(equal("TestNode"))
+                    expect(node.nodeText).to(equal("fooText"))
+                    expect(node.nodeID).to(equal("fooID"))
+                    expect(node.nodeHtmlClass).to(equal("a b c"))
+                    expect(node.href).to(equal("/example.html"))
+                    expect(node.accessibilityLabel).to(equal("fooAL"))
+                    expect(node.referencingPropertyName).to(equal("A.b"))
+                    
+                    expect(node.attributes["fooAttributeKey"]).to(equal(.init(value: "fooAttributeValue")))
                 }
                 
-                it ("truncates nodeText") {
+                it("truncates nodeText") {
                     let value = String(repeating: "あ", count: 65)
                     let expectedValue = String(repeating: "あ", count: 64)
                     testNode.nodeText = value
-                    expect(testNode.node.nodeText).to(equal(expectedValue))
+                    
+                    consumer.trackInteraction(interaction: .click, nodes: [testNode])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
+                    guard
+                        let node = try dataStore.getPendingMessages(for: user, sessionId: originalSessionId).last?.event.interaction.nodes.first
+                    else { throw TestFailure("PRECONDITION: Could not get node") }
+                    
+                    expect(node.nodeText).to(equal(expectedValue))
                 }
                 
-                it ("truncates accessibilityLabel") {
+                it("truncates accessibilityLabel") {
                     let value = String(repeating: "あ", count: 65)
                     let expectedValue = String(repeating: "あ", count: 64)
                     testNode.accessibilityLabel = value
-                    expect(testNode.node.accessibilityLabel).to(equal(expectedValue))
+                    
+                    consumer.trackInteraction(interaction: .click, nodes: [testNode])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
+                    guard
+                        let node = try dataStore.getPendingMessages(for: user, sessionId: originalSessionId).last?.event.interaction.nodes.first
+                    else { throw TestFailure("PRECONDITION: Could not get node") }
+                    
+                    expect(node.accessibilityLabel).to(equal(expectedValue))
+                }
+            }
+            
+            context("field options are set") {
+                
+                beforeEach {
+                    testNode.nodeText = "fooText"
+                    testNode.accessibilityLabel = "fooAL"
+                    testNode.referencingPropertyName = "A.b"
+                }
+                
+                func track(nodes: [InteractionNode], with options: [Option: Any]) throws -> [ElementNode] {
+                    
+                    consumer.startRecording("11", with: options)
+                    consumer.trackInteraction(interaction: .click, nodes: nodes)
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
+                    guard let interaction = try dataStore.getPendingMessagesInOnlySession(for: user).last?.event.interaction,
+                          interaction.kind == .builtin(.click),
+                          interaction.nodes.count > 0
+                    else { throw TestFailure("PRECONDITION: Could not get nodes for last event.") }
+                    
+                    return interaction.nodes
+                }
+                
+                func trackTestNode(with options: [Option: Any]) throws -> ElementNode {
+                    try track(nodes: [testNode], with: options)[0]
+                }
+                
+                it("erases accessibilityLabel on commit given option disableInteractionAccessibilityLabelCapture") {
+                    
+                    let node = try trackTestNode(with: [
+                        .disableInteractionAccessibilityLabelCapture: true,
+                    ])
+                    
+                    expect(node.hasAccessibilityLabel).to(beFalse())
+                    expect(node.hasNodeText).to(beTrue())
+                    expect(node.hasReferencingPropertyName).to(beTrue())
+                }
+                
+                it("erases nodeText on commit given option disableInteractionTextCapture") {
+                    
+                    let node = try trackTestNode(with: [
+                        .disableInteractionTextCapture: true,
+                    ])
+                    
+                    expect(node.hasNodeText).to(beFalse())
+                    expect(node.hasAccessibilityLabel).to(beTrue())
+                    expect(node.hasReferencingPropertyName).to(beTrue())
+                }
+                
+                it("erases referencingPropertyName on commit given option disableInteractionReferencingPropertyCapture") {
+                    
+                    let node = try trackTestNode(with: [
+                        .disableInteractionReferencingPropertyCapture: true,
+                    ])
+                    
+                    expect(node.hasReferencingPropertyName).to(beFalse())
+                    expect(node.hasNodeText).to(beTrue())
+                    expect(node.hasAccessibilityLabel).to(beTrue())
+                }
+                
+                it("limits node hierarchy to 30 if no option is given") {
+                    
+                    let testNodes = (0..<100).map { InteractionNode(nodeName: "TestNode_\($0)") }
+                    let nodes = try track(nodes: testNodes, with: [:])
+                    expect(nodes).to(haveCount(30))
+                }
+                
+                it("limits node hierarchy to the given limit") {
+                    
+                    let testNodes = (0..<100).map { InteractionNode(nodeName: "TestNode_\($0)") }
+                    let nodes = try track(nodes: testNodes, with: [
+                        .interactionHierarchyCaptureLimit: 9,
+                    ])
+                    expect(nodes).to(haveCount(9))
                 }
             }
         }

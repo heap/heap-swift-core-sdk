@@ -65,9 +65,9 @@ extension StateManager {
         }
     }
     
-    func extendSessionAndSetLastPageview(_ pageviewInfo: PageviewInfo) -> State.UpdateResults {
+    func extendSessionAndSetLastPageview(_ pageviewInfo: inout PageviewInfo) -> State.UpdateResults {
         update { state, outcomes in
-            state?.extendSessionAndSetLastPageview(pageviewInfo, outcomes: &outcomes)
+            state?.extendSessionAndSetLastPageview(&pageviewInfo, outcomes: &outcomes)
         }
     }
     

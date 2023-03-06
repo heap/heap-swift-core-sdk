@@ -214,11 +214,11 @@ extension EventConsumer: EventConsumerProtocol {
         let sourceLibrary = sourceInfo?.libraryInfo
         var pageviewInfo = PageviewInfo(newPageviewAt: timestamp)
         pageviewInfo.setIfNotNil(\.componentOrClassName, properties.componentOrClassName)
-        pageviewInfo.setIfNotNil(\.title, truncatedTitle)
+        pageviewInfo.setIfNotNil(\.title, truncatedTitle) // Sanitized in the state manager.
         pageviewInfo.setIfNotNil(\.url, properties.url?.pageviewUrl)
         pageviewInfo.sourceProperties = sanitizedSourceProperties.mapValues(\.protoValue)
         
-        let results = stateManager.extendSessionAndSetLastPageview(pageviewInfo)
+        let results = stateManager.extendSessionAndSetLastPageview(&pageviewInfo)
         handleChanges(results, timestamp: timestamp)
         guard let state = results.current else { return nil }
         
@@ -256,7 +256,7 @@ extension EventConsumer: EventConsumerProtocol {
         let message = Message(forPartialEventAt: timestamp, sourceLibrary: sourceLibrary, in: state)
         let pendingEvent = PendingEvent(partialEventMessage: message, toBeCommittedTo: dataStore)
         
-        let interactionEvent = InteractionEvent(pendingEvent: pendingEvent)
+        let interactionEvent = InteractionEvent(pendingEvent: pendingEvent, fieldSettings: state.fieldSettings)
 
         PageviewResolver.resolvePageviewInfo(requestedPageview: pageview, eventSourceName: sourceInfo?.name, timestamp: timestamp, delegates: delegateManager.current, state: state) {
             pendingEvent.setPageviewInfo($0)

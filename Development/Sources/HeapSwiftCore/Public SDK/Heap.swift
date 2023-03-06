@@ -35,7 +35,7 @@ public class Heap: NSObject {
         // Reminder: any change in the logic here should also be applied to startRecording in HeapBridgeSupport.swift
         let sanitizedOptions = options.sanitizedCopy()
         consumer.startRecording(environmentId, with: sanitizedOptions, timestamp: Date())
-        uploader.startScheduledUploads(with: sanitizedOptions)
+        uploader.startScheduledUploads(with: .init(with: sanitizedOptions))
     }
 
     @objc

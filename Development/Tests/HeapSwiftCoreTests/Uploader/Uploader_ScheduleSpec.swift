@@ -99,22 +99,22 @@ final class Uploader_ScheduleSpec: UploaderSpec {
             }
             
             it("performs an immediate upload attempt when called the first time") {
-                uploader.startScheduledUploads(with: [:])
+                uploader.startScheduledUploads(with: .default)
                 expect(uploader.nextScheduledUploadDate).toEventuallyNot(equal(initialNextScheduledUploadDate))
             }
             
             it("does not perform subsequent initial uploads when called repeatedly") {
-                uploader.startScheduledUploads(with: [:])
+                uploader.startScheduledUploads(with: .default)
                 expect(uploader.nextScheduledUploadDate).toEventuallyNot(equal(initialNextScheduledUploadDate))
                 let subsequentNextScheduledUploadDate = uploader.nextScheduledUploadDate
-                uploader.startScheduledUploads(with: [:])
-                uploader.startScheduledUploads(with: [:])
-                uploader.startScheduledUploads(with: [:])
+                uploader.startScheduledUploads(with: .default)
+                uploader.startScheduledUploads(with: .default)
+                uploader.startScheduledUploads(with: .default)
                 expect(uploader.nextScheduledUploadDate).toAlways(equal(subsequentNextScheduledUploadDate), description: "Extra start calls should not trigger additional uploads")
             }
             
             it("performs uploads at a regular interval") {
-                uploader.startScheduledUploads(with: [.uploadInterval: TimeInterval(0.1) ])
+                uploader.startScheduledUploads(with: .init(with: [.uploadInterval: TimeInterval(0.1) ]))
                 DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) {
                     dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: Date())
                 }
@@ -136,7 +136,7 @@ final class Uploader_ScheduleSpec: UploaderSpec {
                 let baseUrl = URL(string: "https://example.com:123/foo/bar/")!
                 APIProtocol.baseUrlOverride = baseUrl
                 dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: Date())
-                uploader.startScheduledUploads(with: [ .baseUrl: baseUrl ])
+                uploader.startScheduledUploads(with: .init(with: [ .baseUrl: baseUrl ]))
                 expect(APIProtocol.addUserPropertyPayloads).toEventually(haveCount(1), description: "The user should have been uploaded to the custom location")
             }
         }
@@ -144,7 +144,7 @@ final class Uploader_ScheduleSpec: UploaderSpec {
         describe("Uploader.stopScheduledUploads") {
             
             it("stops scheduled uploads") {
-                uploader.startScheduledUploads(with: [.uploadInterval: TimeInterval(0.1) ])
+                uploader.startScheduledUploads(with: .init(with: [.uploadInterval: TimeInterval(0.1) ]))
                 DispatchQueue.main.asyncAfter(deadline: .now() + DispatchTimeInterval.milliseconds(500)) {
                     dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: Date())
                 }

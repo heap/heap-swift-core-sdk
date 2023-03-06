@@ -33,8 +33,8 @@ typealias UploadResult = Result<Void, UploadError>
 protocol UploaderProtocol {
 
     /// Starts scheduling regular uploads to the Heap server.
-    /// - Parameter options: Options to be used when configuring the scheduled uploader.
-    func startScheduledUploads(with options: [Option: Any])
+    /// - Parameter settings: Settings to be used when configuring the scheduled uploader.
+    func startScheduledUploads(with settings: UploaderSettings)
     
     /// Stops the scheduled uploads.
     func stopScheduledUploads()
@@ -46,7 +46,7 @@ protocol UploaderProtocol {
     ///
     /// - Parameters:
     ///   - activeSession: Information about the active session.
-    ///   - options: Any options passed while starting the scheduled upload.
+    ///   - settings: Any settings passed while starting the scheduled upload.
     ///   - complete: A completion block that fires when the upload process completes.
-    func uploadAll(activeSession: ActiveSession, options: [Option: Any], complete: @escaping (UploadResult) -> Void)
+    func uploadAll(activeSession: ActiveSession, settings: UploaderSettings, complete: @escaping (UploadResult) -> Void)
 }

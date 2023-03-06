@@ -86,6 +86,17 @@ public extension Option {
     static let captureAdvertiserId = register(name: "captureAdvertiserId", type: .boolean)
 }
 
+@objc
+public extension Option {
+    static let disablePageviewAutocapture = register(name: "disablePageviewAutocapture", type: .boolean)
+    static let disablePageviewTitleCapture = register(name: "disablePageviewTitleCapture", type: .boolean)
+    static let disableInteractionAutocapture = register(name: "disableInteractionAutocapture", type: .boolean)
+    static let disableInteractionTextCapture = register(name: "disableInteractionTextCapture", type: .boolean)
+    static let disableInteractionAccessibilityLabelCapture = register(name: "disableInteractionAccessibilityLabelCapture", type: .boolean)
+    static let disableInteractionReferencingPropertyCapture = register(name: "disableInteractionReferencingPropertyCapture", type: .boolean)
+    static let interactionHierarchyCaptureLimit = register(name: "interactionHierarchyCaptureLimit", type: .integer)
+}
+
 public extension Dictionary where Key == Option, Value == Any {
 
     func string(at key: Option) -> String? {
@@ -159,5 +170,85 @@ public extension Dictionary where Key == Option, Value == Any {
 
     func matches(_ other: [Option: Any]) -> Bool {
         keys == other.keys && keys.allSatisfy({ matches(other, at: $0) })
+    }
+}
+
+struct UploaderSettings {
+    var uploadInterval: TimeInterval
+    var baseUrl: URL?
+    var messageBatchByteLimit: Int
+    var messageBatchMessageLimit: Int
+    
+    static let `default` = UploaderSettings(
+        uploadInterval: 15,
+        baseUrl: URL(string: "https://heapanalytics.com/"),
+        messageBatchByteLimit: 1_000_000,
+        messageBatchMessageLimit: 200
+    )
+}
+
+extension UploaderSettings {
+    
+    init(with options: [Option: Any]) {
+        
+        let base = Self.default
+        
+        self.init(
+            uploadInterval: options.timeInterval(at: .uploadInterval) ?? base.uploadInterval,
+            baseUrl: options.url(at: .baseUrl) ?? base.baseUrl,
+            messageBatchByteLimit: options.integer(at: .messageBatchByteLimit) ?? base.messageBatchByteLimit,
+            messageBatchMessageLimit: options.integer(at: .messageBatchMessageLimit) ?? base.messageBatchMessageLimit
+        )
+    }
+    
+    static func with(_ config: (_ settings: inout Self) -> Void) -> Self {
+        var instance = Self.default
+        config(&instance)
+        return instance
+    }
+}
+
+struct FieldSettings {
+    var captureAdvertiserId: Bool
+    var capturePageviewTitle: Bool
+    var captureInteractionText: Bool
+    var captureInteractionAccessibilityLabel: Bool
+    var captureInteractionReferencingProperty: Bool
+    var maxInteractionNodeCount: Int
+    
+    static let `default` = FieldSettings(
+        captureAdvertiserId: false,
+        capturePageviewTitle: true,
+        captureInteractionText: true,
+        captureInteractionAccessibilityLabel: true,
+        captureInteractionReferencingProperty: true,
+        maxInteractionNodeCount: 30
+    )
+}
+
+extension FieldSettings {
+    
+    init(with options: [Option: Any]) {
+        
+        let base = Self.default
+        
+        func negated(_ option: Option) -> Bool? {
+            options.boolean(at: option).map({ !$0 })
+        }
+        
+        self.init(
+            captureAdvertiserId: options.boolean(at: .captureAdvertiserId) ?? base.captureAdvertiserId,
+            capturePageviewTitle: negated(.disablePageviewTitleCapture) ?? base.capturePageviewTitle,
+            captureInteractionText: negated(.disableInteractionTextCapture) ?? base.captureInteractionText,
+            captureInteractionAccessibilityLabel: negated(.disableInteractionAccessibilityLabelCapture) ?? base.captureInteractionAccessibilityLabel,
+            captureInteractionReferencingProperty: negated(.disableInteractionReferencingPropertyCapture) ?? base.captureInteractionReferencingProperty,
+            maxInteractionNodeCount: options.integer(at: .interactionHierarchyCaptureLimit) ?? base.maxInteractionNodeCount
+        )
+    }
+    
+    static func with(_ config: (_ settings: inout Self) -> Void) -> Self {
+        var instance = Self.default
+        config(&instance)
+        return instance
     }
 }

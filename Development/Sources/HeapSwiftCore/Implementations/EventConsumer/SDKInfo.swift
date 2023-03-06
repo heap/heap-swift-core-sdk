@@ -4,8 +4,8 @@ struct SDKInfo {
     let deviceInfo: DeviceInfo
     let libraryInfo: LibraryInfo
     
-    static func current(with options: [Option: Any]) -> SDKInfo {
-        let deviceInfo = DeviceInfo.current(with: options, includeCarrier: true)
+    static func current(with settings: FieldSettings) -> SDKInfo {
+        let deviceInfo = DeviceInfo.current(with: settings, includeCarrier: true)
         return .init(applicationInfo: .current, deviceInfo: deviceInfo, libraryInfo: .baseInfo(with: deviceInfo))
     }
 }

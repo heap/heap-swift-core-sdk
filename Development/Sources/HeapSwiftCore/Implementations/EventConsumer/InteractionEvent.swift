@@ -5,14 +5,17 @@ class InteractionEvent: InteractionEventProtocol {
     private var _lock = DispatchSemaphore(value: 1)
     
     private let pendingEvent: PendingEvent
+    private let fieldSettings: FieldSettings
+    
     private var _needsNodes: Bool = true
 
     private var _kind: Interaction?
     private var _callbackName: String? = nil
     private var _nodes: [InteractionNode] = []
     
-    init(pendingEvent: PendingEvent) {
+    init(pendingEvent: PendingEvent, fieldSettings: FieldSettings) {
         self.pendingEvent = pendingEvent
+        self.fieldSettings = fieldSettings
     }
     
     public var kind: Interaction? {
@@ -62,6 +65,7 @@ class InteractionEvent: InteractionEventProtocol {
 
         let kind: Interaction
         let nodes: [InteractionNode]
+        
         do {
             _lock.wait()
             defer { _lock.signal() }
@@ -72,7 +76,9 @@ class InteractionEvent: InteractionEventProtocol {
         
         pendingEvent.setKind(.interaction(.with({
             $0.kind = kind.kind
-            $0.nodes = nodes.map(\.node)
+            $0.nodes = nodes
+                .prefix(fieldSettings.maxInteractionNodeCount)
+                .map({ $0.node(with: fieldSettings) })
             $0.setIfNotNil(\.callbackName, callbackName)
         })))
         
@@ -115,15 +121,15 @@ extension Interaction: CustomStringConvertible {
 
 extension InteractionNode {
 
-    var node: ElementNode {
+    func node(with fieldSettings: FieldSettings) -> ElementNode {
         .with {
             $0.nodeName = nodeName
-            $0.setIfNotNil(\.nodeText, nodeText?.truncated(toUtf16Count: 64).result)
+            $0.setIfNotNil(\.nodeText, nodeText?.truncated(toUtf16Count: 64).result, andTrue: fieldSettings.captureInteractionText)
             $0.setIfNotNil(\.nodeID, nodeId)
             $0.setIfNotNil(\.nodeHtmlClass, nodeHtmlClass)
             $0.setIfNotNil(\.href, href)
-            $0.setIfNotNil(\.accessibilityLabel, accessibilityLabel?.truncated(toUtf16Count: 64).result)
-            $0.setIfNotNil(\.referencingPropertyName, referencingPropertyName)
+            $0.setIfNotNil(\.accessibilityLabel, accessibilityLabel?.truncated(toUtf16Count: 64).result, andTrue: fieldSettings.captureInteractionAccessibilityLabel)
+            $0.setIfNotNil(\.referencingPropertyName, referencingPropertyName, andTrue: fieldSettings.captureInteractionReferencingProperty)
             $0.attributes = attributes.mapValues(\.protoValue)
         }
     }

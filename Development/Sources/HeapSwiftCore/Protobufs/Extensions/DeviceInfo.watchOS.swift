@@ -2,7 +2,7 @@
 import WatchKit
 
 extension DeviceInfo {
-    static func current(with options: [Option: Any], includeCarrier: Bool) -> DeviceInfo {
+    static func current(with settings: FieldSettings, includeCarrier: Bool) -> DeviceInfo {
         let device = WKInterfaceDevice.current()
         
         var deviceInfo = DeviceInfo()
@@ -12,7 +12,7 @@ extension DeviceInfo {
             deviceInfo.setIfNotNil(\.vendorID, device.identifierForVendor?.uuidString)
         }
         deviceInfo.model = device.model
-        deviceInfo.setIfNotNil(\.advertiserID, getAdvertisingIdentifier(with: options))
+        deviceInfo.setIfNotNil(\.advertiserID, getAdvertisingIdentifier(with: settings))
         return deviceInfo
     }
 }

@@ -5,12 +5,12 @@ import IOKit
 
 #if os(macOS)
 extension DeviceInfo {
-    static func current(with options: [Option: Any], includeCarrier: Bool) -> DeviceInfo {
+    static func current(with settings: FieldSettings, includeCarrier: Bool) -> DeviceInfo {
         var deviceInfo = DeviceInfo()
         deviceInfo.type = .desktop
         deviceInfo.platform = getPlatform()
         deviceInfo.setIfNotNil(\.model, getMacModel())
-        deviceInfo.setIfNotNil(\.advertiserID, getAdvertisingIdentifier(with: options))
+        deviceInfo.setIfNotNil(\.advertiserID, getAdvertisingIdentifier(with: settings))
         return deviceInfo
     }
     

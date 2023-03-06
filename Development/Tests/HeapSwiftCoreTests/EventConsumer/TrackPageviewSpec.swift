@@ -373,6 +373,75 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     expect(pageview?.isFromBridge).to(beTrue())
                 }
             }
+            
+            context("field options are applied") {
+                
+                it("prevents pageview title capture when .disablePageviewTitleCapture is true") {
+
+                    consumer.startRecording("11", with: [.disablePageviewTitleCapture: true])
+                    
+                    _ = consumer.trackPageview(.with({
+                        $0.title = "FooTitle"
+                    }))
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    let pageviewInfo = messages[2].pageviewInfo
+                    
+                    expect(pageviewInfo.hasTitle).to(beFalse())
+                    expect(consumer.stateManager.current?.lastPageviewInfo.hasTitle).to(beFalse())
+                }
+                
+                it("does not capture pageview title on events attributed to the last pageview when title is disabled") {
+                    
+                    consumer.startRecording("11", with: [.disablePageviewTitleCapture: true])
+                    
+                    _ = consumer.trackPageview(.with({
+                        $0.title = "FooTitle"
+                    }))
+                    
+                    consumer.track("my event")
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
+                    let pageviewInfo = messages[3].pageviewInfo
+                    
+                    expect(pageviewInfo.hasTitle).to(beFalse())
+                }
+                
+                it("does not capture pageview title on events attributed to the last pageview when title is disabled") {
+                    
+                    consumer.startRecording("11", with: [.disablePageviewTitleCapture: true])
+                    
+                    let pageview = consumer.trackPageview(.with({
+                        $0.title = "FooTitle"
+                    }))
+                    
+                    consumer.track("my event", pageview: pageview)
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
+                    let pageviewInfo = messages[3].pageviewInfo
+                    
+                    expect(pageviewInfo.hasTitle).to(beFalse())
+                }
+                
+                it("captures pageview title when .disablePageviewTitleCapture is false") {
+
+                    consumer.startRecording("11", with: [.disablePageviewTitleCapture: false])
+                    
+                    _ = consumer.trackPageview(.with({
+                        $0.title = "FooTitle"
+                    }))
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    let pageviewInfo = messages[2].pageviewInfo
+                    
+                    expect(pageviewInfo.title).to(equal("FooTitle"))
+                    expect(consumer.stateManager.current?.lastPageviewInfo.title).to(equal("FooTitle"))
+                }
+            }
         }
     }
 }

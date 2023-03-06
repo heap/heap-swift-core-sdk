@@ -3,6 +3,7 @@ import Foundation
 struct State {
     let options: [Option: Any]
     let sdkInfo: SDKInfo
+    let fieldSettings: FieldSettings
     
     var environment: EnvironmentState
     var sessionInfo: SessionInfo
@@ -20,6 +21,20 @@ struct State {
     var lastPageviewInfo: PageviewInfo
     
     var sessionExpirationDate: Date
+    
+    init(partialWith loadedEnvironment: EnvironmentState, sanitizedOptions: [Option: Any]) {
+        environment = loadedEnvironment
+        
+        options = sanitizedOptions
+        fieldSettings = .init(with: sanitizedOptions)
+        sdkInfo = .current(with: fieldSettings)
+        
+        // Init with placeholder data while we get started. Otherwise, we have to recreate logic here.
+        sessionInfo = .init()
+        unattributedPageviewInfo = .init()
+        lastPageviewInfo = .init()
+        sessionExpirationDate = .init(timeIntervalSince1970: 0)
+    }
     
     struct UpdateResults {
 
@@ -45,8 +60,7 @@ extension State {
     
     init(loadedEnvironment: EnvironmentState, sanitizedOptions: [Option: Any], at timestamp: Date, outcomes: inout State.UpdateResults.Outcomes) {
         
-        // Init with placeholder data while we get started. Otherwise, we have to recreate logic here.
-        self.init(options: sanitizedOptions, sdkInfo: .current(with: sanitizedOptions), environment: loadedEnvironment, sessionInfo: .init(), unattributedPageviewInfo: .init(), lastPageviewInfo: .init(), sessionExpirationDate: .init(timeIntervalSince1970: 0))
+        self.init(partialWith: loadedEnvironment, sanitizedOptions: sanitizedOptions)
         
         if !environment.hasUserID {
             createUserAndSession(identity: nil, at: timestamp, outcomes: &outcomes)
@@ -86,8 +100,19 @@ extension State {
         createSession(at: timestamp, outcomes: &outcomes)
     }
     
-    mutating func extendSessionAndSetLastPageview(_ pageviewInfo: PageviewInfo, outcomes: inout UpdateResults.Outcomes) {
+    mutating func extendSessionAndSetLastPageview(_ pageviewInfo: inout PageviewInfo, outcomes: inout UpdateResults.Outcomes) {
         createSessionIfExpired(extendIfNotExpired: true, at: pageviewInfo.time.date, outcomes: &outcomes)
+        
+        // It is a little counter-intuitive to bury the logic here, but we need to know the current
+        // state to know the field settings to know whether the title should be used.
+        //
+        // To do things atomically, we need to clear the title at the point it is first consumed,
+        // which is when it is applied to the session.  We then need to bubble that up to
+        // `trackPageview` using an `inout` property.
+        if !fieldSettings.capturePageviewTitle {
+            pageviewInfo.clearTitle()
+        }
+
         lastPageviewInfo = pageviewInfo
     }
     

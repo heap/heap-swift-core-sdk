@@ -147,7 +147,7 @@ extension UploadOperation {
         let user: UserToUpload
         let activeSession: ActiveSession
         let urlSession: URLSession
-        let options: [Option: Any]
+        let settings: UploaderSettings
         
         func url(path: String) throws -> URL {
             
@@ -155,7 +155,7 @@ extension UploadOperation {
             let relativeString = "\(path)?b=\(activeSession.sdkInfo.libraryInfo.name)&i=\(user.identity ?? "")&u=\(user.userId)&a=\(user.environmentId)"
             
             guard
-                let baseUrl = options.url(at: .baseUrl) ?? UploadOperation.baseUrl,
+                let baseUrl = settings.baseUrl,
                 let url = URL(string: relativeString, relativeTo: baseUrl)
             else {
                 throw UploadError.badRequest
@@ -180,7 +180,7 @@ extension UploadOperation {
             user.isActive(in: activeSession)
         }
         
-        var messageLimit: Int { options.integer(at: .messageBatchMessageLimit) ?? 200 }
-        var byteLimit: Int { options.integer(at: .messageBatchByteLimit) ?? 1_000_000 }
+        var messageLimit: Int { settings.messageBatchMessageLimit }
+        var byteLimit: Int { settings.messageBatchByteLimit }
     }
 }

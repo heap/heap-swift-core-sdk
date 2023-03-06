@@ -1,9 +1,9 @@
 import Foundation
 
 extension DeviceInfo {
-    static func getAdvertisingIdentifier(with options: [Option: Any]) -> String? {
+    static func getAdvertisingIdentifier(with settings: FieldSettings) -> String? {
         guard
-            options.boolean(at: .captureAdvertiserId) ?? false,
+            settings.captureAdvertiserId,
             let ASIdentifierManager = NSClassFromString("ASIdentifierManager"),
             let advertisingIdentifier = ASIdentifierManager.value(forKeyPath: "sharedManager.advertisingIdentifier") as? UUID
         else { return nil }
