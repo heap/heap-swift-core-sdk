@@ -63,10 +63,10 @@ final class UploadOperation: AsynchronousOperation {
         case 200:
             return .success(())
         case 400:
-            HeapLogger.shared.logDebug("Bad Request when posting to <\(response.url?.absoluteString ?? "unknown url")>.")
+            HeapLogger.shared.trace("Bad Request when posting to <\(response.url?.absoluteString ?? "unknown url")>.")
             return .failure(.badRequest)
         default:
-            HeapLogger.shared.logDebug("Unexpected status code \(response.statusCode) when posting to <\(response.url?.absoluteString ?? "unknown url")>.")
+            HeapLogger.shared.trace("Unexpected status code \(response.statusCode) when posting to <\(response.url?.absoluteString ?? "unknown url")>.")
             return .failure(.unexpectedServerResponse)
         }
     }
@@ -81,7 +81,7 @@ extension UploadOperation {
     ///   - configuration: The configuration for this operation.
     ///   - complete: A callback to execute while prior to the completion of the operation.
     convenience init(userProperties: UserProperties, configuration: Configuration, complete: @escaping (UploadResult) -> Void) {
-        HeapLogger.shared.logDebug("Building add_user_properties request for:\n\(userProperties)")
+        HeapLogger.shared.trace("Building add_user_properties request for:\n\(userProperties)")
         self.init(
             path: "api/capture/v2/add_user_properties",
             bodyBuilder: { try userProperties.serializedData() },
@@ -96,7 +96,7 @@ extension UploadOperation {
     ///   - configuration: The configuration for this operation.
     ///   - complete: A callback to execute while prior to the completion of the operation.
     convenience init(userIdentification: UserIdentification, configuration: Configuration, complete: @escaping (UploadResult) -> Void) {
-        HeapLogger.shared.logDebug("Building identify request for:\n\(userIdentification)")
+        HeapLogger.shared.trace("Building identify request for:\n\(userIdentification)")
         self.init(
             path: "api/capture/v2/identify",
             bodyBuilder: { try userIdentification.serializedData() },
@@ -111,7 +111,7 @@ extension UploadOperation {
     ///   - configuration: The configuration for this operation.
     ///   - complete: A callback to execute while prior to the completion of the operation.
     convenience init(encodedMessages: [Data], configuration: Configuration, complete: @escaping (UploadResult) -> Void) {
-        HeapLogger.shared.logDebug("Building track request for \(encodedMessages.count) messages (contents previously logged).")
+        HeapLogger.shared.trace("Building track request for \(encodedMessages.count) messages (contents previously logged).")
         self.init(
             path: "api/capture/v2/track",
             bodyBuilder: {
@@ -131,9 +131,9 @@ extension UploadOperation {
             if let url = request.url,
                let body = request.httpBody {
                 if body.count < 2048 {
-                    HeapLogger.shared.logDebug("Sending serialized data to <\(url.absoluteString)>:\n\(body.base64EncodedString())")
+                    HeapLogger.shared.trace("Sending serialized data to <\(url.absoluteString)>:\n\(body.base64EncodedString())")
                 } else {
-                    HeapLogger.shared.logDebug("Sending serialized data of length \(body.count) to <\(url.absoluteString)>.")
+                    HeapLogger.shared.trace("Sending serialized data of length \(body.count) to <\(url.absoluteString)>.")
                 }
             }
             

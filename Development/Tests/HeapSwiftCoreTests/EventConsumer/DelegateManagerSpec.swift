@@ -25,11 +25,11 @@ final class DelegateManagerSpec: HeapSpec {
             bridge1 = CountingRuntimeBridge()
             bridge2 = CountingRuntimeBridge()
             bridge3 = CountingRuntimeBridge()
-            HeapLogger.shared.logLevel = .debug
+            HeapLogger.shared.logLevel = .trace
         }
         
         afterEach {
-            HeapLogger.shared.logLevel = .prod
+            HeapLogger.shared.logLevel = .info
         }
         
         describe("DelegateManager.addSource") {

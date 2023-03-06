@@ -17,11 +17,11 @@ final class PageviewResolutionSpec: HeapSpec {
             dataStore = InMemoryDataStore()
             consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
             consumer.startRecording("11")
-            HeapLogger.shared.logLevel = .debug
+            HeapLogger.shared.logLevel = .trace
         }
         
         afterEach {
-            HeapLogger.shared.logLevel = .prod
+            HeapLogger.shared.logLevel = .info
         }
         
         describe("EventConsumer.track") {

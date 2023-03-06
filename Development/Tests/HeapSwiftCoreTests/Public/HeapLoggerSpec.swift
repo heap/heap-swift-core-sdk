@@ -32,86 +32,60 @@ final class HeapLoggerSpec: QuickSpec {
             
             var heapLogger: HeapLogger!
             var logChannel: TestLogChannel!
-            let debugMessage = "This is a debug message"
-            let devMessage = "This is a dev message"
-            let prodMessage = "This is a prod message"
-            let criticalMessage = "This is a critical message"
-        
+            let traceMessage = LoggedMessage(logLevel: .trace, message: "This is a trace message")
+            let debugMessage = LoggedMessage(logLevel: .debug, message: "This is a debug message")
+            let infoMessage  = LoggedMessage(logLevel: .info,  message: "This is an info message")
+            let warnMessage  = LoggedMessage(logLevel: .warn,  message: "This is a warning message")
+            let errorMessage = LoggedMessage(logLevel: .error, message: "This is an error message")
+            
             beforeEach {
                 logChannel = TestLogChannel()
                 heapLogger = HeapLogger()
                 heapLogger.logChannel = logChannel
             }
             
+            func logAllMessages() {
+                heapLogger.error(errorMessage.message)
+                heapLogger.warn(warnMessage.message)
+                heapLogger.info(infoMessage.message)
+                heapLogger.debug(debugMessage.message)
+                heapLogger.trace(traceMessage.message)
+            }
+            
             it("logs nothing when logLevel is set to none") {
-                
                 heapLogger.logLevel = .none
-                
-                heapLogger.logDebug(debugMessage)
-                heapLogger.logDev(devMessage)
-                heapLogger.logProd(prodMessage)
-                heapLogger.logCritical(criticalMessage)
-                
+                logAllMessages()
                 expect(logChannel.loggedMessages).to(beEmpty())
             }
             
-            it("logs correct messages when logLevel is set to critical") {
-                
-                heapLogger.logLevel = .critical
-                let expectedLogs = [LoggedMessage(logLevel: .critical,  message: criticalMessage)]
-                
-                heapLogger.logDebug(debugMessage)
-                heapLogger.logDev(devMessage)
-                heapLogger.logProd(prodMessage)
-                heapLogger.logCritical(criticalMessage)
-                
-                expect(logChannel.loggedMessages).to(equal(expectedLogs))
+            it("logs correct messages when logLevel is set to error") {
+                heapLogger.logLevel = .error
+                logAllMessages()
+                expect(logChannel.loggedMessages).to(equal([errorMessage]))
             }
             
-            it("logs correct messages when logLevel is set to prod") {
-                
-                heapLogger.logLevel = .prod
-                let expectedLogs = [LoggedMessage(logLevel: .prod,      message: prodMessage),
-                                    LoggedMessage(logLevel: .critical,  message: criticalMessage)]
-                
-                
-                heapLogger.logDebug(debugMessage)
-                heapLogger.logDev(devMessage)
-                heapLogger.logProd(prodMessage)
-                heapLogger.logCritical(criticalMessage)
-                
-                expect(logChannel.loggedMessages).to(equal(expectedLogs))
+            it("logs correct messages when logLevel is set to warn") {
+                heapLogger.logLevel = .warn
+                logAllMessages()
+                expect(logChannel.loggedMessages).to(equal([errorMessage, warnMessage]))
             }
             
-            it("logs correct messages when logLevel is set to dev") {
-                
-                heapLogger.logLevel = .dev
-                let expectedLogs = [LoggedMessage(logLevel: .dev,       message: devMessage),
-                                    LoggedMessage(logLevel: .prod,      message: prodMessage),
-                                    LoggedMessage(logLevel: .critical,  message: criticalMessage)]
-                
-                heapLogger.logDebug(debugMessage)
-                heapLogger.logDev(devMessage)
-                heapLogger.logProd(prodMessage)
-                heapLogger.logCritical(criticalMessage)
-                
-                expect(logChannel.loggedMessages).to(equal(expectedLogs))
+            it("logs correct messages when logLevel is set to info") {
+                heapLogger.logLevel = .info
+                logAllMessages()
+                expect(logChannel.loggedMessages).to(equal([errorMessage, warnMessage, infoMessage]))
             }
             
             it("logs correct messages when logLevel is set to debug") {
-                
                 heapLogger.logLevel = .debug
-                let expectedLogs = [LoggedMessage(logLevel: .debug,     message: debugMessage),
-                                    LoggedMessage(logLevel: .dev,       message: devMessage),
-                                    LoggedMessage(logLevel: .prod,      message: prodMessage),
-                                    LoggedMessage(logLevel: .critical,  message: criticalMessage)]
-                
-                heapLogger.logDebug(debugMessage)
-                heapLogger.logDev(devMessage)
-                heapLogger.logProd(prodMessage)
-                heapLogger.logCritical(criticalMessage)
-                
-                expect(logChannel.loggedMessages).to(equal(expectedLogs))
+                logAllMessages()
+                expect(logChannel.loggedMessages).to(equal([errorMessage, warnMessage, infoMessage, debugMessage]))
+            }
+            
+            it("logs correct messages when logLevel is set to trace") {
+                heapLogger.logLevel = .trace
+                logAllMessages()
+                expect(logChannel.loggedMessages).to(equal([errorMessage, warnMessage, infoMessage, debugMessage, traceMessage]))
             }
         }
     }

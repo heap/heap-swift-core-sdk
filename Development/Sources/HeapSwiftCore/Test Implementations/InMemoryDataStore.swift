@@ -104,7 +104,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 }
             }
         } catch {
-            HeapLogger.shared.logCritical("Unexpected error in setIdentityIfNull: \(error)")
+            HeapLogger.shared.error("Unexpected error in setIdentityIfNull: \(error)")
         }
     }
 
@@ -116,7 +116,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 }
             }
         } catch {
-            HeapLogger.shared.logCritical("Unexpected error in insertOrUpdateUserProperty: \(error)")
+            HeapLogger.shared.error("Unexpected error in insertOrUpdateUserProperty: \(error)")
         }
     }
 
@@ -132,7 +132,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 }
             })
         } catch {
-            HeapLogger.shared.logCritical("Error in createSessionIfNeeded: \(error)")
+            HeapLogger.shared.error("Error in createSessionIfNeeded: \(error)")
         }
     }
 
@@ -145,7 +145,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 $0.messages.append((nextIdentifier(), data))
             }
         } catch {
-            HeapLogger.shared.logCritical("Error in insertPendingMessage: \(error)")
+            HeapLogger.shared.error("Error in insertPendingMessage: \(error)")
         }
     }
 
@@ -179,7 +179,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 })
             }
         } catch {
-            HeapLogger.shared.logCritical("Error in getPendingEncodedMessages: \(error)")
+            HeapLogger.shared.error("Error in getPendingEncodedMessages: \(error)")
         }
 
         return messages
@@ -191,7 +191,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 $0.hasUserBeenSent = true
             }
         } catch {
-            HeapLogger.shared.logCritical("Error in setHasSentInitialUser: \(error)")
+            HeapLogger.shared.error("Error in setHasSentInitialUser: \(error)")
         }
     }
 
@@ -203,7 +203,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 }
             }
         } catch {
-            HeapLogger.shared.logCritical("Error in setHasSentIdentity: \(error)")
+            HeapLogger.shared.error("Error in setHasSentIdentity: \(error)")
         }
     }
 
@@ -215,7 +215,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 }
             }
         } catch {
-            HeapLogger.shared.logCritical("Error in setHasSentUserProperty: \(error)")
+            HeapLogger.shared.error("Error in setHasSentUserProperty: \(error)")
         }
     }
 
@@ -251,7 +251,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
                 $0.sessions[sessionId] = nil
             }
         } catch {
-            HeapLogger.shared.logCritical("Error in setHasSentInitialUser: \(error)")
+            HeapLogger.shared.error("Error in setHasSentInitialUser: \(error)")
         }
     }
 

@@ -54,7 +54,7 @@ public class HeapBridgeSupport
             return try heapLogger_setLogLevel(arguments: arguments)
             
         default:
-            HeapLogger.shared.logDev("HeapBridgeSupport received an unknown method invocation: \(method).")
+            HeapLogger.shared.debug("HeapBridgeSupport received an unknown method invocation: \(method).")
             throw InvocationError.unknownMethod
         }
     }
@@ -139,10 +139,11 @@ public class HeapBridgeSupport
         let source = try getOptionalString(named: "source", from: arguments, message: "HeapBridgeSupport.heapLogger_log received an invalid message and wil not complete the bridged method call.")
         switch logLevel
         {
-        case .critical: HeapLogger.shared.logCritical(message, source: source)
-        case .prod: HeapLogger.shared.logProd(message, source: source)
-        case .dev: HeapLogger.shared.logDev(message, source: source)
-        case .debug: HeapLogger.shared.logDebug(message, source: source)
+        case .error: HeapLogger.shared.error(message, source: source)
+        case .warn: HeapLogger.shared.warn(message, source: source)
+        case .info: HeapLogger.shared.info(message, source: source)
+        case .debug: HeapLogger.shared.debug(message, source: source)
+        case .trace: HeapLogger.shared.trace(message, source: source)
         case .none: break // Let's not bother throwing here.
         }
         return nil
@@ -150,10 +151,11 @@ public class HeapBridgeSupport
     
     func heapLogger_logLevel() -> JSONEncodable? {
         switch HeapLogger.shared.logLevel {
-        case .critical: return "critical"
-        case .prod: return "prod"
-        case .dev: return "dev"
+        case .error: return "error"
+        case .warn: return "warn"
+        case .info: return "info"
         case .debug: return "debug"
+        case .trace: return "trace"
         case .none: return "none"
         }
     }
@@ -172,7 +174,7 @@ extension HeapBridgeSupport {
         }
         
         guard let value = rawString as? String else {
-            HeapLogger.shared.logDev(message())
+            HeapLogger.shared.debug(message())
             throw InvocationError.invalidParameters
         }
         return value
@@ -180,7 +182,7 @@ extension HeapBridgeSupport {
     
     func getRequiredString(named name: String, from arguments: [String: Any], message: @autoclosure () -> String) throws -> String {
         guard let value = try getOptionalString(named: name, from: arguments, message: message()), !value.isEmpty else {
-            HeapLogger.shared.logDev(message())
+            HeapLogger.shared.debug(message())
             throw InvocationError.invalidParameters
         }
         return value
@@ -189,13 +191,14 @@ extension HeapBridgeSupport {
     func getRequiredLogLevel(_ arguments: [String: Any], methodName: String) throws -> LogLevel {
         let value = try getRequiredString(named: "logLevel", from: arguments, message: "HeapBridgeSupport.\(methodName) received an invalid log level and will not complete the bridged method call.")
         switch value {
-        case "critical": return .critical
-        case "prod": return .prod
-        case "dev": return .dev
+        case "error": return .error
+        case "warn": return .warn
+        case "info": return .info
         case "debug": return .debug
+        case "trace": return .trace
         case "none": return .none
         default:
-            HeapLogger.shared.logDev("HeapBridgeSupport.\(methodName) received an invalid log level and will not complete the bridged method call.")
+            HeapLogger.shared.debug("HeapBridgeSupport.\(methodName) received an invalid log level and will not complete the bridged method call.")
             throw InvocationError.invalidParameters
         }
     }
@@ -206,7 +209,7 @@ extension HeapBridgeSupport {
         }
         
         guard let timestamp = rawTimestamp as? Double else {
-            HeapLogger.shared.logDev("HeapBridgeSupport.\(methodName) received an invalid timestamp and will not complete the bridged method call.")
+            HeapLogger.shared.debug("HeapBridgeSupport.\(methodName) received an invalid timestamp and will not complete the bridged method call.")
             throw InvocationError.invalidParameters
         }
         
@@ -220,7 +223,7 @@ extension HeapBridgeSupport {
         
         guard let rawDictionary = arguments["sourceLibrary"] else { return nil }
         guard let sourceLibrary = rawDictionary as? [String: Any] else {
-            HeapLogger.shared.logDev(errorMessage())
+            HeapLogger.shared.debug(errorMessage())
             throw InvocationError.invalidParameters
         }
         
@@ -235,7 +238,7 @@ extension HeapBridgeSupport {
     func getOptionalParameterDictionary(named name: String, from arguments: [String: Any], message: @autoclosure () -> String) throws -> [String: HeapPropertyValue] {
         guard let rawDictionary = arguments[name] else { return [:] }
         guard let dictionary = rawDictionary as? [String: Any] else {
-            HeapLogger.shared.logDev(message())
+            HeapLogger.shared.debug(message())
             throw InvocationError.invalidParameters
         }
         
@@ -249,7 +252,7 @@ extension HeapBridgeSupport {
             } else if let value = value as? Double {
                 return value
             } else {
-                HeapLogger.shared.logDev("Omitting unsupported property type: \(type(of: value))")
+                HeapLogger.shared.debug("Omitting unsupported property type: \(type(of: value))")
                 return nil
             }
         }
@@ -259,14 +262,14 @@ extension HeapBridgeSupport {
         
         guard let rawDictionary = arguments["options"] else { return [:] }
         guard let dictionary = rawDictionary as? [String: Any] else {
-            HeapLogger.shared.logDev("HeapBridgeSupport.startRecording received an invalid options parameter.")
+            HeapLogger.shared.debug("HeapBridgeSupport.startRecording received an invalid options parameter.")
             throw InvocationError.invalidParameters
         }
         
         let keysAndValues: [(Option, Any)] = dictionary.compactMap { (key, value) in
             
             guard let option = Option.named(key) else {
-                HeapLogger.shared.logDev("HeapBridgeSupport.startRecording received an unknown option, \(key). It will be ignored.")
+                HeapLogger.shared.debug("HeapBridgeSupport.startRecording received an unknown option, \(key). It will be ignored.")
                 return nil
             }
             

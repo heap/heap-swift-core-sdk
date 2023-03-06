@@ -107,7 +107,7 @@ class NotificationManager {
     
     @objc func applicationWillEnterForeground(_ notification: NSNotification) {
         
-        HeapLogger.shared.logDebug("applicationWillEnterForeground")
+        HeapLogger.shared.trace("applicationWillEnterForeground")
         
         // Delay until the next cycle so "willEnterForeground" becomes "didEnterForeground".
         DispatchQueue.main.async { [self] in
@@ -116,13 +116,13 @@ class NotificationManager {
             let timestamp = Date()
             for (sourceName, source) in sources {
                 source.applicationDidEnterForeground(timestamp: timestamp) {
-                    HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to the applicationDidEnterForeground notification.")
+                    HeapLogger.shared.trace("Source [\(sourceName)] has completed all work related to the applicationDidEnterForeground notification.")
                 }
             }
             
             for bridge in bridges {
                 bridge.applicationDidEnterForeground(timestamp: timestamp) {
-                    HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to the applicationDidEnterForeground notification.")
+                    HeapLogger.shared.trace("Bridge of type [\(type(of: bridge))] has completed all work related to the applicationDidEnterForeground notification.")
                 }
             }
         }
@@ -130,19 +130,19 @@ class NotificationManager {
     
     @objc func applicationDidEnterBackground(_ notification: NSNotification) {
         
-        HeapLogger.shared.logDebug("applicationDidEnterBackground")
+        HeapLogger.shared.trace("applicationDidEnterBackground")
 
         let (sources, _, bridges) = delegateManager.current
         let timestamp = Date()
         for (sourceName, source) in sources {
             source.applicationDidEnterBackground(timestamp: timestamp) {
-                HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to the applicationDidEnterBackground notification.")
+                HeapLogger.shared.trace("Source [\(sourceName)] has completed all work related to the applicationDidEnterBackground notification.")
             }
         }
         
         for bridge in bridges {
             bridge.applicationDidEnterBackground(timestamp: timestamp) {
-                HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to the applicationDidEnterBackground notification.")
+                HeapLogger.shared.trace("Bridge of type [\(type(of: bridge))] has completed all work related to the applicationDidEnterBackground notification.")
             }
         }
     }
@@ -152,7 +152,7 @@ class NotificationManager {
     @objc func windowSceneWillEnterForeground(_ notification: NSNotification) {
         
         guard let scene = notification.object as? UIWindowScene else { return }
-        HeapLogger.shared.logDebug("windowSceneWillEnterForeground: \(scene)")
+        HeapLogger.shared.trace("windowSceneWillEnterForeground: \(scene)")
         
         // Delay until the next cycle so "willEnterForeground" becomes "didEnterForeground".
         DispatchQueue.main.async { [self] in
@@ -160,13 +160,13 @@ class NotificationManager {
             let timestamp = Date()
             for (sourceName, source) in sources {
                 source.windowSceneDidEnterForeground(scene: scene, timestamp: timestamp) {
-                    HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to the windowSceneDidEnterForeground notification.")
+                    HeapLogger.shared.trace("Source [\(sourceName)] has completed all work related to the windowSceneDidEnterForeground notification.")
                 }
             }
             
             for bridge in bridges {
                 bridge.windowSceneDidEnterForeground(scene: scene, timestamp: timestamp) {
-                    HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to the windowSceneDidEnterForeground notification.")
+                    HeapLogger.shared.trace("Bridge of type [\(type(of: bridge))] has completed all work related to the windowSceneDidEnterForeground notification.")
                 }
             }
         }
@@ -176,19 +176,19 @@ class NotificationManager {
     @objc func windowSceneDidEnterBackground(_ notification: NSNotification) {
         
         guard let scene = notification.object as? UIWindowScene else { return }
-        HeapLogger.shared.logDebug("windowSceneDidEnterBackground: \(scene)")
+        HeapLogger.shared.trace("windowSceneDidEnterBackground: \(scene)")
         
         let (sources, _, bridges) = delegateManager.current
         let timestamp = Date()
         for (sourceName, source) in sources {
             source.windowSceneDidEnterBackground(scene: scene, timestamp: timestamp) {
-                HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to the windowSceneDidEnterBackground notification.")
+                HeapLogger.shared.trace("Source [\(sourceName)] has completed all work related to the windowSceneDidEnterBackground notification.")
             }
         }
         
         for bridge in bridges {
             bridge.windowSceneDidEnterBackground(scene: scene, timestamp: timestamp) {
-                HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to the windowSceneDidEnterBackground notification.")
+                HeapLogger.shared.trace("Bridge of type [\(type(of: bridge))] has completed all work related to the windowSceneDidEnterBackground notification.")
             }
         }
     }
@@ -197,19 +197,19 @@ class NotificationManager {
     @objc func windowDidBecomeMain(_ notification: NSNotification) {
         
         guard let window = notification.object as? NSWindow else { return }
-        HeapLogger.shared.logDebug("Window Become Main: [\(window)]")
+        HeapLogger.shared.trace("Window Become Main: [\(window)]")
             
         let (sources, _, bridges) = delegateManager.current
         let timestamp = Date()
         for (sourceName, source) in sources {
             source.windowDidBecomeMain(window: window, timestamp: timestamp) {
-                HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to the windowDidBecomeMain notification.")
+                HeapLogger.shared.trace("Source [\(sourceName)] has completed all work related to the windowDidBecomeMain notification.")
             }
         }
         
         for bridge in bridges {
             bridge.windowDidBecomeMain(window: window, timestamp: timestamp) {
-                HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to the windowDidBecomeMain notification.")
+                HeapLogger.shared.trace("Bridge of type [\(type(of: bridge))] has completed all work related to the windowDidBecomeMain notification.")
             }
         }
     }
@@ -217,19 +217,19 @@ class NotificationManager {
     @objc func windowDidResignMain(_ notification: NSNotification) {
         
         guard let window = notification.object as? NSWindow else { return }
-        HeapLogger.shared.logDebug("Window Resigned Main: [\(window)]")
+        HeapLogger.shared.trace("Window Resigned Main: [\(window)]")
         
         let (sources, _, bridges) = delegateManager.current
         let timestamp = Date()
         for (sourceName, source) in sources {
             source.windowDidResignMain(window: window, timestamp: timestamp) {
-                HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to the windowDidResignMain notification.")
+                HeapLogger.shared.trace("Source [\(sourceName)] has completed all work related to the windowDidResignMain notification.")
             }
         }
         
         for bridge in bridges {
             bridge.windowDidResignMain(window: window, timestamp: timestamp) {
-                HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to the windowDidResignMain notification.")
+                HeapLogger.shared.trace("Bridge of type [\(type(of: bridge))] has completed all work related to the windowDidResignMain notification.")
             }
         }
     }

@@ -38,9 +38,9 @@ class DelegateManager {
         
         if let removedDefault = removedDefault {
             if isDefault {
-                HeapLogger.shared.logDev("Replaced default source \(removedDefault.name) with \(source.name).")
+                HeapLogger.shared.warn("Replaced default source \(removedDefault.name) with \(source.name).")
             } else {
-                HeapLogger.shared.logDev("Removed default source \(removedDefault.name) when setting a new non-default source of the same name.")
+                HeapLogger.shared.warn("Removed default source \(removedDefault.name) when setting a new non-default source of the same name.")
             }
         }
         

@@ -13,7 +13,7 @@ func prepareEventConsumerWithCountingDelegates() -> (InMemoryDataStore, EventCon
         
     consumer.addRuntimeBridge(bridge)
     consumer.addSource(source, isDefault: false)
-    HeapLogger.shared.logLevel = .debug
+    HeapLogger.shared.logLevel = .trace
     
     func restoreState() {
         consumer.stopRecording()

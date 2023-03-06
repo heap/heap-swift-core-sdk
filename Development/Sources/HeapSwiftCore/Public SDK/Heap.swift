@@ -7,7 +7,6 @@ public class Heap: NSObject {
     internal let uploader: any UploaderProtocol
 
     private static let heapDirectory: URL = {
-        // TODO: Need to validate that this works on all environments and places things where they need to go.
         let fileManager = FileManager.default
         var url = fileManager.urls(for: .libraryDirectory, in: .userDomainMask).first!
         url.appendPathComponent("HeapSwiftCore", isDirectory: true)

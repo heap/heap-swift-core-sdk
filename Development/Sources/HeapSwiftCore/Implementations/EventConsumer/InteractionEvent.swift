@@ -77,9 +77,9 @@ class InteractionEvent: InteractionEventProtocol {
         })))
         
         if let firstNode = nodes.first {
-            HeapLogger.shared.logDev("Tracked \(kind) interaction event on node \(firstNode.nodeName).")
+            HeapLogger.shared.debug("Tracked \(kind) interaction event on node \(firstNode.nodeName).")
         } else {
-            HeapLogger.shared.logDev("Tracked \(kind) interaction event with no nodes.")
+            HeapLogger.shared.debug("Tracked \(kind) interaction event with no nodes.")
         }
     }
 }

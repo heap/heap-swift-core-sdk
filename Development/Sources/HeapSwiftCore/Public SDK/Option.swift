@@ -53,7 +53,7 @@ public class Option: NSObject {
         if let existing = registeredOptions[name] {
             
             if existing != option {
-                HeapLogger.shared.logCritical("Attempted to overwrite option \(name) of type \(existing.type) with \(option.type). This may result in unexpected behavior as options of the wrong type are ignored.")
+                HeapLogger.shared.error("Attempted to overwrite option \(name) of type \(existing.type) with \(option.type). This may result in unexpected behavior as options of the wrong type are ignored.")
             }
             
             return existing

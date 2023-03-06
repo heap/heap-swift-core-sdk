@@ -27,11 +27,11 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
             dataStore = InMemoryDataStore()
             consumer = EventConsumer(stateStore: dataStore, dataStore: dataStore)
 
-            HeapLogger.shared.logLevel = .debug
+            HeapLogger.shared.logLevel = .trace
         }
         
         afterEach {
-            HeapLogger.shared.logLevel = .prod
+            HeapLogger.shared.logLevel = .info
         }
         
         describe("EventConsumer.trackInteraction") {

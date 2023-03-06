@@ -34,11 +34,11 @@ final class NotificationManagerSpec: HeapSpec {
             delegateManager.addSource(sourceA1, isDefault: false, timestamp: .init(), currentState: currentState)
             delegateManager.addRuntimeBridge(bridge1, timestamp: .init(), currentState: currentState)
             
-            HeapLogger.shared.logLevel = .debug
+            HeapLogger.shared.logLevel = .trace
         }
         
         afterEach {
-            HeapLogger.shared.logLevel = .prod
+            HeapLogger.shared.logLevel = .info
             notificationManager.removeForegroundAndBackgroundObservers()
         }
 

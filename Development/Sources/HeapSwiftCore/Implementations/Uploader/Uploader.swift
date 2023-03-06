@@ -185,6 +185,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         
         var users: [UserToUpload] = []
         var result: UploadResult = .success(())
+        var operationCount = 0
         
         // This method calls `doNextOperation()` repeatedly on the upload queue until there are no
         // more upload operations or an operation has failed.  When an operation complete
@@ -196,14 +197,18 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
             else {
                 switch result {
                 case .failure(.networkFailure):
-                    HeapLogger.shared.logProd("A network error occurred while uploading data and Heap will try again later.")
+                    HeapLogger.shared.warn("A network error occurred while uploading data and Heap will try again later.")
                 case .failure(.unexpectedServerResponse):
-                    HeapLogger.shared.logProd("A server issue was encountered while uploading and Heap will try again later.")
+                    HeapLogger.shared.warn("A server issue was encountered while uploading and Heap will try again later.")
                 case .failure(.badRequest):
-                    HeapLogger.shared.logProd("All pending data has been uploaded but some invalid data was discarded.")
+                    HeapLogger.shared.warn("All pending data has been uploaded but some invalid data was discarded.")
+                case .success(()) where operationCount > 0:
+                    HeapLogger.shared.info("All pending data has been uploaded.")
                 case .success(()):
-                    HeapLogger.shared.logProd("All pending data has been uploaded.")
+                    break // Don't log if nothing happened.
                 }
+                
+                HeapLogger.shared.debug("A total of \(operationCount) requests were made.")
                 
                 complete(result)
                 return
@@ -213,6 +218,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
             
             let completionOperation = BlockOperation {
                 result = uploadOperation.result ?? .failure(.badRequest)
+                operationCount += 1
                 doNextOperation()
             }
             

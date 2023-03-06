@@ -276,7 +276,7 @@ final class EventConsumer_TrackSpec: HeapSpec {
                 it("records events sequentially on the main thread") {
 
                     // Disable logging for this test because it's a lot of messages and slows things down.
-                    HeapLogger.shared.logLevel = .prod
+                    HeapLogger.shared.logLevel = .info
                     
                     for n in 1...1000 {
                         consumer.track("event-\(n)")
@@ -298,7 +298,7 @@ final class EventConsumer_TrackSpec: HeapSpec {
                 it("records events sequentially from a background thread") {
                     
                     // Disable logging for this test because it's a lot of messages and slows things down.
-                    HeapLogger.shared.logLevel = .prod
+                    HeapLogger.shared.logLevel = .info
                     
                     Thread.detachNewThread {
                         expect(Thread.isMainThread).to(beFalse(), description: "PRECONDITION: Expected work to happen in a background queue")

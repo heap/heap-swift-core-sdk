@@ -4,13 +4,18 @@ import WebKit
 
 class WebviewBridge: NSObject, WKScriptMessageHandler {
     
+    // Generated from https://github.com/heap/heap-webview-core/pull/3/commits/cad86534c0b8cdc15cdc01d6de119c337ec70d9f
+    // This is the contents of `dist/bundle/heap-swift-core.js` after `npm run compile:bundles`, but replacing `\` with `\\` because we're in a string.
     static let embeddedScript = WKUserScript(source: """
-        (()=>{"use strict";let e=0;const t={};var o,r;const n=null===(r=null===(o=window.webkit)||void 0===o?void 0:o.messageHandlers)||void 0===r?void 0:r.HeapSwiftBridge;n&&(window.__heapNativeMessage=e=>{(function(e){return"result"===e.type})(e)&&function(e){var o;null===(o=t[e.callbackId])||void 0===o||o.call(t,e),delete t[e.callbackId]}(e)});const i="\\nFailed to find a suitable bridge for Heap. All operations will be ignored.\\n\\nIf using HeapSwiftCore (Apple platforms), ensure you are calling Heap.attachWebView with the appropriate origins.\\n".trim();function l(e){return["number","boolean","string","bigint"].includes(typeof e)}function a(e,t,o){var r;if(!e)return null;if("object"!=typeof e)return t.logDev("Ignoring properties because they are not an object",o),null;const n={};for(const i of Object.keys(e)){const a=e[i];l(a)?n[i]=a.toString():t.logDev(`Ignoring property ${i} because the value ${(null===(r=null==a?void 0:a.toString)||void 0===r?void 0:r.call(a))||a} is not a valid property type`,o)}return n}function s(e){return e&&"string"==typeof e}function d(e,t,o){if(!e)return null;if(!s(e.name))return t.logDebug("Source will be ignored because name was omitted.",o),null;if(!s(e.version))return t.logDebug("Source will be ignored because version was omitted.",o),null;if(!s(e.platform))return t.logDebug("Source will be ignored because platform was omitted.",o),null;const r={name:e.name,version:e.version,platform:e.platform},n=a(e.properties,t,o);return n&&(r.properties=n),r}function c(e,t,o,r){if(!s(t))return;const n={logLevel:o,message:t};s(r)&&(n.source=r),e("heapLogger_log",n)}const g=(n?(o,r)=>{if(!n)return Promise.resolve();const{promise:i,callbackId:l}=function(){const o="cb:"+e++,r=new Promise(((e,r)=>{t[o]=t=>{t.error?r(t.error):e(t.data)}}));return{callbackId:o,promise:r}}();return n.postMessage({type:"invocation",method:o,arguments:r,callbackId:l}),i}:null)||(()=>{let e=!1;return()=>(e||(e=!0,console.warn(i)),Promise.resolve(null))})(),u=(e=>({logCritical(t,o){c(e,t,"critical",o)},logProd(t,o){c(e,t,"prod",o)},logDev(t,o){c(e,t,"dev",o)},logDebug(t,o){c(e,t,"debug",o)},setLogLevel(t){e("heapLogger_setLogLevel",{logLevel:t})},getLogLevel:()=>e("heapLogger_logLevel",{})}))(g),p=((e,t,o=null)=>{const r=null==o?void 0:o.name,n=d(o,t,r);return{startRecording(o,n){0!==arguments.length?s(o)?e("startRecording",{environmentId:o,options:n||{}}):t.logProd("startRecording failed because environmentId was not a string.",r):t.logProd("startRecording failed because environmentId was omitted.",r)},stopRecording(){e("stopRecording",{})},track(o,i,l,c){if(0===arguments.length)return void t.logDev("track failed because event was omitted.",r);if(!s(o))return void t.logDev("track failed because event was not a string.",r);const g=a(i,t,r),u=d(c,t,r)||n,p=function(e,t,o){return e?"function"!=typeof e.getTime?(t.logDev("Timestamp will be ignored because it is not a date.",o),null):e.getTime():null}(l,t,r),v={event:o};g&&(v.properties=g),p&&(v.javascriptEpochTimestamp=p),u&&(v.sourceInfo=u),e("track",v)},identify(o){0!==arguments.length?s(o)?e("identify",{identity:o}):t.logDev("identify failed because identity was not a string.",r):t.logDev("identify failed because identity was omitted.",r)},resetIdentity(){e("resetIdentity",{})},addUserProperties(o){const n=a(o,t,r);n&&(0!==Object.keys(n).length?e("addUserProperties",{properties:n}):t.logDev("addUserProperties was called without any valid properties."))},addEventProperties(o){const n=a(o,t,r);n&&(0!==Object.keys(n).length?e("addEventProperties",{properties:n}):t.logDev("addUserProperties was called without any valid properties."))},removeEventProperty(o){0!==arguments.length?s(o)?e("removeEventProperty",{name:o}):t.logDev("removeEventProperty failed because name was not a string.",r):t.logDev("removeEventProperty failed because name was omitted.",r)},clearEventProperties(){e("clearEventProperties",{})},getSessionId:()=>e("sessionId",{}),getUserId:()=>e("userId",{}),getIdentity:()=>e("identity",{})}})(g,u);window.HeapLogger=u,window.Heap=p})();
+        (()=>{"use strict";let e=0;const t={};const r="\\nFailed to find a suitable bridge for Heap. All operations will be ignored.\\n\\nIf using HeapSwiftCore (Apple platforms), ensure you are calling Heap.attachWebView with the appropriate origins.\\n".trim();var n,o;const i=null===(o=null===(n=window.webkit)||void 0===n?void 0:n.messageHandlers)||void 0===o?void 0:o.HeapSwiftBridge;function a(e){return["number","boolean","string","bigint"].includes(typeof e)}function s(e,t,r){var n;if(!e)return null;if("object"!=typeof e)return t.debug("Ignoring properties because they are not an object",r),null;const o={};for(const i of Object.keys(e)){const s=e[i];a(s)?o[i]=s.toString():t.debug(`Ignoring property ${i} because the value ${(null===(n=null==s?void 0:s.toString)||void 0===n?void 0:n.call(s))||s} is not a valid property type`,r)}return o}function l(e){return e&&"string"==typeof e}function d(e,t,r){if(!e)return null;if(!l(e.name))return t.debug("Source will be ignored because name was omitted.",r),null;if(!l(e.version))return t.debug("Source will be ignored because version was omitted.",r),null;if(!l(e.platform))return t.debug("Source will be ignored because platform was omitted.",r),null;const n={name:e.name,version:e.version,platform:e.platform},o=s(e.properties,t,r);return o&&(n.properties=o),n}function u(e,t,r,n){if(!l(t))return;const o={logLevel:r,message:t};l(n)&&(o.source=n),e("heapLogger_log",o)}i&&(window.__heapNativeMessage=e=>{(function(e){return"result"===e.type})(e)&&function(e){var r;null===(r=t[e.callbackId])||void 0===r||r.call(t,e),delete t[e.callbackId]}(e)});const c=(i?(r,n)=>{if(!i)return Promise.resolve();const{promise:o,callbackId:a}=function(){const r="cb:"+e++,n=new Promise(((e,n)=>{t[r]=t=>{t.error?n(t.error):e(t.data)}}));return{callbackId:r,promise:n}}();return i.postMessage({type:"invocation",method:r,arguments:n,callbackId:a}),o}:null)||(()=>{let e=!1;return()=>(e||(e=!0,console.warn(r)),Promise.resolve(null))})(),p=(e=>({error(t,r){u(e,t,"error",r)},warn(t,r){u(e,t,"warn",r)},info(t,r){u(e,t,"info",r)},debug(t,r){u(e,t,"debug",r)},trace(t,r){u(e,t,"trace",r)},setLogLevel(t){e("heapLogger_setLogLevel",{logLevel:t})},getLogLevel:()=>e("heapLogger_logLevel",{})}))(c),g=((e,t,r=null)=>{const n=null==r?void 0:r.name,o=d(r,t,n);return{startRecording(r,o){0!==arguments.length?l(r)?e("startRecording",{environmentId:r,options:o||{}}):t.warn("startRecording failed because environmentId was not a string.",n):t.warn("startRecording failed because environmentId was omitted.",n)},stopRecording(){e("stopRecording",{})},track(r,i,a,u){if(0===arguments.length)return void t.warn("track failed because event was omitted.",n);if(!l(r))return void t.warn("track failed because event was not a string.",n);const c=s(i,t,n),p=d(u,t,n)||o,g=function(e,t,r){return e?"function"!=typeof e.getTime?(t.debug("Timestamp will be ignored because it is not a date.",r),null):e.getTime():null}(a,t,n),f={event:r};c&&(f.properties=c),g&&(f.javascriptEpochTimestamp=g),p&&(f.sourceInfo=p),e("track",f)},identify(r){0!==arguments.length?l(r)?e("identify",{identity:r}):t.warn("identify failed because identity was not a string.",n):t.warn("identify failed because identity was omitted.",n)},resetIdentity(){e("resetIdentity",{})},addUserProperties(r){const o=s(r,t,n);o&&(0!==Object.keys(o).length?e("addUserProperties",{properties:o}):t.warn("addUserProperties was called without any valid properties."))},addEventProperties(r){const o=s(r,t,n);o&&(0!==Object.keys(o).length?e("addEventProperties",{properties:o}):t.warn("addUserProperties was called without any valid properties."))},removeEventProperty(r){0!==arguments.length?l(r)?e("removeEventProperty",{name:r}):t.warn("removeEventProperty failed because name was not a string.",n):t.warn("removeEventProperty failed because name was omitted.",n)},clearEventProperties(){e("clearEventProperties",{})},getSessionId:()=>e("sessionId",{}),getUserId:()=>e("userId",{}),getIdentity:()=>e("identity",{})}})(c,p);window.HeapLogger=p,window.Heap=g})();
     """, injectionTime: .atDocumentStart, forMainFrameOnly: true)
     
     weak var webView: WKWebView?
     let origins: [Origin]
     let injectHeapJavaScript: Bool
+    
+    // Keep a list of rejected origins so we don't log incessantly about it.
+    var rejectedOriginDescriptions: Set<String> = []
 
     init(webView: WKWebView, origins: Set<String>, injectHeapJavaScript: Bool) {
         self.webView = webView
@@ -28,7 +33,7 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
             webView.configuration.userContentController.addUserScript(WebviewBridge.embeddedScript)
         }
         
-        HeapLogger.shared.logDev("Heap attached to web view with allowed origins: \(origins.map(\.description).joined(separator: ", "))")
+        HeapLogger.shared.debug("Heap attached to web view with allowed origins: \(origins.map(\.description).joined(separator: ", "))")
     }
     
     func remove() {
@@ -39,12 +44,17 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
         
         guard origins.contains(where: { $0.matches(message.frameInfo) }) else {
             
-            HeapLogger.shared.logDev("Web view received a message from an unauthorized security origin \(message.frameInfo.securityOrigin.heapDescription).  Allowed origins are \(origins.map(\.rawValue).joined(separator: ", "))")
+            let description = message.frameInfo.securityOrigin.heapDescription
+            
+            // Log the invalid origin, once.
+            if rejectedOriginDescriptions.insert(description).inserted {
+                HeapLogger.shared.warn("Web view received a message from an unauthorized security origin \(description).  Allowed origins are \(origins.map(\.rawValue).joined(separator: ", "))")
+            }
             
             return
         }
         
-        HeapLogger.shared.logDebug("Web view received the following message:\n\(message.body)")
+        HeapLogger.shared.trace("Web view received the following message:\n\(message.body)")
         
         if let body = message.body as? [String: Any],
            let type = body["type"] as? String {
@@ -70,7 +80,7 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
             }
         }
         
-        HeapLogger.shared.logDebug("Web view received an unknown message over the JavaScript bridge.")
+        HeapLogger.shared.trace("Web view received an unknown message over the JavaScript bridge.")
     }
     
     func replyWithData(_ data: JSON, to message: WKScriptMessage, callbackId: String?) {
@@ -94,7 +104,7 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
     @available(iOS 14.0, macOS 11.0, *)
     func send(_ payload: Encodable, to frame: WKFrameInfo, in world: WKContentWorld) {
         guard let webView = webView else { return }
-        HeapLogger.shared.logDebug("Sending message to web view: \(payload)")
+        HeapLogger.shared.trace("Sending message to web view: \(payload)")
         
         do {
             let data = try JSONEncoder().encode(payload)
@@ -102,7 +112,7 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
             
             webView.evaluateJavaScript("window.__heapNativeMessage(\(jsonString))", in: frame, in: world, completionHandler: { result in
                 if case .failure(let error) = result {
-                    HeapLogger.shared.logDebug("An error occured while invoking a JavaScript callback: \(error)")
+                    HeapLogger.shared.warn("An error occured while invoking a JavaScript callback: \(error)")
                 }
             })
         } catch {
@@ -111,7 +121,7 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
     
     func send(_ payload: Encodable) {
         guard let webView = webView else { return }
-        HeapLogger.shared.logDebug("Sending message to web view: \(payload)")
+        HeapLogger.shared.trace("Sending message to web view: \(payload)")
         
         do {
             let data = try JSONEncoder().encode(payload)
@@ -119,7 +129,7 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
 
             webView.evaluateJavaScript("window.Heap.nativeMessage(\(jsonString))", completionHandler: { _, error in
                 if let error = error {
-                    HeapLogger.shared.logDebug("An error occured while invoking a JavaScript callback: \(error)")
+                    HeapLogger.shared.warn("An error occured while invoking a JavaScript callback: \(error)")
                 }
             })
         } catch {

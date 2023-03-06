@@ -31,13 +31,13 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
             
             for (sourceName, source) in snapshot.sources {
                 source.didStopRecording {
-                    HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to stopRecording.")
+                    HeapLogger.shared.trace("Source [\(sourceName)] has completed all work related to stopRecording.")
                 }
             }
 
             for bridge in snapshot.runtimeBridges {
                 bridge.didStopRecording {
-                    HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to stopRecording.")
+                    HeapLogger.shared.trace("Bridge of type [\(type(of: bridge))] has completed all work related to stopRecording.")
                 }
             }
         }
@@ -64,7 +64,7 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
             let sessionMessage = Message(forSessionIn: state)
             let pageviewMessage = Message(forPageviewWith: state.unattributedPageviewInfo, sourceLibrary: nil, in: state)
             
-            HeapLogger.shared.logDebug("Starting new session with session event:\n\(sessionMessage)\nPageview:\n\(pageviewMessage)")
+            HeapLogger.shared.trace("Starting new session with session event:\n\(sessionMessage)\nPageview:\n\(pageviewMessage)")
 
             dataStore.createSessionIfNeeded(with: sessionMessage)
             dataStore.insertPendingMessage(pageviewMessage)
@@ -74,12 +74,12 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
             
             for (sourceName, source) in snapshot.sources {
                 source.didStartRecording(options: state.options) {
-                    HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to startRecording.")
+                    HeapLogger.shared.trace("Source [\(sourceName)] has completed all work related to startRecording.")
                 }
             }
             for bridge in snapshot.runtimeBridges {
                 bridge.didStartRecording(options:  state.options) {
-                    HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to startRecording.")
+                    HeapLogger.shared.trace("Bridge of type [\(type(of: bridge))] has completed all work related to startRecording.")
                 }
             }
             
@@ -101,13 +101,13 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
                 
                 for (sourceName, source) in snapshot.sources {
                     source.sessionDidStart(sessionId: sessionId, timestamp: timestamp, foregrounded: foregrounded) {
-                        HeapLogger.shared.logDebug("Source [\(sourceName)] has completed all work related to session initialization.")
+                        HeapLogger.shared.trace("Source [\(sourceName)] has completed all work related to session initialization.")
                     }
                 }
                 
                 for bridge in snapshot.runtimeBridges {
                     bridge.sessionDidStart(sessionId: sessionId, timestamp: timestamp, foregrounded: foregrounded) {
-                        HeapLogger.shared.logDebug("Bridge of type [\(type(of: bridge))] has completed all work related to session initialization.")
+                        HeapLogger.shared.trace("Bridge of type [\(type(of: bridge))] has completed all work related to session initialization.")
                     }
                 }
             }
@@ -120,7 +120,7 @@ extension EventConsumer: EventConsumerProtocol {
     func startRecording(_ environmentId: String, with options: [Option: Any] = [:], timestamp: Date = Date()) {
         
         if environmentId.isEmpty {
-            HeapLogger.shared.logDev("Heap.startRecording was called with an invalid environment ID. Recording will not proceed.")
+            HeapLogger.shared.warn("Heap.startRecording was called with an invalid environment ID. Recording will not proceed.")
             return
         }
         
@@ -129,13 +129,13 @@ extension EventConsumer: EventConsumerProtocol {
         let results = stateManager.start(environmentId: environmentId, sanitizedOptions: sanitizedOptions, at: timestamp)
         
         if results.outcomes.currentStarted {
-            HeapLogger.shared.logProd("Heap started recording with environment ID \(environmentId).")
+            HeapLogger.shared.info("Heap started recording with environment ID \(environmentId).")
             
             // Use the option name when logging.
-            HeapLogger.shared.logDev("Heap started recording with the following options: \(Dictionary(sanitizedOptions.map({ ($0.key.name, $0.value)}), uniquingKeysWith: { a, _ in a })).")
+            HeapLogger.shared.debug("Heap started recording with the following options: \(Dictionary(sanitizedOptions.map({ ($0.key.name, $0.value)}), uniquingKeysWith: { a, _ in a })).")
             
         } else if results.outcomes.alreadyRecording {
-            HeapLogger.shared.logDev("Heap.startRecording was called multiple times with the same parameters. The duplicate call will have no effect.")
+            HeapLogger.shared.debug("Heap.startRecording was called multiple times with the same parameters. The duplicate call will have no effect.")
         }
 
         notificationManager.addForegroundAndBackgroundObservers()
@@ -148,7 +148,7 @@ extension EventConsumer: EventConsumerProtocol {
         let results = stateManager.stop()
         
         if results.outcomes.previousStopped {
-            HeapLogger.shared.logProd("Heap has stopped recording.")
+            HeapLogger.shared.info("Heap has stopped recording.")
         }
         
         notificationManager.removeForegroundAndBackgroundObservers()
@@ -157,14 +157,14 @@ extension EventConsumer: EventConsumerProtocol {
     }
     
     func logSanitizedProperties(_ functionName: String, _ keys: [String], _ values: [String])  {
-        if !keys.isEmpty { HeapLogger.shared.logDev("\(functionName): The following properties were omitted because the key exceeded 512 utf-16 code units:\n\(keys)") }
-        if !values.isEmpty { HeapLogger.shared.logDev("\(functionName): The following properties were truncated because the value exceeded 1024 utf-16 code units:\n\(values)") }
+        if !keys.isEmpty { HeapLogger.shared.debug("\(functionName): The following properties were omitted because the key exceeded 512 utf-16 code units:\n\(keys)") }
+        if !values.isEmpty { HeapLogger.shared.debug("\(functionName): The following properties were truncated because the value exceeded 1024 utf-16 code units:\n\(values)") }
     }
 
     func track(_ event: String, properties: [String: HeapPropertyValue] = [:], timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, pageview: Pageview? = nil) {
         
         if event.utf16.count > 512 {
-            HeapLogger.shared.logDev("Event \(event) was not logged because its name exceeds 512 UTF-16 code units")
+            HeapLogger.shared.warn("Event \(event) was not logged because its name exceeds 512 UTF-16 code units")
             return
         }
         
@@ -172,7 +172,7 @@ extension EventConsumer: EventConsumerProtocol {
         logSanitizedProperties("track", omittedKeys, truncatedValues)
         
         if stateManager.current == nil {
-            HeapLogger.shared.logDev("Heap.track was called before Heap.startRecording and the event will not be recorded.")
+            HeapLogger.shared.debug("Heap.track was called before Heap.startRecording and the event will not be recorded.")
             return
         }
         
@@ -191,22 +191,21 @@ extension EventConsumer: EventConsumerProtocol {
             pendingEvent.setPageviewInfo($0)
         }
         
-        HeapLogger.shared.logDev("Tracked event named \(event).")
+        HeapLogger.shared.debug("Tracked event named \(event).")
     }
     
     func trackPageview(_ properties: PageviewProperties, timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, bridge: RuntimeBridge? = nil, userInfo: Any? = nil) -> Pageview? {
         
         guard stateManager.current != nil else {
             if let sourceName = sourceInfo?.name {
-                HeapLogger.shared.logDev("Heap.trackPageview was called before Heap.startRecording and will not be recorded. It is possible that the \(sourceName) library was not properly configured.")
+                HeapLogger.shared.debug("Heap.trackPageview was called before Heap.startRecording and will not be recorded. It is possible that the \(sourceName) library was not properly configured.")
             } else {
-                HeapLogger.shared.logDev("Heap.trackPageview was called before Heap.startRecording and will not be recorded.")
+                HeapLogger.shared.debug("Heap.trackPageview was called before Heap.startRecording and will not be recorded.")
             }
             
             return nil
         }
         
-        // TODO: Need to validate what truncation rules to use.
         let truncatedTitle = properties.title?.truncatedLoggingToDev(message: "trackPageview: Pageview title was truncated because the value exceeded 1024 utf-16 code units.")
         
         let (sanitizedSourceProperties, omittedKeys, truncatedValues) = properties.sourceProperties.sanitized()
@@ -227,11 +226,11 @@ extension EventConsumer: EventConsumerProtocol {
         
         dataStore.insertPendingMessage(message)
         if let sourceName = sourceInfo?.name {
-            HeapLogger.shared.logDev("Tracked pageview from \(sourceName) on \(properties.componentOrClassName ?? "an unknown component") titled \"\(properties.title ?? "")\".")
+            HeapLogger.shared.debug("Tracked pageview from \(sourceName) on \(properties.componentOrClassName ?? "an unknown component") titled \"\(properties.title ?? "")\".")
         } else {
-            HeapLogger.shared.logDev("Tracked pageview on \(properties.componentOrClassName ?? "an unknown component") titled \"\(properties.title ?? "")\".")
+            HeapLogger.shared.debug("Tracked pageview on \(properties.componentOrClassName ?? "an unknown component") titled \"\(properties.title ?? "")\".")
         }
-        HeapLogger.shared.logDebug("Committed event message:\n\(message)")
+        HeapLogger.shared.trace("Committed event message:\n\(message)")
         
         return .init(sessionInfo: state.sessionInfo, pageviewInfo: pageviewInfo, sourceLibrary: sourceLibrary, bridge: bridge, properties: properties, userInfo: userInfo)
     }
@@ -240,9 +239,9 @@ extension EventConsumer: EventConsumerProtocol {
 
         guard stateManager.current != nil else {
             if let sourceName = sourceInfo?.name {
-                HeapLogger.shared.logDev("Heap.uncommitedInteractionEvent was called before Heap.startRecording and the event will not be recorded. It is possible that the \(sourceName) library was not properly configured.")
+                HeapLogger.shared.debug("Heap.uncommitedInteractionEvent was called before Heap.startRecording and the event will not be recorded. It is possible that the \(sourceName) library was not properly configured.")
             } else {
-                HeapLogger.shared.logDev("Heap.uncommitedInteractionEvent was called before Heap.startRecording and the event will not be recorded.")
+                HeapLogger.shared.debug("Heap.uncommitedInteractionEvent was called before Heap.startRecording and the event will not be recorded.")
             }
             return nil
         }
@@ -281,26 +280,26 @@ extension EventConsumer: EventConsumerProtocol {
         
         // Don't set an empty identity
         if identity.isEmpty {
-            HeapLogger.shared.logDev("Heap.identify was called with an empty string and the identity will not be set.")
+            HeapLogger.shared.debug("Heap.identify was called with an empty string and the identity will not be set.")
             return
         }
         
         // Check for an environment
         guard stateManager.current != nil else {
-            HeapLogger.shared.logDev("Heap.identify was called before Heap.startRecording and will not set the identity.")
+            HeapLogger.shared.debug("Heap.identify was called before Heap.startRecording and will not set the identity.")
             return
         }
         
         let results = stateManager.identify(identity, at: timestamp)
         
         if results.outcomes.wasAlreadyIdentified {
-            HeapLogger.shared.logDev("Heap.identify was called with the existing identity so no identity will be set.")
+            HeapLogger.shared.debug("Heap.identify was called with the existing identity so no identity will be set.")
         } else if results.outcomes.identitySet && results.outcomes.userCreated {
-            HeapLogger.shared.logDev("Heap.identify was called while already identified, so a new user was created with the new identity.")
+            HeapLogger.shared.debug("Heap.identify was called while already identified, so a new user was created with the new identity.")
         }
         
         if results.outcomes.identitySet {
-            HeapLogger.shared.logDev("Identity set to \(identity).")
+            HeapLogger.shared.debug("Identity set to \(identity).")
         }
         
         handleChanges(results, timestamp: timestamp)
@@ -309,16 +308,16 @@ extension EventConsumer: EventConsumerProtocol {
     func resetIdentity(timestamp: Date = Date()) {
         
         if stateManager.current == nil {
-            HeapLogger.shared.logDev("Heap.resetIdentity was called before Heap.startRecording and will not reset the identity.")
+            HeapLogger.shared.debug("Heap.resetIdentity was called before Heap.startRecording and will not reset the identity.")
             return
         }
         
         let results = stateManager.resetIdentity(at: timestamp)
         
         if results.outcomes.identityReset {
-            HeapLogger.shared.logDev("Identity reset.")
+            HeapLogger.shared.debug("Identity reset.")
         } else if results.outcomes.wasAlreadyUnindentified {
-            HeapLogger.shared.logDev("Heap.resetIdentity was called while already unidentified, so no action will be taken.")
+            HeapLogger.shared.debug("Heap.resetIdentity was called while already unidentified, so no action will be taken.")
         }
         
         handleChanges(results, timestamp: timestamp)
@@ -330,7 +329,7 @@ extension EventConsumer: EventConsumerProtocol {
         logSanitizedProperties("addUserProperties", omittedKeys, truncatedValues)
         
         guard let environment = stateManager.current?.environment else {
-            HeapLogger.shared.logDev("Heap.addUserProperties was called before Heap.startRecording and will not add user properties.")
+            HeapLogger.shared.debug("Heap.addUserProperties was called before Heap.startRecording and will not add user properties.")
             return
         }
         
@@ -341,7 +340,7 @@ extension EventConsumer: EventConsumerProtocol {
                 userId: environment.userID,
                 name: name, value: value)
         }
-        HeapLogger.shared.logDev("Added \(sanitizedProperties.count) user properties.")
+        HeapLogger.shared.debug("Added \(sanitizedProperties.count) user properties.")
     }
 
     func addEventProperties(_ properties: [String: HeapPropertyValue]) {
@@ -350,45 +349,45 @@ extension EventConsumer: EventConsumerProtocol {
         logSanitizedProperties("addEventProperties", omittedKeys, truncatedValues)
         
         if stateManager.current == nil {
-            HeapLogger.shared.logDev("Heap.addEventProperties was called before Heap.startRecording and will not add event properties.")
+            HeapLogger.shared.debug("Heap.addEventProperties was called before Heap.startRecording and will not add event properties.")
             return
         }
         
         stateManager.addEventProperties(sanitizedProperties.mapValues(\.protoValue))
-        HeapLogger.shared.logDev("Added \(sanitizedProperties.count) event properties.")
+        HeapLogger.shared.debug("Added \(sanitizedProperties.count) event properties.")
     }
 
     func removeEventProperty(_ name: String) {
         
         if name.isEmpty {
-            HeapLogger.shared.logDev("Heap.removeEventProperty was called with an invalid property name and no action will be taken.")
+            HeapLogger.shared.debug("Heap.removeEventProperty was called with an invalid property name and no action will be taken.")
             return
         }
         
         if stateManager.current == nil {
-            HeapLogger.shared.logDev("Heap.removeEventProperty was called before Heap.startRecording and will not remove the event property.")
+            HeapLogger.shared.debug("Heap.removeEventProperty was called before Heap.startRecording and will not remove the event property.")
             return
         }
         
         stateManager.removeEventProperty(name)
-        HeapLogger.shared.logDev("Removed the event property named \(name).")
+        HeapLogger.shared.debug("Removed the event property named \(name).")
     }
 
     func clearEventProperties() {
         
         if stateManager.current == nil {
-            HeapLogger.shared.logDev("Heap.clearEventProperties was called before Heap.startRecording and will not clear event properties.")
+            HeapLogger.shared.debug("Heap.clearEventProperties was called before Heap.startRecording and will not clear event properties.")
             return
         }
         
         stateManager.clearEventProperties()
-        HeapLogger.shared.logDev("Cleared all event properties.")
+        HeapLogger.shared.debug("Cleared all event properties.")
     }
 
     var userId: String? {
         
         guard let environment = stateManager.current?.environment else {
-            HeapLogger.shared.logDev("Heap.getUserId was called before Heap.startRecording and will return nil.")
+            HeapLogger.shared.debug("Heap.getUserId was called before Heap.startRecording and will return nil.")
             return nil
         }
         
@@ -397,7 +396,7 @@ extension EventConsumer: EventConsumerProtocol {
 
     var identity: String? {
         guard let environment = stateManager.current?.environment else {
-            HeapLogger.shared.logDev("Heap.identity was called before Heap.startRecording and will return nil.")
+            HeapLogger.shared.debug("Heap.identity was called before Heap.startRecording and will return nil.")
             return nil
         }
         
@@ -415,7 +414,7 @@ extension EventConsumer: EventConsumerProtocol {
     func getSessionId(timestamp: Date = Date()) -> String? {
         
         if stateManager.current == nil {
-            HeapLogger.shared.logDev("Heap.getSessionId was called before Heap.startRecording and will return nil.")
+            HeapLogger.shared.debug("Heap.getSessionId was called before Heap.startRecording and will return nil.")
             return nil
         }
         
@@ -502,7 +501,7 @@ extension String {
     }
     
     /// Truncates a string so it fits in a utf-16 count, without splitting characters,
-    /// logging a message to dev if the value changed.
+    /// logging a message to debug if the value changed.
     /// - Parameters:
     ///   - count: The number of code units to truncate to.
     ///   - message: The message to log if the length was exceeded.
@@ -510,7 +509,7 @@ extension String {
     func truncatedLoggingToDev(toUtf16Count count: Int = 1024, message: @autoclosure () -> String) -> String {
         let (result, wasTruncated) = truncated(toUtf16Count: count)
         if wasTruncated {
-            HeapLogger.shared.logDev(message())
+            HeapLogger.shared.debug(message())
         }
         return result
     }

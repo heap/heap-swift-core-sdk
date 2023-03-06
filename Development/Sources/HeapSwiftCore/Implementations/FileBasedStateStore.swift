@@ -25,11 +25,11 @@ class FileBasedStateStore: StateStoreProtocol {
             if state.envID == environmentId && !state.userID.isEmpty {
                 return state
             } else {
-                HeapLogger.shared.logDev("The environment state at \(fileUrl) is corrupted and will be ignored.")
+                HeapLogger.shared.warn("The environment state at \(fileUrl) is corrupted and will be ignored.")
             }
         } catch {
-            HeapLogger.shared.logDev("The environment state at \(fileUrl) is corrupted and will be ignored.")
-            HeapLogger.shared.logDebug("Read error: \(error.localizedDescription)")
+            HeapLogger.shared.warn("The environment state at \(fileUrl) is corrupted and will be ignored.")
+            HeapLogger.shared.debug("Reading state failed with the following error: \(error.localizedDescription)")
         }
         
         return .with { $0.envID = environmentId }
@@ -40,8 +40,8 @@ class FileBasedStateStore: StateStoreProtocol {
         do {
             try environmentState.serializedData().write(to: fileUrl)
         } catch {
-            HeapLogger.shared.logDev("An error occurred while writing the environment state to \(fileUrl).")
-            HeapLogger.shared.logDebug("Write error: \(error.localizedDescription)")
+            HeapLogger.shared.warn("An error occurred while writing the environment state to \(fileUrl).")
+            HeapLogger.shared.debug("Writing state failed with the following error: \(error.localizedDescription)")
         }
     }
     
@@ -51,8 +51,8 @@ class FileBasedStateStore: StateStoreProtocol {
         do {
             try FileManager.default.removeItem(at: fileUrl)
         } catch {
-            HeapLogger.shared.logDev("An error occurred while deleting the environment state at \(fileUrl).")
-            HeapLogger.shared.logDebug("Delete error: \(error.localizedDescription)")
+            HeapLogger.shared.warn("An error occurred while deleting the environment state at \(fileUrl).")
+            HeapLogger.shared.debug("Deleting state state failed with the following error: \(error.localizedDescription)")
         }
     }
 }

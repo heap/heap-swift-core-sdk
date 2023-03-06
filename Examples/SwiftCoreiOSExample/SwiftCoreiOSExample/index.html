@@ -19,7 +19,7 @@
     <body>
         <div class="centerer">
             <button type="button" id="track">Track an event</button>
-            <button type="button" id="logProd">Log a prod message</button>
+            <button type="button" id="log">Log an info message</button>
             <button type="button" id="getInfo">Show Heap properties</button>
             <pre id="details">
                 
@@ -40,8 +40,8 @@
                 });
             });
             
-            document.getElementById('logProd').addEventListener('click', function () {
-                HeapLogger.logProd('This log message originated from a web view.', 'Just a source');
+            document.getElementById('log').addEventListener('click', function () {
+                HeapLogger.info('This log message originated from a web view.', 'Just a source');
             });
             
             document.getElementById('getInfo').addEventListener('click', async function () {
