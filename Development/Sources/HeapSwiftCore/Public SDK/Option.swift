@@ -181,7 +181,7 @@ struct UploaderSettings {
     
     static let `default` = UploaderSettings(
         uploadInterval: 15,
-        baseUrl: URL(string: "https://heapanalytics.com/"),
+        baseUrl: URL(string: "https://c.us.heap-api.com/"),
         messageBatchByteLimit: 1_000_000,
         messageBatchMessageLimit: 200
     )

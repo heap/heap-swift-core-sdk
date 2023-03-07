@@ -63,7 +63,7 @@ class APIProtocol: URLProtocol {
     
     static var baseUrlOverride: URL? = nil
     
-    var baseUrl: URL { APIProtocol.baseUrlOverride ?? URL(string: "https://heapanalytics.com/")! }
+    var baseUrl: URL { APIProtocol.baseUrlOverride ?? URL(string: "https://c.us.heap-api.com/")! }
     
     static var requests: [APIRequest] = []
     

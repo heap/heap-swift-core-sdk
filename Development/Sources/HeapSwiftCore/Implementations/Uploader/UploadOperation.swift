@@ -3,7 +3,7 @@ import Foundation
 /// An operation to upload data to Heap.
 final class UploadOperation: AsynchronousOperation {
     
-    private static let baseUrl = URL(string: "https://heapanalytics.com/")
+    private static let baseUrl = URL(string: "https://c.us.heap-api.com/")
     
     private var callback: ((UploadResult) -> Void)?
     private var task: URLSessionDataTask?
