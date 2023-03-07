@@ -413,8 +413,23 @@ extension EventConsumer: EventConsumerProtocol {
 
     func getSessionId(timestamp: Date = Date()) -> String? {
         
-        if stateManager.current == nil {
+        guard let state = stateManager.current else {
             HeapLogger.shared.debug("Heap.getSessionId was called before Heap.startRecording and will return nil.")
+            return nil
+        }
+        
+        guard timestamp < state.sessionExpirationDate else {
+            HeapLogger.shared.debug("Heap.getSessionId was called after the session expired and will return nil. To get a valid session in this scenario, use fetchSessionId instead.")
+            return nil
+        }
+        
+        return state.sessionInfo.id
+    }
+
+    func fetchSessionId(timestamp: Date = Date()) -> String? {
+        
+        if stateManager.current == nil {
+            HeapLogger.shared.debug("Heap.fetchSessionId was called before Heap.startRecording and will return nil.")
             return nil
         }
         

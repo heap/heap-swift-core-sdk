@@ -565,7 +565,44 @@ final class HeapBridgeSupportSpec: HeapSpec {
                     ])).to(throwError(InvocationError.invalidParameters))
                 }
                 
-                it("uses the passed in time for the session start time when extending the session") {
+                it("returns the session id when Heap is recording and the session is not expired") {
+                    consumer.startRecording("11")
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(equal(consumer.activeSession!.sessionId))
+                }
+                
+                it("returns null when Heap is recording and the session is expired") {
+                    let timestamp = Date().addingTimeInterval(3000)
+                    consumer.startRecording("11")
+                    let sessionId = try webConsumer.handleInvocation(method: method, arguments: [
+                        "javascriptEpochTimestamp": timestamp.timeIntervalSince1970 * 1000,
+                    ])
+                    expect(sessionId).to(beNil())
+                }
+                
+                it("returns null when Heap is not recording") {
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(beNil())
+                }
+            }
+            
+            describeMethod("fetchSessionId") { method in
+                
+                it("does not throw when all options are provided") {
+                    _ = try webConsumer.handleInvocation(method: method, arguments: [
+                        "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
+                    ])
+                }
+                
+                it("does not throw when the timestamp is omitted") {
+                    _ = try webConsumer.handleInvocation(method: method, arguments: [:])
+                }
+                
+                it("throws when javascriptEpochTimestamp is not a number") {
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [
+                        "javascriptEpochTimestamp": "something else",
+                    ])).to(throwError(InvocationError.invalidParameters))
+                }
+                
+                it("uses the passed-in time for the session start time when extending the session") {
                     let timestamp = Date().addingTimeInterval(3000)
                     consumer.startRecording("11")
                     _ = try webConsumer.handleInvocation(method: method, arguments: [

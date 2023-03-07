@@ -45,6 +45,8 @@ public class HeapBridgeSupport
             return identity()
         case "sessionId":
             return try sessionId(arguments: arguments)
+        case "fetchSessionId":
+            return try fetchSessionId(arguments: arguments)
             
         case "heapLogger_log":
             return try heapLogger_log(arguments: arguments)
@@ -133,6 +135,11 @@ public class HeapBridgeSupport
         return eventConsumer.getSessionId(timestamp: timestamp)
     }
     
+    func fetchSessionId(arguments: [String: Any]) throws -> JSONEncodable? {
+        let timestamp = try getOptionalTimestamp(arguments, methodName: "fetchSessionId")
+        return eventConsumer.fetchSessionId(timestamp: timestamp)
+    }
+
     func heapLogger_log(arguments: [String: Any]) throws -> JSONEncodable? {
         let logLevel = try getRequiredLogLevel(arguments, methodName: "heapLogger_log")
         let message = try getRequiredString(named: "message", from: arguments, message: "HeapBridgeSupport.heapLogger_log received an invalid message and wil not complete the bridged method call.")

@@ -102,6 +102,11 @@ public class Heap: NSObject {
         consumer.getSessionId(timestamp: Date())
     }
     
+    @objc
+    public func fetchSessionId() -> String? {
+        consumer.fetchSessionId(timestamp: Date())
+    }
+    
     public func addSource(_ source: Source, isDefault: Bool = false) {
         consumer.addSource(source, isDefault: isDefault, timestamp: Date())
     }

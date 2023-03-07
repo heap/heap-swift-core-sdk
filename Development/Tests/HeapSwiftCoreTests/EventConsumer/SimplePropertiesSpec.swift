@@ -65,5 +65,32 @@ final class EventConsumer_SimplePropertiesSpec: HeapSpec {
                 expect(consumer.identity).notTo(beNil())
             }
         }
+        
+        describe("EventConsumer.getSessionId") {
+            
+            it("returns nil before `startRecording` is called") {
+                _ = dataStore.applyIdentifiedState(to: "11")
+                expect(consumer.getSessionId()).to(beNil())
+            }
+
+            it("returns nil after `stopRecording` is called") {
+                _ = dataStore.applyIdentifiedState(to: "11")
+                consumer.startRecording("11")
+                consumer.stopRecording()
+                expect(consumer.getSessionId()).to(beNil())
+            }
+            
+            it("returns a value when Heap is recording and the session has not expired") {
+                _ = dataStore.applyIdentifiedState(to: "11")
+                consumer.startRecording("11")
+                expect(consumer.getSessionId()).notTo(beNil())
+            }
+            
+            it("returns nil when Heap is recording and the session has expired") {
+                _ = dataStore.applyIdentifiedState(to: "11")
+                consumer.startRecording("11")
+                expect(consumer.getSessionId(timestamp: Date().addingTimeInterval(3000))).to(beNil())
+            }
+        }
     }
 }
