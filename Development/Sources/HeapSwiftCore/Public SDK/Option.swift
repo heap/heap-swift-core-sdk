@@ -65,7 +65,8 @@ public class Option: NSObject {
     
     @objc
     public static func named(_ name: String) -> Option? {
-        registeredOptions[name]
+        Option.registerCoreOptionNames()
+        return registeredOptions[name]
     }
 }
 
@@ -95,6 +96,34 @@ public extension Option {
     static let disableInteractionAccessibilityLabelCapture = register(name: "disableInteractionAccessibilityLabelCapture", type: .boolean)
     static let disableInteractionReferencingPropertyCapture = register(name: "disableInteractionReferencingPropertyCapture", type: .boolean)
     static let interactionHierarchyCaptureLimit = register(name: "interactionHierarchyCaptureLimit", type: .integer)
+}
+
+extension Option {
+    /// Ensures the options are registered before HeapBridgeSupport.startRecording attempts to
+    /// resolve them.
+    ///
+    /// Because Swift `static let` properties are lazy-loaded, we don't know what properties are needed until they're used.
+    static func registerCoreOptionNames() {
+        _ = _optionLoader
+    }
+    
+    private static let _optionLoader: Void =  {
+        _ = [
+            Option.uploadInterval,
+            Option.baseUrl,
+            Option.messageBatchByteLimit,
+            Option.messageBatchMessageLimit,
+            Option.captureAdvertiserId,
+            
+            Option.disablePageviewAutocapture,
+            Option.disablePageviewTitleCapture,
+            Option.disableInteractionAutocapture,
+            Option.disableInteractionTextCapture,
+            Option.disableInteractionAccessibilityLabelCapture,
+            Option.disableInteractionReferencingPropertyCapture,
+            Option.interactionHierarchyCaptureLimit,
+        ]
+    }()
 }
 
 public extension Dictionary where Key == Option, Value == Any {

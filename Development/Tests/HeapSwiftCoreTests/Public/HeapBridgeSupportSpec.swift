@@ -67,6 +67,17 @@ final class HeapBridgeSupportSpec: HeapSpec {
                 ])
             }
             
+            it("consumes a known option") {
+                // Using `disablePageviewAutocapture` because it's not currently used anywhere.
+                // Otherwise, this test only produces valid failures when run in isolation with `fit`.
+                _ = try webConsumer.handleInvocation(method: method, arguments: [
+                    "environmentId": "11",
+                    "options": ["disablePageviewAutocapture": NSNumber(booleanLiteral: true)],
+                ])
+                
+                expect(consumer.stateManager.current?.options.boolean(at: .disablePageviewAutocapture)).to(beTrue())
+            }
+            
             it("throws when environmentId is omitted") {
                 expect(try webConsumer.handleInvocation(method: method, arguments: [:])).to(throwError(InvocationError.invalidParameters))
             }
