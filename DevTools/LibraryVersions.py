@@ -92,6 +92,17 @@ def UpdateFiles(version_string):
                                  version_swift_content)
   open(_VERSION_SWIFT_PATH, 'w').write(version_swift_content)
 
+def ReadVersion():
+  version_swift_content = open(_VERSION_SWIFT_PATH).read()
+  major = re.search(r'static let major = (\d+)\n', version_swift_content).group(1)
+  minor = re.search(r'static let minor = (\d+)\n', version_swift_content).group(1)
+  revision = re.search(r'static let revision = (\d+)\n', version_swift_content).group(1)
+  prerelease = re.search(r'static let prerelease: String\? = "([^"]+)"\n', version_swift_content)
+
+  if prerelease:
+    return '%s.%s.%s-%s' % ( major, minor, revision, prerelease.group(1) )
+  else:
+    return '%s.%s.%s' % ( major, minor, revision )
 
 def main(args):
   usage = '%prog [OPTIONS] [VERSION]'
@@ -102,20 +113,35 @@ def main(args):
   parser.add_option('--validate',
                     default=False, action='store_true',
                     help='Check if the versions in all the files match.')
+  parser.add_option('--print',
+                    default=False, action='store_true',
+                    help='Prints the version string.')
   opts, extra_args = parser.parse_args(args)
 
+  if opts.validate and opts.print:
+    parser.error('--print and --validate are mutually exclusive.')
+
+  if opts.print:
+    if extra_args:
+      parser.error('No version can be given when using --validate.')
+    
+    print(ReadVersion())
+    return 0
+  
   if opts.validate:
     if extra_args:
       parser.error('No version can be given when using --validate.')
-  else:
-    if len(extra_args) != 1:
-      parser.error('Expected one argument, the version number to ensure is in the sources.')
-    if not _VERSION_RE.match(extra_args[0]):
-      parser.error('Version does not appear to be in the form of x.y.z.')
+    
+    ValidateFiles()
+    return 0
+  
+  if len(extra_args) != 1:
+    parser.error('Expected one argument, the version number to ensure is in the sources.')
+  
+  if not _VERSION_RE.match(extra_args[0]):
+    parser.error('Version does not appear to be in the form of x.y.z.')
 
-  # Always validate, just use the flag to tell if we're expected to also have set something.
-  if not opts.validate:
-    UpdateFiles(extra_args[0])
+  UpdateFiles(extra_args[0])
   ValidateFiles()
   return 0
 

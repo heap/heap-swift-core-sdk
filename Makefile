@@ -257,3 +257,7 @@ endif
 
 	git fetch origin --tags
 	git push public ${BUILDKITE_TAG}
+
+release_from_origin_main:
+
+	./DevTools/ReleaseFromRemoteBranch.sh

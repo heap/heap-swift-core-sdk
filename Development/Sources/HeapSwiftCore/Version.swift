@@ -5,10 +5,10 @@ struct Version {
     static let major = 0
     
     /// Minor version.
-    static let minor = 0
+    static let minor = 1
 
     /// Revision number.
-    static let revision = 3
+    static let revision = 0
 
     /// Optional pre-release version
     static let prerelease: String? = nil
