@@ -56,6 +56,17 @@ final class Uploader_IdentifySpec: UploaderSpec {
                 expect(userIdentification.library).to(equal(SDKInfo.withoutAdvertiserId.libraryInfo))
             }
             
+            it("uploads identity when identity contains query-incompatible characters") {
+                let timestamp = Date()
+                dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "My user & % = test", creationDate: timestamp)
+                expectUploadAll(in: uploader).toEventually(beSuccess())
+                
+                guard let userIdentification = APIProtocol.identifyPayloads.first
+                else { throw TestFailure("Could not get first identity") }
+                
+                expect(userIdentification.identity).to(equal("My user & % = test"))
+            }
+            
             it("sets query properties and header") {
                 
                 let timestamp = Date()
@@ -65,6 +76,17 @@ final class Uploader_IdentifySpec: UploaderSpec {
                 expect(APIProtocol.requests).to(haveCount(1), description: "PRECONDITION: There should only be one request")
                 
                 expect(APIProtocol.requests.first?.rawRequest).to(haveMetadata(environmentId: "11", userId: "123", identity: "user-1", library: SDKInfo.withoutAdvertiserId.libraryInfo.name))
+            }
+            
+            it("sets query properties and header when identity contains query-incompatible characters") {
+                
+                let timestamp = Date()
+                dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: "My user & % = test", creationDate: timestamp)
+                dataStore.setHasSentInitialUser(environmentId: "11", userId: "123")
+                expectUploadAll(in: uploader).toEventually(beSuccess())
+                expect(APIProtocol.requests).to(haveCount(1), description: "PRECONDITION: There should only be one request")
+                
+                expect(APIProtocol.requests.first?.rawRequest).to(haveMetadata(environmentId: "11", userId: "123", identity: "My user & % = test", library: SDKInfo.withoutAdvertiserId.libraryInfo.name))
             }
             
             context("multiple identities are present") {

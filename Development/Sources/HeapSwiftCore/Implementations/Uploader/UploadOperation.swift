@@ -144,20 +144,28 @@ extension UploadOperation {
     }
     
     struct Configuration {
+        
+        static let allowedQueryCharacters: CharacterSet = .urlQueryAllowed.subtracting(.init(charactersIn: "&+"))
+        
         let user: UserToUpload
         let activeSession: ActiveSession
         let urlSession: URLSession
         let settings: UploaderSettings
         
+        func encode(_ string: String?) -> String {
+            string?.addingPercentEncoding(withAllowedCharacters: Configuration.allowedQueryCharacters) ?? ""
+        }
+        
         func url(path: String) throws -> URL {
             
             // Apply a query string with properties to support log troubleshooting.
-            let relativeString = "\(path)?b=\(activeSession.sdkInfo.libraryInfo.name)&i=\(user.identity ?? "")&u=\(user.userId)&a=\(user.environmentId)"
+            let relativeString = "\(path)?b=\(encode(activeSession.sdkInfo.libraryInfo.name))&i=\(encode(user.identity))&u=\(encode(user.userId))&a=\(encode(user.environmentId))"
             
             guard
                 let baseUrl = settings.baseUrl,
                 let url = URL(string: relativeString, relativeTo: baseUrl)
             else {
+                HeapLogger.shared.trace("Could not generate url with relative string: \(relativeString) and base url: \(String(describing: settings.baseUrl))")
                 throw UploadError.badRequest
             }
             
