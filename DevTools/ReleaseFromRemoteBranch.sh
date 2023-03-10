@@ -14,10 +14,10 @@ set -o errexit
 
 BRANCH="${1:-main}"
 
-TMP_DIR=$(mktemp -d -t heap-ios-autocapture)
-REPO_DIR="${TMP_DIR}/heap-ios-autocapture"
+TMP_DIR=$(mktemp -d -t heap-swift-core)
+REPO_DIR="${TMP_DIR}/heap-swift-core"
 
-REPO='git@github.com:heap/heap-swift-autocapture.git'
+REPO='git@github.com:heap/heap-swift-core.git'
 
 echo "--- Cloning branch ${BRANCH} of ${REPO}"
 
