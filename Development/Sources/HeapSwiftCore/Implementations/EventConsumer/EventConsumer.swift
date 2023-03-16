@@ -481,14 +481,21 @@ extension Dictionary where Key == String, Value == HeapPropertyValue {
             return value
         })
             .filter({
-                if ($0.key.utf16.count <= 512) {
+                if ($0.key.utf16.count <= 512 && !$0.key.trimmingCharacters(in: .whitespaces).isEmpty) {
                     return true
                 } else {
                     sanitizedKeys.append($0.key)
                     return false
                 }
             })
-
+            .filter({
+                if ($0.value.trimmingCharacters(in: .whitespaces).isEmpty) {
+                    sanitizedValues.append($0.value)
+                    return false
+                } else {
+                    return true
+                }
+            })
         return (sanitizedDictionary, sanitizedKeys, sanitizedValues)
     }
 }

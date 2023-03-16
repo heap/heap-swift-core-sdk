@@ -335,5 +335,20 @@ final class EventConsumer_EventPropertiesSpec: HeapSpec {
                 expect(state.properties).to(equal(consumer.eventProperties))
             }
         }
+        describe ("EventConsumer.sanitized") {
+            
+            it ("sanitizes values that are empty or whitespace only") {
+              
+                let value: [String:HeapPropertyValue] = ["test_key"                :"test_value",
+                                                         "test_empty_value_key"    :"",
+                                                         "test_blank_value_key"    :"     ",
+                                                         ""                        :"test_empty_key_value",
+                                                         "   "                     :"test_blank_key_value"]
+                
+                let expectedValue: [String:String] = ["test_key":"test_value"]
+                
+                expect(value.sanitized().result).to(equal(expectedValue))
+            }
+        }
     }
 }
