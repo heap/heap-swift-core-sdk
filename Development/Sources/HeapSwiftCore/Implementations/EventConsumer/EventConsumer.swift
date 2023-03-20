@@ -155,11 +155,6 @@ extension EventConsumer: EventConsumerProtocol {
         
         handleChanges(results, timestamp: timestamp)
     }
-    
-    func logSanitizedProperties(_ functionName: String, _ keys: [String], _ values: [String])  {
-        if !keys.isEmpty { HeapLogger.shared.debug("\(functionName): The following properties were omitted because the key exceeded 512 utf-16 code units:\n\(keys)") }
-        if !values.isEmpty { HeapLogger.shared.debug("\(functionName): The following properties were truncated because the value exceeded 1024 utf-16 code units:\n\(values)") }
-    }
 
     func track(_ event: String, properties: [String: HeapPropertyValue] = [:], timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, pageview: Pageview? = nil) {
         
@@ -168,8 +163,7 @@ extension EventConsumer: EventConsumerProtocol {
             return
         }
         
-        let (sanitizedProperties, omittedKeys, truncatedValues) = properties.sanitized()
-        logSanitizedProperties("track", omittedKeys, truncatedValues)
+        let sanitizedProperties = properties.sanitized(methodName: "track")
         
         if stateManager.current == nil {
             HeapLogger.shared.debug("Heap.track was called before Heap.startRecording and the event will not be recorded.")
@@ -208,8 +202,7 @@ extension EventConsumer: EventConsumerProtocol {
         
         let truncatedTitle = properties.title?.truncatedLoggingToDev(message: "trackPageview: Pageview title was truncated because the value exceeded 1024 utf-16 code units.")
         
-        let (sanitizedSourceProperties, omittedKeys, truncatedValues) = properties.sourceProperties.sanitized()
-        logSanitizedProperties("trackPageview", omittedKeys, truncatedValues)
+        let sanitizedSourceProperties = properties.sourceProperties.sanitized(methodName: "trackPageview")
         
         let sourceLibrary = sourceInfo?.libraryInfo
         var pageviewInfo = PageviewInfo(newPageviewAt: timestamp)
@@ -325,8 +318,8 @@ extension EventConsumer: EventConsumerProtocol {
 
     func addUserProperties(_ properties: [String: HeapPropertyValue]) {
         
-        let (sanitizedProperties, omittedKeys, truncatedValues) = properties.sanitized()
-        logSanitizedProperties("addUserProperties", omittedKeys, truncatedValues)
+        
+        let sanitizedProperties = properties.sanitized(methodName: "addUserProperties")
         
         guard let environment = stateManager.current?.environment else {
             HeapLogger.shared.debug("Heap.addUserProperties was called before Heap.startRecording and will not add user properties.")
@@ -345,8 +338,7 @@ extension EventConsumer: EventConsumerProtocol {
 
     func addEventProperties(_ properties: [String: HeapPropertyValue]) {
 
-        let (sanitizedProperties, omittedKeys, truncatedValues) = properties.sanitized()
-        logSanitizedProperties("addEventProperties", omittedKeys, truncatedValues)
+        let sanitizedProperties = properties.sanitized(methodName: "addEventProperties")
         
         if stateManager.current == nil {
             HeapLogger.shared.debug("Heap.addEventProperties was called before Heap.startRecording and will not add event properties.")
@@ -469,34 +461,63 @@ extension Dictionary where Key == String, Value == HeapPropertyValue {
     /// Omits keys that exceed a 512 utf-16 count.
     /// Truncates values that exceed 1024 utf-16 count.
     /// - Returns: Sanitized Dictionary.
-    func sanitized() -> (result: [String: String], sanitizedKeys: [String], sanitizedValues: [String])  {
+    func sanitized(methodName: String?) -> [String: String] {
         
-        var sanitizedKeys: [String] = []
-        var sanitizedValues: [String] = []
-        let sanitizedDictionary = mapValues({
-            let (value, wasTruncated) = $0.heapValue.truncated()
-            if wasTruncated {
-                sanitizedValues.append(value)
+        var hasRemovedEmptyKeys = false
+        var keysRemovedBecauseTheyWereTooLong: [String] = []
+        var keysRemovedBecauseTheValueWasEmpty: [String] = []
+        var entriesThatWereTrimmed: [(key: String, value: String)] = []
+        
+        func sanitize(_ pair: (key: String, value: HeapPropertyValue)) -> (String, String)? {
+            
+            let key = pair.key
+            
+            guard key.utf16.count <= 512 else {
+                keysRemovedBecauseTheyWereTooLong.append(key)
+                return nil
             }
-            return value
-        })
-            .filter({
-                if ($0.key.utf16.count <= 512 && !$0.key.trimmingCharacters(in: .whitespaces).isEmpty) {
-                    return true
-                } else {
-                    sanitizedKeys.append($0.key)
-                    return false
-                }
-            })
-            .filter({
-                if ($0.value.trimmingCharacters(in: .whitespaces).isEmpty) {
-                    sanitizedValues.append($0.value)
-                    return false
-                } else {
-                    return true
-                }
-            })
-        return (sanitizedDictionary, sanitizedKeys, sanitizedValues)
+            
+            guard key.hasNonWhitespaceCharacters else {
+                hasRemovedEmptyKeys = true
+                return nil
+            }
+            
+            let (value, wasTruncated) = pair.value.heapValue.truncated()
+            
+            guard value.hasNonWhitespaceCharacters else {
+                keysRemovedBecauseTheValueWasEmpty.append(key)
+                return nil
+            }
+            
+            if wasTruncated {
+                entriesThatWereTrimmed.append((key, value))
+            }
+            
+            return (key, value)
+        }
+        
+        let sanitizedDictionary = [String: String](uniqueKeysWithValues: compactMap(sanitize))
+        
+        if let methodName = methodName {
+            
+            if hasRemovedEmptyKeys {
+                HeapLogger.shared.debug("\(methodName): Some properties were removed because the keys were empty or whitespace.")
+            }
+            
+            if !keysRemovedBecauseTheyWereTooLong.isEmpty {
+                HeapLogger.shared.debug("\(methodName): The following properties were omitted because their keys exceeded 512 utf-16 code units: \(keysRemovedBecauseTheyWereTooLong.joined(separator: ", "))")
+            }
+            
+            if !keysRemovedBecauseTheValueWasEmpty.isEmpty {
+                HeapLogger.shared.debug("\(methodName): The following properties were omitted because their values were empty or whitespace: \(keysRemovedBecauseTheValueWasEmpty.joined(separator: ", "))")
+            }
+            
+            if !entriesThatWereTrimmed.isEmpty {
+                HeapLogger.shared.debug("\(methodName): The following properties were truncated because their values exceeded 1024 utf-16 code units:\n\(entriesThatWereTrimmed.map({ "    \($0.key): \($0.value)" }).joined(separator: "\n"))")
+            }
+        }
+        
+        return sanitizedDictionary
     }
 }
 
@@ -546,4 +567,7 @@ extension String {
         let testString = "👨‍👨‍👧‍👧👨‍👨‍👧‍👧"
         return testString.index(before: .init(utf16Offset: 16, in: testString)) == testString.startIndex
     }()
+    
+    /// Checks if the string contains any non-whitespace values.
+    var hasNonWhitespaceCharacters: Bool { rangeOfCharacter(from: .whitespacesAndNewlines.inverted) != nil }
 }

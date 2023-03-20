@@ -67,70 +67,20 @@ final class EventConsumer_AddUserPropertiesSpec: HeapSpec {
                 ]), description: "The properties should all have been persisted to the uploadable data store")
             }
             
-            it("does not truncate properties exactly 1024 characters long") {
-                
-                consumer.startRecording("11")
-                let value = String(repeating: "あ", count: 1024)
-                let expectedValue = value
-                
-                consumer.addUserProperties(["a": value])
-                let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                expect(user.pendingUserProperties).to(equal(["a": expectedValue]), description: "The property value should have remain unchanged.")
-            }
+            it("sanitizes properties using [String: HeapPropertyValue].sanitized") {
             
-            
-            it("truncates properties that are more than 1024 characters long") {
-                
                 consumer.startRecording("11")
-                let value = String(repeating: "あ", count: 1030)
-                let expectedValue = String(repeating: "あ", count: 1024)
+                consumer.addUserProperties([
+                    "a": String(repeating: "あ", count: 1030),
+                    "b": "    ",
+                    " ": "test",
+                    String(repeating: "あ", count: 513): "?",
+                ])
                 
-                consumer.addUserProperties(["a": value])
                 let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                expect(user.pendingUserProperties).to(equal(["a": expectedValue]), description: "The property value should have been truncated.")
-            }
-             
-            it("does not partially truncate emoji") {
-                
-                consumer.startRecording("11")
-                let value = String(repeating: "あ", count: 1020).appending("👨‍👨‍👧‍👧")
-                let expectedValue = String(repeating: "あ", count: 1020)
-                
-                consumer.addUserProperties(["a": value])
-                let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                expect(user.pendingUserProperties).to(equal(["a": expectedValue]), description: "The property value should have been truncated.")
-                
-            }
-            
-            it("does not partially truncate diacritics") {
-                
-                consumer.startRecording("11")
-                let value = String(repeating: "あ", count: 1000).appending("A̶̧̨̨̡̡̼̯̯͖̖͔̗̞̣̯̲̰̞̹͎̝̱̪̬̹̰͔̹̫̙̤̞̯͓̖̣͉̻̣̙͉̰̦͔͚̔̍̍̃͌͆̎̊̈̇̽̿̕͜͠͝ͅ")
-                let expectedValue = String(repeating: "あ", count: 1000)
-                
-                consumer.addUserProperties(["a": value])
-                let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                expect(user.pendingUserProperties).to(equal(["a": expectedValue]), description: "The property value should have been truncated.")
-            }
-            
-            it("does not omit properties where the key is the maximum length") {
-                
-                consumer.startRecording("11")
-                let key = String(repeating: "あ", count: 512)
-                
-                consumer.addUserProperties([key: "value"])
-                let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                expect(user.pendingUserProperties[key]).toNot(beNil())
-            }
-            
-            it("omits properties where the key is above the maximum length") {
-                
-                consumer.startRecording("11")
-                let key = String(repeating: "あ", count: 513)
-                
-                consumer.addUserProperties([key: "value"])
-                let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                expect(user.pendingUserProperties[key]).to(beNil())
+                expect(user.pendingUserProperties).to(equal([
+                    "a": String(repeating: "あ", count: 1024),
+                ]))
             }
         }
     }

@@ -4,16 +4,6 @@ import Nimble
 @testable import HeapSwiftCore
 @testable import HeapSwiftCoreTestSupport
 
-private enum MyEnum: String {
-    case val1 = "VALUE 1"
-    case val2 = "VALUE 2"
-}
-
-extension MyEnum: HeapPropertyValue {
-    var heapValue: String { rawValue }
-}
-
-
 final class EventConsumer_EventPropertiesSpec: HeapSpec {
 
     override func spec() {
@@ -51,83 +41,34 @@ final class EventConsumer_EventPropertiesSpec: HeapSpec {
                 expect(consumer.eventProperties).to(equal([:]))
             }
 
-            it("stores Int values") {
+            it("stores values") {
                 
                 consumer.startRecording("11")
                 consumer.addEventProperties([
                     "a": 1,
-                    "b": 0,
-                    "c": -1,
+                    "b": "Hello 🗺",
+                    "c": false,
                 ])
 
                 expect(consumer.eventProperties).to(equal([
                     "a": .init(value: "1"),
-                    "b": .init(value: "0"),
-                    "c": .init(value: "-1"),
+                    "b": .init(value: "Hello 🗺"),
+                    "c": .init(value: "false"),
                 ]))
             }
-
-            it("stores Double values") {
+            
+            it("sanitizes properties using [String: HeapPropertyValue].sanitized") {
 
                 consumer.startRecording("11")
                 consumer.addEventProperties([
-                    "a": 7.5,
-                    "b": 0.0,
-                    "c": -7.25,
+                    "a": String(repeating: "あ", count: 1030),
+                    "b": "    ",
+                    " ": "test",
+                    String(repeating: "あ", count: 513): "?",
                 ])
 
                 expect(consumer.eventProperties).to(equal([
-                    "a": .init(value: "7.5"),
-                    "b": .init(value: "0.0"),
-                    "c": .init(value: "-7.25"),
-                ]))
-            }
-
-            it("stores boolean values") {
-
-                consumer.startRecording("11")
-                consumer.addEventProperties([
-                    "a": true,
-                    "b": false,
-                    "c": true,
-                ])
-
-                expect(consumer.eventProperties).to(equal([
-                    "a": .init(value: "true"),
-                    "b": .init(value: "false"),
-                    "c": .init(value: "true"),
-                ]))
-            }
-
-            it("stores string values") {
-
-                consumer.startRecording("11")
-                consumer.addEventProperties([
-                    "a": "😀",
-                    "b": "🤨",
-                    "c": "😫",
-                ])
-
-                expect(consumer.eventProperties).to(equal([
-                    "a": .init(value: "😀"),
-                    "b": .init(value: "🤨"),
-                    "c": .init(value: "😫"),
-                ]))
-            }
-
-            it("stores custom values") {
-
-                consumer.startRecording("11")
-                consumer.addEventProperties([
-                    "a": MyEnum.val1,
-                    "b": MyEnum.val2,
-                    "c": MyEnum.val1,
-                ])
-
-                expect(consumer.eventProperties).to(equal([
-                    "a": .init(value: "VALUE 1"),
-                    "b": .init(value: "VALUE 2"),
-                    "c": .init(value: "VALUE 1"),
+                    "a": .init(value: String(repeating: "あ", count: 1024)),
                 ]))
             }
 
@@ -135,7 +76,7 @@ final class EventConsumer_EventPropertiesSpec: HeapSpec {
 
                 consumer.startRecording("11")
                 consumer.addEventProperties([
-                    "a": MyEnum.val1,
+                    "a": String(repeating: "あ", count: 1030),
                     "b": "Hello 🗺",
                     "c": false,
                 ])
@@ -162,65 +103,6 @@ final class EventConsumer_EventPropertiesSpec: HeapSpec {
                     "b": .init(value: "b"),
                     "c": .init(value: "c"),
                 ]))
-            }
-            
-            it("does not truncate properties exactly 1024 characters long") {
-
-                consumer.startRecording("11")
-                let value = String(repeating: "あ", count: 1024)
-                let expectedValue = value
-
-                consumer.addEventProperties(["a": value])
-                expect(consumer.eventProperties).to(equal(["a": .init(value: expectedValue)]))
-            }
-
-            it("truncates properties that are more than 1024 characters long") {
-
-                consumer.startRecording("11")
-                let value = String(repeating: "あ", count: 1030)
-                let expectedValue = String(repeating: "あ", count: 1024)
-
-                consumer.addEventProperties(["a": value])
-                expect(consumer.eventProperties).to(equal(["a":  .init(value: expectedValue)]), description: "The property value should have been truncated.")
-            }
-
-            it("does not partially truncate emoji") {
-
-                consumer.startRecording("11")
-                let value = String(repeating: "あ", count: 1020).appending("👨‍👨‍👧‍👧")
-                let expectedValue = String(repeating: "あ", count: 1020)
-
-                consumer.addEventProperties(["a": value])
-                expect(consumer.eventProperties).to(equal(["a":  .init(value: expectedValue)]), description: "The property value should have been truncated.")
-
-            }
-
-            it("does not partially truncate diacritics") {
-
-                consumer.startRecording("11")
-                let value = String(repeating: "あ", count: 1000).appending("A̶̧̨̨̡̡̼̯̯͖̖͔̗̞̣̯̲̰̞̹͎̝̱̪̬̹̰͔̹̫̙̤̞̯͓̖̣͉̻̣̙͉̰̦͔͚̔̍̍̃͌͆̎̊̈̇̽̿̕͜͠͝ͅ")
-                let expectedValue = String(repeating: "あ", count: 1000)
-
-                consumer.addEventProperties(["a": value])
-                expect(consumer.eventProperties).to(equal(["a":  .init(value: expectedValue)]), description: "The property value should have been truncated.")
-            }
-            
-            it("does not omit properties where the key is the maximum length") {
-                
-                consumer.startRecording("11")
-                let key = String(repeating: "あ", count: 512)
-                
-                consumer.addEventProperties([key: "value"])
-                expect(consumer.eventProperties[key]).toNot(beNil())
-            }
-            
-            it("omits properties where the key is above the maximum length") {
-                
-                consumer.startRecording("11")
-                let key = String(repeating: "あ", count: 513)
-                
-                consumer.addEventProperties([key: "value"])
-                expect(consumer.eventProperties[key]).to(beNil())
             }
         }
 
@@ -333,21 +215,6 @@ final class EventConsumer_EventPropertiesSpec: HeapSpec {
                 let state = dataStore.loadState(for: "11")
 
                 expect(state.properties).to(equal(consumer.eventProperties))
-            }
-        }
-        describe ("EventConsumer.sanitized") {
-            
-            it ("sanitizes values that are empty or whitespace only") {
-              
-                let value: [String:HeapPropertyValue] = ["test_key"                :"test_value",
-                                                         "test_empty_value_key"    :"",
-                                                         "test_blank_value_key"    :"     ",
-                                                         ""                        :"test_empty_key_value",
-                                                         "   "                     :"test_blank_key_value"]
-                
-                let expectedValue: [String:String] = ["test_key":"test_value"]
-                
-                expect(value.sanitized().result).to(equal(expectedValue))
             }
         }
     }

@@ -225,23 +225,25 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     expect(pageviewInfo.sourceProperties["c"]).to(equal(.init(value: "false")))
                 }
                 
-                it("applies truncation rules to sourceProperties") {
-                    let longValue = String(repeating: "あ", count: 1030)
-                    let expectedValue = String(repeating: "あ", count: 1024)
-                    
-                    let longKey = String(repeating: "あ", count: 513)
+                
+                it("sanitizes sourceProperties using [String: HeapPropertyValue].sanitized") {
                     
                     _ = consumer.trackPageview(.with({
-                        $0.sourceProperties = ["key": longValue, longKey: true]
+                        $0.sourceProperties = [
+                            "a": String(repeating: "あ", count: 1030),
+                            "b": "    ",
+                            " ": "test",
+                            String(repeating: "あ", count: 513): "?",
+                        ]
                     }))
                     
                     let user = try dataStore.assertOnlyOneUserToUpload()
                     let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
                     let pageviewInfo = messages[2].pageviewInfo
                     
-                    expect(pageviewInfo.sourceProperties["key"]?.string).to(equal(expectedValue))
-                    expect(pageviewInfo.sourceProperties["key"]?.string.count).to(equal(expectedValue.count))
-                    expect(pageviewInfo.sourceProperties[longKey]).to(beNil())
+                    expect(pageviewInfo.sourceProperties).to(equal([
+                        "a": .init(value: String(repeating: "あ", count: 1024)),
+                    ]))
                 }
                 
                 it("truncates title") {
