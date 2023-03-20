@@ -90,7 +90,38 @@ non-macOS device will create a temporary simulator which is destroyed at the end
 
 The specifics of the CI system are described in the [iOS CI Infrastructure][ci] document (Heap internal).
 
+# Triggering a Release
+
+Use the following process to trigger a release.
+
+1.  Create a new branch for the release, potentially including the version name in the branch name (e.g. `release-0.2.7-alpha.1`
+    for version 0.2.7-alpha.1).
+2.  Use [`DevTools/LibraryVersions.py`](../DevTools/LibraryVersions.py) to set the version. (e.g. `./DevTools/LibraryVersions.py 1.2.7-alpha.1`
+    for version 0.2.7-alpha.1).
+3.  Make sure [`CHANGELOG.md`](../CHANGELOG.md) is up-to-date with features from the release in the appropriate section.
+4.  Create a PR, make sure tests run, and that it is approved.
+5.  Merge the PR.
+6.  Run `make release_from_origin_main` to trigger a release.  This will push a tag with the version at `origin/main` to `origin`.
+7.  [Wait for the tag to finish building.][buildkite]
+8.  Once the build finishes successfully, the tag will be visible on the public repo and you should [create a new GitHub release][new-release]
+    with the details from the changelog.
+9.  Release the new podspec.  Unfortunately, this step is still manual and requires you to be a member of the Heap organization on CocoaPods.
+    Run the following in the internal repo:
+   
+    ```shell
+    git checkout main && git pull && pod trunk push HeapSwiftCore.podspec
+    ```
+
+> **Note**
+> 
+> Steps in this process are bound to break, as they aren't run as often and depend on the CI being in tip-top shape.  If step 6 fails, you can
+> tag the commit manually. If step 7 fails on the CI, the make command or child scripts can be run locally to diagnose or circumvent the error.
+> In the very worst case, you can tag the commit yourself on the public repo and move on to step 9.
+>
+> _If_ you have to run anything manually, capture it as a ticket so we can fix it later on.
 
 [specs]: https://heapinc.atlassian.net/wiki/spaces/CAP/pages/2604990512/Capture+Core+SDKs
+[buildkite]: https://buildkite.com/heap/repo-heap-swift-core
 [buildkite-req]: https://buildkite.com/heap/repo-heap-swift-core-required
 [ci]: https://heapinc.atlassian.net/wiki/spaces/CAP/pages/1327202313/iOS+CI+Infrastructure
+[new-release]: https://github.com/heap/heap-swift-core-sdk/releases/new
