@@ -22,7 +22,6 @@
 		EBA9A90C2922DC72001756EB /* HybridViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA9A90B2922DC72001756EB /* HybridViewController.swift */; };
 		EBA9A90E2922DF1E001756EB /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = EBA9A90D2922DF1E001756EB /* index.html */; };
 		EBB571FF29AE82E600E47A66 /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBB571FE29AE82E500E47A66 /* AdSupport.framework */; };
-		EBB5720029AE82F400E47A66 /* HeapSwiftCore in Embed Frameworks */ = {isa = PBXBuildFile; productRef = D6258F2728D8812F00E81D63 /* HeapSwiftCore */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,7 +52,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				EBB5720029AE82F400E47A66 /* HeapSwiftCore in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -78,6 +76,8 @@
 		EBA9A90B2922DC72001756EB /* HybridViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridViewController.swift; sourceTree = "<group>"; };
 		EBA9A90D2922DF1E001756EB /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		EBB571FE29AE82E500E47A66 /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
+		EBD0672629CA45870091D2F5 /* SwiftCoreiOSExample.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftCoreiOSExample.entitlements; sourceTree = "<group>"; };
+		EBD0672729CA45870091D2F5 /* iOSWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iOSWidgetExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,6 +106,7 @@
 		D6258EE528D8805E00E81D63 = {
 			isa = PBXGroup;
 			children = (
+				EBD0672729CA45870091D2F5 /* iOSWidgetExtension.entitlements */,
 				D6258F2428D8807A00E81D63 /* Packages */,
 				D6258EF028D8805E00E81D63 /* SwiftCoreiOSExample */,
 				D6664ED728DD059F00AC0814 /* iOSWidget */,
@@ -126,6 +127,7 @@
 		D6258EF028D8805E00E81D63 /* SwiftCoreiOSExample */ = {
 			isa = PBXGroup;
 			children = (
+				EBD0672629CA45870091D2F5 /* SwiftCoreiOSExample.entitlements */,
 				D6258EF128D8805E00E81D63 /* AppDelegate.swift */,
 				D6258EF528D8805E00E81D63 /* ViewController.swift */,
 				D6258EF728D8805E00E81D63 /* Main.storyboard */,
@@ -440,6 +442,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SwiftCoreiOSExample/SwiftCoreiOSExample.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -457,6 +460,9 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = io.heap.SwiftCoreiOSExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -469,6 +475,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SwiftCoreiOSExample/SwiftCoreiOSExample.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -486,6 +493,9 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = io.heap.SwiftCoreiOSExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -497,6 +507,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = iOSWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -514,6 +525,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = io.heap.SwiftCoreiOSExample.iOSWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -525,6 +537,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = iOSWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -542,6 +555,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = io.heap.SwiftCoreiOSExample.iOSWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

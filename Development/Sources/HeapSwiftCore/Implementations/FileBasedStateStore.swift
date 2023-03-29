@@ -1,4 +1,5 @@
 import Foundation
+import HeapSwiftCoreInterfaces
 
 class FileBasedStateStore: StateStoreProtocol {
     

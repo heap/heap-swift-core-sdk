@@ -1,4 +1,5 @@
 import Foundation
+import HeapSwiftCoreInterfaces
 
 public enum InvocationError: Error {
     case unknownMethod
@@ -7,10 +8,10 @@ public enum InvocationError: Error {
 
 public class HeapBridgeSupport
 {
-    let eventConsumer: any EventConsumerProtocol
+    let eventConsumer: any HeapProtocol
     let uploader: any UploaderProtocol
     
-    init(eventConsumer: any EventConsumerProtocol, uploader: any UploaderProtocol)
+    init(eventConsumer: any HeapProtocol, uploader: any UploaderProtocol)
     {
         self.eventConsumer = eventConsumer
         self.uploader = uploader
@@ -24,13 +25,13 @@ public class HeapBridgeSupport
         case "startRecording":
             return try startRecording(arguments: arguments)
         case "stopRecording":
-            return try stopRecording(arguments: arguments)
+            return try stopRecording()
         case "track":
             return try track(arguments: arguments)
         case "identify":
             return try identify(arguments: arguments)
         case "resetIdentity":
-            return try resetIdentity(arguments: arguments)
+            return try resetIdentity()
         case "addUserProperties":
             return try addUserProperties(arguments: arguments)
         case "addEventProperties":
@@ -44,7 +45,7 @@ public class HeapBridgeSupport
         case "identity":
             return identity()
         case "sessionId":
-            return try sessionId(arguments: arguments)
+            return try sessionId()
         case "fetchSessionId":
             return try fetchSessionId(arguments: arguments)
             
@@ -65,15 +66,13 @@ public class HeapBridgeSupport
         // Reminder: any change in the logic here should also be applied to startRecording in Heap.swift
         let environmentId = try getRequiredString(named: "environmentId", from: arguments, message: "HeapBridgeSupport.startRecording received an invalid environmentId and will not complete the bridged method call.")
         let options = try getOptionalOptionsDictionary(from: arguments)
-        let timestamp = try getOptionalTimestamp(arguments, methodName: "startRecording")
-        eventConsumer.startRecording(environmentId, with: options, timestamp: timestamp)
+        eventConsumer.startRecording(environmentId, with: options)
         uploader.startScheduledUploads(with: .init(with: options))
         return nil
     }
     
-    func stopRecording(arguments: [String: Any]) throws -> JSONEncodable? {
-        let timestamp = try getOptionalTimestamp(arguments, methodName: "stopRecording")
-        eventConsumer.stopRecording(timestamp: timestamp)
+    func stopRecording() throws -> JSONEncodable? {
+        eventConsumer.stopRecording()
         return nil
     }
     
@@ -87,15 +86,13 @@ public class HeapBridgeSupport
     }
     
     func identify(arguments: [String: Any]) throws -> JSONEncodable? {
-        let event = try getRequiredString(named: "identity", from: arguments, message: "HeapBridgeSupport.identify received an invalid identity and will not complete the bridged method call.")
-        let timestamp = try getOptionalTimestamp(arguments, methodName: "identify")
-        eventConsumer.identify(event, timestamp: timestamp)
+        let identity = try getRequiredString(named: "identity", from: arguments, message: "HeapBridgeSupport.identify received an invalid identity and will not complete the bridged method call.")
+        eventConsumer.identify(identity)
         return nil
     }
     
-    func resetIdentity(arguments: [String: Any]) throws -> JSONEncodable? {
-        let timestamp = try getOptionalTimestamp(arguments, methodName: "resetIdentity")
-        eventConsumer.resetIdentity(timestamp: timestamp)
+    func resetIdentity() throws -> JSONEncodable? {
+        eventConsumer.resetIdentity()
         return nil
     }
     
@@ -130,14 +127,12 @@ public class HeapBridgeSupport
         eventConsumer.identity
     }
     
-    func sessionId(arguments: [String: Any]) throws -> JSONEncodable? {
-        let timestamp = try getOptionalTimestamp(arguments, methodName: "sessionId")
-        return eventConsumer.getSessionId(timestamp: timestamp)
+    func sessionId() throws -> JSONEncodable? {
+        return eventConsumer.sessionId
     }
     
     func fetchSessionId(arguments: [String: Any]) throws -> JSONEncodable? {
-        let timestamp = try getOptionalTimestamp(arguments, methodName: "fetchSessionId")
-        return eventConsumer.fetchSessionId(timestamp: timestamp)
+        return eventConsumer.fetchSessionId()
     }
 
     func heapLogger_log(arguments: [String: Any]) throws -> JSONEncodable? {
@@ -152,6 +147,10 @@ public class HeapBridgeSupport
         case .debug: HeapLogger.shared.debug(message, source: source)
         case .trace: HeapLogger.shared.trace(message, source: source)
         case .none: break // Let's not bother throwing here.
+            
+        @unknown default:
+            // This is not technically possible since we always link to the same or older versions, but we'll apply a safe default.
+            break
         }
         return nil
     }
@@ -164,6 +163,9 @@ public class HeapBridgeSupport
         case .debug: return "debug"
         case .trace: return "trace"
         case .none: return "none"
+        @unknown default:
+            // This is not technically possible since we always link to the same or older versions, but we'll apply a safe default.
+            return "none"
         }
     }
     

@@ -92,11 +92,11 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     }
                     
                     it("sets lastPageviewInfo") {
-                        expect(finalState.lastPageviewInfo).to(equal(pageview.pageviewInfo))
+                        expect(finalState.lastPageviewInfo).to(equal(pageview._pageviewInfo))
                     }
                     
                     it("does not modify unattributedPageviewInfo") {
-                        expect(finalState.unattributedPageviewInfo).notTo(equal(pageview.pageviewInfo))
+                        expect(finalState.unattributedPageviewInfo).notTo(equal(pageview._pageviewInfo))
                     }
                     
                     it("returns a pageview with the final session ID") {
@@ -109,7 +109,7 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                         messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: sessionTimestamp, eventProperties: consumer.eventProperties)
                         
                         messages[2].expectPageviewMessage(user: user, timestamp: trackTimestamp, sessionMessage: messages[0])
-                        expect(messages[2].pageviewInfo).to(equal(pageview.pageviewInfo))
+                        expect(messages[2].pageviewInfo).to(equal(pageview._pageviewInfo))
                     }
                 }
 
@@ -145,11 +145,11 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     }
                     
                     it("sets lastPageviewInfo") {
-                        expect(finalState.lastPageviewInfo).to(equal(pageview.pageviewInfo))
+                        expect(finalState.lastPageviewInfo).to(equal(pageview._pageviewInfo))
                     }
                     
                     it("does not modify unattributedPageviewInfo") {
-                        expect(finalState.unattributedPageviewInfo).notTo(equal(pageview.pageviewInfo))
+                        expect(finalState.unattributedPageviewInfo).notTo(equal(pageview._pageviewInfo))
                     }
                     
                     it("returns a pageview with the final session ID") {
@@ -178,7 +178,7 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                         messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: trackTimestamp, eventProperties: consumer.eventProperties)
                         
                         messages[2].expectPageviewMessage(user: user, timestamp: trackTimestamp, sessionMessage: messages[0])
-                        expect(messages[2].pageviewInfo).to(equal(pageview.pageviewInfo))
+                        expect(messages[2].pageviewInfo).to(equal(pageview._pageviewInfo))
                     }
 
                     it("produces valid messages in the new session") {
@@ -312,7 +312,7 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                 it("sets sourceLibrary when provided") {
 
                     let sourceInfo = SourceInfo(name: "heap-turbo-pascal", version: "0.0.0-beta.10", platform: "comadore 64", properties: ["a": 1, "b": false])
-                    _ = consumer.trackPageview(.init(), sourceInfo: sourceInfo)
+                    _ = consumer.trackPageview(.with({ _ in }), sourceInfo: sourceInfo)
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
                     let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
@@ -332,7 +332,7 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                 it("uses the current event properties") {
                     consumer.addEventProperties(["a": 1, "b": 2, "c": true])
                     consumer.removeEventProperty("c")
-                    _ = consumer.trackPageview(.init())
+                    _ = consumer.trackPageview(.with({ _ in }))
                     consumer.addEventProperties(["a": "hello", "d": "4"])
                     consumer.removeEventProperty("b")
 
@@ -359,20 +359,20 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     
                     expect(pageview).notTo(beNil())
                     expect(pageview?.isNone).to(beFalse())
-                    expect(pageview?.sessionInfo).to(equal(consumer.stateManager.current?.sessionInfo))
-                    expect(pageview?.pageviewInfo).to(equal(consumer.stateManager.current?.lastPageviewInfo))
-                    expect(pageview?.sourceLibrary).to(equal(sourceInfo.libraryInfo))
-                    expect(pageview?.bridge as? CountingRuntimeBridge).to(equal(bridge))
-                    expect(pageview?.isFromBridge).to(beTrue())
+                    expect(pageview?._sessionInfo).to(equal(consumer.stateManager.current?.sessionInfo))
+                    expect(pageview?._pageviewInfo).to(equal(consumer.stateManager.current?.lastPageviewInfo))
+                    expect(pageview?._sourceLibrary).to(equal(sourceInfo.libraryInfo))
+                    expect(pageview?._bridge as? CountingRuntimeBridge).to(equal(bridge))
+                    expect(pageview?._isFromBridge).to(beTrue())
                     expect(pageview?.sessionId).to(equal(consumer.getSessionId()))
                     expect(pageview?.properties.title).to(equal(properties.title))
                     expect(pageview?.userInfo as? NSObject).to(equal(userInfo))
                 }
                 
                 it("does not retrain the bridge") {
-                    let pageview = consumer.trackPageview(.init(), bridge: CountingRuntimeBridge())
-                    expect(pageview?.bridge).toEventually(beNil())
-                    expect(pageview?.isFromBridge).to(beTrue())
+                    let pageview = consumer.trackPageview(.with({ _ in }), bridge: CountingRuntimeBridge())
+                    expect(pageview?._bridge).toEventually(beNil())
+                    expect(pageview?._isFromBridge).to(beTrue())
                 }
             }
             

@@ -1,4 +1,5 @@
 import Foundation
+import HeapSwiftCoreInterfaces
 
 enum InMemoryError: Error {
     case userNotFound

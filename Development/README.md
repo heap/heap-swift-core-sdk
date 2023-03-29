@@ -32,24 +32,12 @@ The behavior of this project is defined in the [Capture Core SDKs][specs] docume
 
 Heap can be installed using the developer instructions at https://developers.heap.io/docs/ios
 
-During development, HeapSwiftCore can be added to an Xcode project or Swift package using `git@github.com:heap/heap-swift-core.git` or the
-mirror at `git@github.com:heap/heap-swift-core-sdk.git`.
+For Swift Package Manager:
 
-Once the repo is made public, users will be able to using `https://github.com/heap/heap-swift-core.git`.
+- The internal development repo can be added to an Xcode project using `git@github.com:heap/heap-swift-core.git`.
+- The public mirror can be added to an Xcode project using `https://github.com/heap/heap-swift-core.git`.
 
-For projects that require Cocoapods, such as the development of React Native and Flutter SDKs, there is a private repo at
-https://github.com/heap/pre-release-cocoapods.  You can add it as a local pod repository using
-`pod repo add pre-release-cocoapods git@github.com:heap/pre-release-cocoapods.git main`.  Once added, you can use it by adding the following
-to the top of your `Podfile`:
-
-```
-source 'git@github.com:heap/pre-release-cocoapods.git'
-source 'https://cdn.cocoapods.org/'
-```
-
-Then you can then add it as a dependency in your podspec with `s.dependency 'HeapSwiftCore'`.
-
-Once this repo is made public, you will be able to remove references to `pre-release-cocoapods`.
+For CocoaPods, including (React Native and Flutter SDKs), the project can be added using `s.dependency 'HeapSwiftCore', '~> 0.1'` for podspecs and `pod 'HeapSwiftCore', '~> 0.1' for podfiles.
 
 # Usage
 
@@ -78,6 +66,17 @@ HeapSwiftCore is packaged as a Swift Package and can be developed on by opening 
 exist in [Sources](Sources/) and tests exist in [Tests](Tests/).  There are also example apps in [Examples](Examples/) which can be used for
 manually validating Heap.
 
+# HeapSwiftCoreInterfaces
+
+If you take a look in [../Package.swift][../Package.swift], you'll see that HeapSwiftCore has a binary target called
+HeapSwiftCoreInterfaces.  This exists because HeapIOSAutocapture requires a stable ABI provided by Library Evolution and Swift Package
+Manager doesn't have an ergonomic way to enable Library Evolution in a source package.
+
+Instead, we compile a small XCFramework, HeapSwiftCoreInterfaces, which provides a stable ABI that can be used by HeapIOSAutocapture's
+binary target, requiring only a thin wrapper on top to connect `Heap.shared` to the autocapture SDK.
+
+Details on how this gets deployed are covered below.
+
 # CI Pipeline
 
 Each branch pushed to the server triggers a build in [the repo-heap-swift-core-required BuildKite pipeline][buildkite-req].  This pipeline
@@ -90,18 +89,18 @@ non-macOS device will create a temporary simulator which is destroyed at the end
 
 The specifics of the CI system are described in the [iOS CI Infrastructure][ci] document (Heap internal).
 
-# Triggering a Release
+# Triggering a HeapSwiftCore Release
 
 Use the following process to trigger a release.
 
 1.  Create a new branch for the release, potentially including the version name in the branch name (e.g. `release-0.2.7-alpha.1`
     for version 0.2.7-alpha.1).
-2.  Use [`DevTools/LibraryVersions.py`](../DevTools/LibraryVersions.py) to set the version. (e.g. `./DevTools/LibraryVersions.py 1.2.7-alpha.1`
-    for version 0.2.7-alpha.1).
+2.  Use [`DevTools/LibraryVersions.py`](../DevTools/LibraryVersions.py) to set the version. (e.g.
+    `./DevTools/LibraryVersions.py --library=core 0.2.7-alpha.1` for version 0.2.7-alpha.1).
 3.  Make sure [`CHANGELOG.md`](../CHANGELOG.md) is up-to-date with features from the release in the appropriate section.
 4.  Create a PR, make sure tests run, and that it is approved.
 5.  Merge the PR.
-6.  Run `make release_from_origin_main` to trigger a release.  This will push a tag with the version at `origin/main` to `origin`.
+6.  Run `make release_core_from_origin_main` to trigger a release.  This will push a tag with the version at `origin/main` to `origin`.
 7.  [Wait for the tag to finish building.][buildkite]
 8.  Once the build finishes successfully, the tag will be visible on the public repo and you should [create a new GitHub release][new-release]
     with the details from the changelog.
@@ -111,6 +110,29 @@ Use the following process to trigger a release.
     ```shell
     git checkout main && git pull && pod trunk push HeapSwiftCore.podspec
     ```
+
+# Triggering a HeapSwiftCoreInterfaces Release
+
+HeapSwiftCoreInterfaces should update much less frequently than HeapSwiftCore.  Essentially, it only needs to be changed if we are adding
+features that are consumed by a binary framework. If you find yourself modifying a file in that folder, you will want to perform the
+following steps:
+
+1. Create a new branch for adding those feature to HeapSwiftCoreInterfaces.
+2.  Use [`DevTools/LibraryVersions.py`](../DevTools/LibraryVersions.py) to set the version. (e.g.
+    `./DevTools/LibraryVersions.py --library=interfaces 0.2.7` for version 0.2.7).
+3.  Create a PR, make sure tests run, and that it is approved.
+4.  Merge the PR.
+5.  Run `make release_interfaces_from_origin_main` to trigger a release.  This will push a tag with the version at `origin/main` to
+    `origin`.
+6.  [Wait for the tag to finish building.][buildkite]
+7.  Release the new podspec.  Unfortunately, this step is still manual and requires you to be a member of the Heap organization on CocoaPods.
+    Run the following in the internal repo:
+   
+    ```shell
+    git checkout main && git pull && pod trunk push HeapSwiftCoreInterfaces.podspec
+    ```
+8.  Create a new branch for feature development.
+9.  Run `make apply_interfaces_to_public_packages` to update dependencies in Packages.swift and HeapSwiftCore.podspec.
 
 > **Note**
 > 

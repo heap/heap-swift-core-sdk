@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
 # DevTools/DeleteOldSimulators.rb - A script to delete stray simulators created by `make`.
+#
+# All simulators created for testing are tagged with a timestamp. While they typically close on their own at the end of testing,
+# stray simulators can get stuck if builds are aborted or there are other unexpected failures. This script deletes those orphaned
+# simulators.
 
 require 'JSON'
 require 'date'

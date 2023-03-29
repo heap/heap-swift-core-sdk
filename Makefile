@@ -18,8 +18,10 @@ PUBLIC_REPO := git@github.com:heap/heap-swift-core-sdk.git
 INTERNAL_REPO := git@github.com:heap/heap-swift-core.git
 MAIN_BRANCH := main
 MAKE_DIR := $(shell pwd)
+INTERFACES_VERSION := $(shell ./DevTools/LibraryVersions.py --print --library=interfaces)
 
-# 1 - test name, 2 - xcodebuild parameters
+# Runs the unit test suite
+# USAGE: $(call run_unit_tests,name of the test run,xcodebuild parameters)
 define run_unit_tests
 
 	@echo "+++ Running unit tests ($(1))"
@@ -30,7 +32,7 @@ define run_unit_tests
 	-rm build/.success
 
 	-(cd Development && xcodebuild \
-		-scheme HeapSwiftCore \
+		-scheme HeapSwiftCore-Package \
 		$(2) \
 		-resultBundlePath ${MAKE_DIR}/build/reports/$(1).xcresult \
 		clean test \
@@ -43,7 +45,8 @@ define run_unit_tests
 
 endef
 
-# 1 - runtime, 2 - device type
+# Creates a device
+# USAGE: $(call create_device,runtime,device type)
 define create_device
 
 	@echo "--- Creating device ($(1), $(2))"
@@ -66,6 +69,8 @@ define delete_device
 
 endef
 
+# Sets the public repo as a remote for the current repo.
+# USAGE: $(call set_public_repo)
 define set_public_repo
 
 	if [ "$$(git remote get-url --push origin)" != '${INTERNAL_REPO}' ]; then \
@@ -80,15 +85,20 @@ define set_public_repo
 endef
 
 clear_results:
+# (CI) Removes all test results.
 
 	-rm -rf build/reports/
 
 macos_unit_tests:
+# (CI) Runs unit tests on macOS.
+# This can be run locally to determine why it is breaking on the CDN.
 
 	$(call run_unit_tests,macos_unit_tests,-destination "platform=macOS")
 	@if [ ! -f build/.success ]; then exit 1; fi
 
 catalyst_unit_tests:
+# (CI) Runs unit tests on catalyst.
+# This can be run locally to determine why it is breaking on the CDN.
 
 	# The "," breaks `call` so we move it to a file
 	mkdir -p build
@@ -98,6 +108,8 @@ catalyst_unit_tests:
 	@if [ ! -f build/.success ]; then exit 1; fi
 
 iphone_ios12_unit_tests:
+# (CI) Runs unit tests on an iPhone targetting iOS 12.
+# This can be run locally to determine why it is breaking on the CDN.
 
 	DevTools/DeleteOldSimulators.rb
 	
@@ -114,6 +126,8 @@ iphone_ios12_unit_tests:
 	@if [ ! -f build/.success ]; then exit 1; fi
 
 iphone_ios16_unit_tests:
+# (CI) Runs unit tests on an iPhone targetting iOS 16.
+# This can be run locally to determine why it is breaking on the CDN.
 
 	DevTools/DeleteOldSimulators.rb
 	
@@ -130,6 +144,8 @@ iphone_ios16_unit_tests:
 	@if [ ! -f build/.success ]; then exit 1; fi
 
 ipad_unit_tests:
+# (CI) Runs unit tests on an iPad targetting iOS 12.
+# This can be run locally to determine why it is breaking on the CDN.
 
 	DevTools/DeleteOldSimulators.rb
 	
@@ -146,6 +162,8 @@ ipad_unit_tests:
 	@if [ ! -f build/.success ]; then exit 1; fi
 
 tvos_unit_tests:
+# (CI) Runs unit tests on tvOS.
+# This can be run locally to determine why it is breaking on the CDN.
 
 	DevTools/DeleteOldSimulators.rb
 	
@@ -162,6 +180,8 @@ tvos_unit_tests:
 	@if [ ! -f build/.success ]; then exit 1; fi
 
 watchos_unit_tests:
+# (CI) Runs unit tests on watchOS.
+# This can be run locally to determine why it is breaking on the CDN.
 
 	DevTools/DeleteOldSimulators.rb
 	
@@ -178,6 +198,8 @@ watchos_unit_tests:
 	@if [ ! -f build/.success ]; then exit 1; fi
 
 macos_sample_app:
+# (CI) Builds the macOS sample app.
+# This can be run locally to determine why it is breaking on the CDN.
 
 	set -o pipefail && \
 	xcodebuild \
@@ -187,6 +209,8 @@ macos_sample_app:
 	| xcbeautify
 
 ios_sample_app:
+# (CI) Builds the iOS sample app.
+# This can be run locally to determine why it is breaking on the CDN.
 
 	set -o pipefail && \
 	xcodebuild \
@@ -197,6 +221,8 @@ ios_sample_app:
 	| xcbeautify
 
 ios_sample_extension:
+# (CI) Builds the iOS sample extension.
+# This can be run locally to determine why it is breaking on the CDN.
 
 	set -o pipefail && \
 	xcodebuild \
@@ -207,6 +233,7 @@ ios_sample_extension:
 	| xcbeautify
 
 add_prerelease_pod_repo:
+# (LOCAL) Adds the pre-release CocoaPods repo to the current machine.
 
 	@if [ ! -d ~/.cocoapods/repos/pre-release-cocoapods ]; then \
 		pod repo add pre-release-cocoapods git@github.com:heap/pre-release-cocoapods.git main; \
@@ -214,13 +241,8 @@ add_prerelease_pod_repo:
 		echo "Repo pre-release-cocoapods was already added."; \
 	fi
 
-protobufs:
-
-	-rm Development/Sources/HeapSwiftCore/Protobufs/*.pb.swift
-	cd Development/Sources/Protobufs && protoc --swift_out=../HeapSwiftCore/Protobufs *.proto
-	./DevTools/FixProtoImports.sh
-
 remove_prerelease_pod_repo:
+# (LOCAL) Removes the pre-release CocoaPods repo from current machine.
 
 	@if [ -d ~/.cocoapods/repos/pre-release-cocoapods ]; then \
 		pod repo remove pre-release-cocoapods; \
@@ -229,10 +251,19 @@ remove_prerelease_pod_repo:
 	fi
 
 push_prerelease_podspec: add_prerelease_pod_repo
+# (LOCAL) Pushes HeapSwiftCore to the pre-release CocoaPods repo.
 
 	pod repo push pre-release-cocoapods HeapSwiftCore.podspec
 
+protobufs:
+# (LOCAL) Rebuilds the protobuf Swift files.
+
+	-rm Development/Sources/HeapSwiftCore/Protobufs/*.pb.swift
+	cd Development/Sources/Protobufs && protoc --swift_out=../HeapSwiftCore/Protobufs *.proto
+
 push_branch_to_public:
+# (CI) Pushes the current branch to the public repo if it is `main`.
+# This can be run locally if it is failing on the CDN.
 
 ifndef BUILDKITE_BRANCH
 	$(error BUILDKITE_BRANCH is not set)
@@ -248,6 +279,8 @@ endif
 	git push public '${MAIN_BRANCH}'
 
 push_tag_to_public:
+# (CI) Pushes the current tag to the public repo.
+# This can be run locally if it is failing on the CDN.
 
 ifndef BUILDKITE_TAG
 	$(error BUILDKITE_TAG is not set)
@@ -258,6 +291,50 @@ endif
 	git fetch origin --tags
 	git push public ${BUILDKITE_TAG}
 
-release_from_origin_main:
+release_core_from_origin_main:
+# (LOCAL) Creates a tag for the core version on orgin/main using the version on that commit rather than the local version.
+# This mitigate the risk of tagging from the wrong branch or commit.
 
-	./DevTools/ReleaseFromRemoteBranch.sh
+	./DevTools/ReleaseFromRemoteBranch.sh core
+
+release_interfaces_from_origin_main:
+# (LOCAL) Creates a tag for the interfaces version on orgin/main using the version on that commit rather than the local version.
+# This mitigate the risk of tagging from the wrong branch or commit.
+
+	./DevTools/ReleaseFromRemoteBranch.sh interfaces
+
+apply_interfaces_to_public_packages:
+# (LOCAL) Updates HeapSwiftCore.podspec and Package.swift with the current version of HeapSwiftCoreInterfaces.
+# This is to be run after the interfaces are deployed to the CDN.
+
+	./DevTools/GeneratePublicPackage.sh "${INTERFACES_VERSION}"
+	./DevTools/UpdatePodspecDependency.py --library=core HeapSwiftCoreInterfaces "${INTERFACES_VERSION}"
+
+interfaces_xcframework:
+# (CI) Builds and zips the interfaces XCFramework.
+# This can be run locally to determine why it is breaking on the CDN.
+
+	./DevTools/RecreateInterfacesProject.sh
+	./DevTools/BuildInterfacesFramework.sh "${INTERFACES_VERSION}"
+	./DevTools/CreateInterfacesXcframework.sh "${INTERFACES_VERSION}"
+
+deploy_interfaces_to_s3:
+# (CI) Uploads the already built interfaces zip file to the CDN. This should be called after `interfaces_xcframework`.  E.g.
+# `make interfaces_xcframework deploy_interfaces_to_s3`.
+# This command requires the CDN, an AWS token, and permission to upload to heapcdn, so it is not trivial to run locally.
+
+ifndef BUILDKITE_TAG
+	$(error BUILDKITE_TAG is not set)
+endif
+
+ifneq (${BUILDKITE_TAG},interfaces/${INTERFACES_VERSION})
+	$(error Version mismatch between tag ${BUILDKITE_TAG} and ${INTERFACES_VERSION} from HeapSwiftCoreInterfaces.podspec)
+endif
+
+	@echo "--- Deploying heap-swift-core-interfaces-${INTERFACES_VERSION}.zip to S3"
+
+	./DevTools/upload-to-s3.sh \
+		'./build/xcframework/heap-swift-core-interfaces-${INTERFACES_VERSION}.zip' \
+		'${INTERFACES_VERSION}' \
+		"heapcdn" \
+		'ios/heap-swift-core-interfaces-${INTERFACES_VERSION}.zip'

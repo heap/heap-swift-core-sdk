@@ -49,7 +49,7 @@ final class PageviewResolutionSpec: HeapSpec {
                     let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
                     let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)
                     
-                    expect(messages.last?.pageviewInfo).to(equal(pageview?.pageviewInfo))
+                    expect(messages.last?.pageviewInfo).to(equal(pageview?._pageviewInfo))
                 }
                 
                 context("the provided pageview is from another session") {
@@ -88,7 +88,7 @@ final class PageviewResolutionSpec: HeapSpec {
                             let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
                             let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: pageview?.sessionId, count: 5)
                             
-                            expect(messages.last?.pageviewInfo).to(equal(pageview?.pageviewInfo))
+                            expect(messages.last?.pageviewInfo).to(equal(pageview?._pageviewInfo))
                         }
                         
                         it("falls back to the default source if the bridge returns a stale pageview") {
@@ -192,7 +192,7 @@ final class PageviewResolutionSpec: HeapSpec {
                             
                             let stalePageview = consumer.trackPageview(.with({ $0.title = "A" }), bridge: CountingRuntimeBridge())
                             
-                            expect(stalePageview?.bridge).toEventually(beNil(), description: "PRECONDITION: The pageview should not have a strong reference to the bridge since this can create retain cycles")
+                            expect(stalePageview?._bridge).toEventually(beNil(), description: "PRECONDITION: The pageview should not have a strong reference to the bridge since this can create retain cycles")
                             
                             consumer.track("event", timestamp: session2Timestamp, sourceInfo: sourceInfo, pageview: stalePageview)
                             
@@ -255,7 +255,7 @@ final class PageviewResolutionSpec: HeapSpec {
                             let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
                             let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: pageview?.sessionId, count: 5)
                             
-                            expect(messages.last?.pageviewInfo).to(equal(pageview?.pageviewInfo))
+                            expect(messages.last?.pageviewInfo).to(equal(pageview?._pageviewInfo))
                         }
                         
                         it("falls back to the event source if the pageview source is not registered") {
@@ -348,7 +348,7 @@ final class PageviewResolutionSpec: HeapSpec {
                         let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
                         let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)
                         
-                        expect(messages.last?.pageviewInfo).to(equal(pageview?.pageviewInfo))
+                        expect(messages.last?.pageviewInfo).to(equal(pageview?._pageviewInfo))
                     }
                     
                     it("falls back to the default source if the event source is not registered") {
@@ -425,7 +425,7 @@ final class PageviewResolutionSpec: HeapSpec {
                         let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
                         let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)
                         
-                        expect(messages.last?.pageviewInfo).to(equal(pageview?.pageviewInfo))
+                        expect(messages.last?.pageviewInfo).to(equal(pageview?._pageviewInfo))
                     }
                     
                     it("falls back to the original last pageview if the default source returns a stale pageview") {
@@ -443,7 +443,7 @@ final class PageviewResolutionSpec: HeapSpec {
                         let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
                         let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: lastPageview?.sessionId, count: 5)
                         
-                        expect(messages.last?.pageviewInfo).to(equal(lastPageview?.pageviewInfo))
+                        expect(messages.last?.pageviewInfo).to(equal(lastPageview?._pageviewInfo))
                     }
                     
                     it("falls back to the original last pageview if the default source returns nil") {
@@ -458,7 +458,7 @@ final class PageviewResolutionSpec: HeapSpec {
                         let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
                         let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)
                         
-                        expect(messages.last?.pageviewInfo).to(equal(lastPageview?.pageviewInfo))
+                        expect(messages.last?.pageviewInfo).to(equal(lastPageview?._pageviewInfo))
                     }
                 }
                 
@@ -473,7 +473,7 @@ final class PageviewResolutionSpec: HeapSpec {
                         let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
                         let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)
                         
-                        expect(messages.last?.pageviewInfo).to(equal(lastPageview?.pageviewInfo))
+                        expect(messages.last?.pageviewInfo).to(equal(lastPageview?._pageviewInfo))
                     }
                 }
             }

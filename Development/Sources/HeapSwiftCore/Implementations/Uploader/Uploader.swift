@@ -1,4 +1,5 @@
 import Foundation
+import HeapSwiftCoreInterfaces
 
 protocol ActiveSessionProvider {
     var activeSession: ActiveSession? { get }

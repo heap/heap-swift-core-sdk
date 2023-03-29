@@ -1,4 +1,5 @@
 import Foundation
+import HeapSwiftCoreInterfaces
 
 /// An operation to upload data to Heap.
 final class UploadOperation: AsynchronousOperation {

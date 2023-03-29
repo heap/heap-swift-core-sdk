@@ -1,17 +1,22 @@
 import Foundation
+import HeapSwiftCoreInterfaces
 
 struct PageviewResolver {
     
     static func resolvePageviewInfo(requestedPageview: Pageview?, eventSourceName: String?, timestamp: Date, delegates: DelegateManager.Snapshot, state: State, complete: @escaping (PageviewInfo) -> Void) {
         
-        guard let requestedPageview = requestedPageview else {
+        // None pageview is not a ConcretePageview so it needs to be handled first.
+        guard requestedPageview?.isNone != true else {
+            complete(state.unattributedPageviewInfo)
+            return
+        }
+        
+        guard let requestedPageview = requestedPageview as? ConcretePageview else {
             activePageviewInfoFromEventSourceOrFallback(eventSourceName: eventSourceName, timestamp: timestamp, delegates: delegates, state: state, complete: complete)
             return
         }
         
-        if requestedPageview.isNone {
-            complete(state.unattributedPageviewInfo)
-        } else if requestedPageview.sessionInfo == state.sessionInfo {
+        if requestedPageview.sessionInfo == state.sessionInfo {
             complete(requestedPageview.pageviewInfo)
         } else if let bridge = requestedPageview.bridge {
             reissuePageviewInfoFromBridgeOrFallback(requestedPageview: requestedPageview, bridge: bridge, timestamp: timestamp, delegates: delegates, state: state, complete: complete)
@@ -23,7 +28,7 @@ struct PageviewResolver {
         }
     }
     
-    static func reissuePageviewInfoFromBridgeOrFallback(requestedPageview: Pageview, bridge: RuntimeBridge, timestamp: Date, delegates: DelegateManager.Snapshot, state: State, complete: @escaping (PageviewInfo) -> Void) {
+    static func reissuePageviewInfoFromBridgeOrFallback(requestedPageview: ConcretePageview, bridge: RuntimeBridge, timestamp: Date, delegates: DelegateManager.Snapshot, state: State, complete: @escaping (PageviewInfo) -> Void) {
         
         func fallback() {
             activePageviewInfoFromDefaultSourceOrFallback(timestamp: timestamp, delegates: delegates, state: state, complete: complete)
@@ -32,7 +37,7 @@ struct PageviewResolver {
         bridge.reissuePageview(requestedPageview, sessionId: state.sessionInfo.id, timestamp: timestamp, complete: callbackOrFallback(complete, fallback, state))
     }
     
-    static func reissuePageviewInfoFromPageviewSourceOrFallback(requestedPageview: Pageview, eventSourceName: String?, timestamp: Date, delegates: DelegateManager.Snapshot, state: State, complete: @escaping (PageviewInfo) -> Void) {
+    static func reissuePageviewInfoFromPageviewSourceOrFallback(requestedPageview: ConcretePageview, eventSourceName: String?, timestamp: Date, delegates: DelegateManager.Snapshot, state: State, complete: @escaping (PageviewInfo) -> Void) {
         
         func fallback() {
             activePageviewInfoFromEventSourceOrFallback(eventSourceName: eventSourceName, timestamp: timestamp, delegates: delegates, state: state, complete: complete)
@@ -81,7 +86,7 @@ struct PageviewResolver {
     
     static func callbackOrFallback(_ complete: @escaping (PageviewInfo) -> Void, _ fallback: @escaping () -> Void, _ state: State) -> (Pageview?) -> Void {
         return { pageview in
-            if let pageview = pageview, pageview.sessionInfo == state.sessionInfo {
+            if let pageview = pageview as? ConcretePageview, pageview.sessionInfo == state.sessionInfo {
                 complete(pageview.pageviewInfo)
             } else {
                 fallback()

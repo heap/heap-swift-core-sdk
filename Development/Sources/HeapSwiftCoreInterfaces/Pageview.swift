@@ -5,16 +5,14 @@ import Foundation
 /// This object can be passed in to `track` and `trackInteraction` to attribute that event to a
 /// specific pageview.  It is also used in `Source` and `RuntimeBridge` delegate methods to resolve
 /// pageviews from a active source or to reissue pageviews from expired sessions.
-final public class Pageview {
-    internal let isNone: Bool
-    internal let sessionInfo: SessionInfo
-    internal let pageviewInfo: PageviewInfo
-    internal let sourceLibrary: LibraryInfo?
-    internal weak var bridge: RuntimeBridge?
-    internal let isFromBridge: Bool
+open class Pageview {
     
+    /// A special case for `Pageview.none`, indicating that an event should not be associated with
+    /// any tracked pageviews.
+    public let isNone: Bool
+
     /// A unique string representing the session that the pageview originated in.
-    public var sessionId: String { sessionInfo.id }
+    public let sessionId: String
     
     /// The properties provided in the the `trackPageview` call.
     ///
@@ -48,30 +46,29 @@ final public class Pageview {
     /// ```
     public let userInfo: Any?
     
-    internal init(
-        sessionInfo: SessionInfo,
-        pageviewInfo: PageviewInfo,
-        sourceLibrary: LibraryInfo?,
-        bridge: RuntimeBridge?,
-        properties: PageviewProperties,
-        userInfo: Any?,
-        isNone: Bool = false
-    ) {
-        self.sessionInfo = sessionInfo
-        self.pageviewInfo = pageviewInfo
-        self.sourceLibrary = sourceLibrary
-        self.bridge = bridge
-        self.isFromBridge = bridge != nil
+    private init() {
+        isNone = true
+        sessionId = ""
+        properties = .init()
+        userInfo = nil
+    }
+    
+    /// Initializes a new Pageview.
+    ///
+    /// This method should not be called directly and pageviews created with this will be ignored.
+    /// Instead, use `Heap.trackPageview` to create a pageview.
+    public init(sessionId: String, properties: PageviewProperties, userInfo: Any?) {
+        isNone = false
+        self.sessionId = sessionId
         self.properties = properties
         self.userInfo = userInfo
-        self.isNone = isNone
     }
     
     /// A singleton `Pageview` indicating that the event should not be attributed to a pageview.
     ///
     /// When passed into `track` or `trackInteraction`, the SDK will resolve this to an empty
     /// "unattributed" pageview that occurred at the start of the session.
-    static let none: Pageview = .init(sessionInfo: .init(), pageviewInfo: .init(), sourceLibrary: .init(), bridge: nil, properties: .init(), userInfo: nil, isNone: true)
+    public static let none: Pageview = .init()
 }
 
 public struct PageviewProperties {

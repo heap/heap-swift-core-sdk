@@ -1,9 +1,10 @@
 import Foundation
+import HeapSwiftCoreInterfaces
 
 @objc
-public class Heap: NSObject {
+public class Heap: NSObject, HeapProtocol {
 
-    internal let consumer: any EventConsumerProtocol
+    internal let consumer: any HeapProtocol
     internal let uploader: any UploaderProtocol
 
     private static let heapDirectory: URL = {
@@ -25,7 +26,7 @@ public class Heap: NSObject {
         return Heap(consumer: consumer, uploader: uploader)
     }()
 
-    private init(consumer: any EventConsumerProtocol, uploader: any UploaderProtocol) {
+    private init(consumer: any HeapProtocol, uploader: any UploaderProtocol) {
         self.consumer = consumer
         self.uploader = uploader
     }
@@ -34,13 +35,13 @@ public class Heap: NSObject {
     public func startRecording(_ environmentId: String, with options: [Option: Any] = [:]) {
         // Reminder: any change in the logic here should also be applied to startRecording in HeapBridgeSupport.swift
         let sanitizedOptions = options.sanitizedCopy()
-        consumer.startRecording(environmentId, with: sanitizedOptions, timestamp: Date())
+        consumer.startRecording(environmentId, with: sanitizedOptions)
         uploader.startScheduledUploads(with: .init(with: sanitizedOptions))
     }
 
     @objc
     public func stopRecording() {
-        consumer.stopRecording(timestamp: Date())
+        consumer.stopRecording()
     }
 
     public func track(_ event: String, properties: [String: HeapPropertyValue] = [:], timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, pageview: Pageview? = nil) {
@@ -61,12 +62,12 @@ public class Heap: NSObject {
 
     @objc
     public func identify(_ identity: String) {
-        consumer.identify(identity, timestamp: Date())
+        consumer.identify(identity)
     }
 
     @objc
     public func resetIdentity() {
-        consumer.resetIdentity(timestamp: Date())
+        consumer.resetIdentity()
     }
 
     public func addUserProperties(_ properties: [String: HeapPropertyValue]) {
@@ -99,16 +100,16 @@ public class Heap: NSObject {
 
     @objc
     public var sessionId: String? {
-        consumer.getSessionId(timestamp: Date())
+        consumer.sessionId
     }
     
     @objc
     public func fetchSessionId() -> String? {
-        consumer.fetchSessionId(timestamp: Date())
+        consumer.fetchSessionId()
     }
     
     public func addSource(_ source: Source, isDefault: Bool = false) {
-        consumer.addSource(source, isDefault: isDefault, timestamp: Date())
+        consumer.addSource(source, isDefault: isDefault)
     }
     
     public func removeSource(_ name: String) {
@@ -116,7 +117,7 @@ public class Heap: NSObject {
     }
     
     public func addRuntimeBridge(_ bridge: RuntimeBridge) {
-        consumer.addRuntimeBridge(bridge, timestamp: Date())
+        consumer.addRuntimeBridge(bridge)
     }
     
     public func removeRuntimeBridge(_ bridge: RuntimeBridge) {

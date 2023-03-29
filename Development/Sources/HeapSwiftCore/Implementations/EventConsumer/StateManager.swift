@@ -1,4 +1,5 @@
 import Foundation
+import HeapSwiftCoreInterfaces
 
 class StateManager<StateStore: StateStoreProtocol> {
     let stateStore: StateStore

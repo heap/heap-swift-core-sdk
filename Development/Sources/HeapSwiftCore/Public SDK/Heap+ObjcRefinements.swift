@@ -1,4 +1,5 @@
 import Foundation
+import HeapSwiftCoreInterfaces
 
 @objc
 public protocol HeapObjcPropertyValue: NSObjectProtocol {

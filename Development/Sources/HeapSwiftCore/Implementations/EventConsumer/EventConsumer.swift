@@ -1,4 +1,5 @@
 import Foundation
+import HeapSwiftCoreInterfaces
 
 class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol> {
     
@@ -115,7 +116,7 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
     }
 }
 
-extension EventConsumer: EventConsumerProtocol {
+extension EventConsumer {
     
     func startRecording(_ environmentId: String, with options: [Option: Any] = [:], timestamp: Date = Date()) {
         
@@ -225,7 +226,7 @@ extension EventConsumer: EventConsumerProtocol {
         }
         HeapLogger.shared.trace("Committed event message:\n\(message)")
         
-        return .init(sessionInfo: state.sessionInfo, pageviewInfo: pageviewInfo, sourceLibrary: sourceLibrary, bridge: bridge, properties: properties, userInfo: userInfo)
+        return ConcretePageview(sessionInfo: state.sessionInfo, pageviewInfo: pageviewInfo, sourceLibrary: sourceLibrary, bridge: bridge, properties: properties, userInfo: userInfo)
     }
     
     func uncommittedInteractionEvent(timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, pageview: Pageview? = nil) -> InteractionEventProtocol? {
@@ -448,10 +449,55 @@ extension EventConsumer: EventConsumerProtocol {
     }
 }
 
+extension EventConsumer: HeapProtocol {
+    func startRecording(_ environmentId: String, with options: [HeapSwiftCoreInterfaces.Option : Any]) {
+        startRecording(environmentId, with: options, timestamp: Date())
+    }
+    
+    func stopRecording() {
+        stopRecording(timestamp: Date())
+    }
+    
+    func identify(_ identity: String) {
+        identify(identity, timestamp: Date())
+    }
+    
+    func resetIdentity() {
+        resetIdentity(timestamp: Date())
+    }
+    
+    var sessionId: String? {
+        getSessionId(timestamp: Date())
+    }
+    
+    func fetchSessionId() -> String? {
+        fetchSessionId(timestamp: Date())
+    }
+    
+    func addSource(_ source: HeapSwiftCoreInterfaces.Source, isDefault: Bool) {
+        addSource(source, isDefault: isDefault, timestamp: Date())
+    }
+    
+    func addRuntimeBridge(_ bridge: HeapSwiftCoreInterfaces.RuntimeBridge) {
+        addRuntimeBridge(bridge, timestamp: Date())
+    }
+}
+    
 extension EventConsumer: ActiveSessionProvider {
     var activeSession: ActiveSession? {
         guard let state = stateManager.current else { return nil }
         return .init(environmentId: state.environment.envID, userId: state.environment.userID, sessionId: state.sessionInfo.id, sdkInfo: state.sdkInfo)
+    }
+}
+
+internal extension SourceInfo {
+    var libraryInfo: LibraryInfo {
+        var libraryInfo = LibraryInfo()
+        libraryInfo.name = name
+        libraryInfo.version = version
+        libraryInfo.platform = platform
+        libraryInfo.properties = properties.mapValues(\.protoValue)
+        return libraryInfo
     }
 }
 

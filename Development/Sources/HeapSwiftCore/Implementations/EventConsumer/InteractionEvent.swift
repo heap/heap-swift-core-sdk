@@ -1,4 +1,5 @@
 import CoreGraphics
+import HeapSwiftCoreInterfaces
 
 class InteractionEvent: InteractionEventProtocol {
     
@@ -101,6 +102,10 @@ extension Interaction {
         case .change: return .builtin(.change)
         case .submit: return .builtin(.submit)
         case .builtin(let value): return .builtin(.UNRECOGNIZED(value))
+            
+        @unknown default:
+            // This is not technically possible since we always link to the same or older versions, but we'll apply a safe default.
+            return .builtin(.unspecified)
         }
     }
 }
@@ -115,6 +120,10 @@ extension Interaction: CustomStringConvertible {
         case .change: return "change"
         case .submit: return "submit"
         case .builtin(let value): return "\(value) (unknown built-in)"
+            
+        @unknown default:
+            // This is not technically possible since we always link to the same or older versions, but we'll apply a safe default.
+            return "unknown type"
         }
     }
 }

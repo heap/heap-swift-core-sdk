@@ -1,4 +1,6 @@
 import Foundation
+import HeapSwiftCoreInterfaces
+
 #if canImport(UIKit) && !os(watchOS)
 import UIKit
 #elseif canImport(AppKit)

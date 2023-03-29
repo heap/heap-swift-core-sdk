@@ -6,11 +6,7 @@ import Foundation
 // heap-ios-autocapture-sdk) without warnings that we're importing an
 // unstable library.
 
-#if BUILD_HEAP_SWIFT_CORE_FOR_DEVELOPMENT
 import SwiftProtobuf
-#else
-@_implementationOnly import SwiftProtobuf
-#endif
 
 extension SwiftProtobuf.Message {
     /// Sets the property at the keypath if not nil.

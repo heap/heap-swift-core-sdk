@@ -1,4 +1,5 @@
 import Foundation
+import HeapSwiftCoreInterfaces
 
 extension Value {
     init(value: any HeapPropertyValue) {

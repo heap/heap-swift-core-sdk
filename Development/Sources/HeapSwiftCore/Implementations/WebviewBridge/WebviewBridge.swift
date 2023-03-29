@@ -1,6 +1,7 @@
 #if canImport(WebKit)
 
 import WebKit
+import HeapSwiftCoreInterfaces
 
 class WebviewBridge: NSObject, WKScriptMessageHandler {
     

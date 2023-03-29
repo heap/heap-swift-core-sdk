@@ -14,8 +14,10 @@ let package = Package(
     products: [
         .library(
             name: "HeapSwiftCore",
-            type: .dynamic,
             targets: ["HeapSwiftCore"]),
+        .library(
+            name: "HeapSwiftCoreInterfaces",
+            targets: ["HeapSwiftCoreInterfaces"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
@@ -27,10 +29,11 @@ let package = Package(
             name: "HeapSwiftCore",
             dependencies: [
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
-            ],
-            swiftSettings: [
-                .define("BUILD_HEAP_SWIFT_CORE_FOR_DEVELOPMENT"),
+                "HeapSwiftCoreInterfaces",
             ]),
+        .target(
+            name: "HeapSwiftCoreInterfaces"
+        ),
         .target(
             name: "HeapSwiftCoreTestSupport",
             dependencies: [

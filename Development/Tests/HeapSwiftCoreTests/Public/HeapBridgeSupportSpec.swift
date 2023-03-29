@@ -42,21 +42,12 @@ final class HeapBridgeSupportSpec: HeapSpec {
                 _ = try webConsumer.handleInvocation(method: method, arguments: [
                     "environmentId": "11",
                     "options": [String: Any](),
-                    "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
-                ])
-            }
-            
-            it("does not throw when the timestamp is omitted") {
-                _ = try webConsumer.handleInvocation(method: method, arguments: [
-                    "environmentId": "11",
-                    "options": [String: Any](),
                 ])
             }
             
             it("does not throw when options are omitted") {
                 _ = try webConsumer.handleInvocation(method: method, arguments: [
                     "environmentId": "11",
-                    "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
                 ])
             }
             
@@ -95,47 +86,15 @@ final class HeapBridgeSupportSpec: HeapSpec {
                 ])).to(throwError(InvocationError.invalidParameters))
             }
             
-            it("throws when javascriptEpochTimestamp is not a number") {
-                expect(try webConsumer.handleInvocation(method: method, arguments: [
-                    "environmentId": "11",
-                    "javascriptEpochTimestamp": "something else",
-                ])).to(throwError(InvocationError.invalidParameters))
-            }
-            
             it("starts recording") {
                 _ = try webConsumer.handleInvocation(method: method, arguments: [
                     "environmentId": "11",
                 ])
                 expect(consumer.stateManager.current).notTo(beNil())
             }
-            
-            it("uses the passed in time for the session start time") {
-                let timestamp = Date().addingTimeInterval(3000)
-                _ = try webConsumer.handleInvocation(method: method, arguments: [
-                    "environmentId": "11",
-                    "javascriptEpochTimestamp": timestamp.timeIntervalSince1970 * 1000,
-                ])
-                expect(consumer.stateManager.current?.sessionInfo.time.date).to(beCloseTo(timestamp))
-            }
         }
         
         describeMethod("stopRecording") { method in
-
-            it("does not throw when all options are provided") {
-                _ = try webConsumer.handleInvocation(method: method, arguments: [
-                    "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
-                ])
-            }
-            
-            it("does not throw when the timestamp is omitted") {
-                _ = try webConsumer.handleInvocation(method: method, arguments: [:])
-            }
-            
-            it("throws when javascriptEpochTimestamp is not a number") {
-                expect(try webConsumer.handleInvocation(method: method, arguments: [
-                    "javascriptEpochTimestamp": "something else",
-                ])).to(throwError(InvocationError.invalidParameters))
-            }
             
             it("stops recording recording") {
                 consumer.startRecording("11")
@@ -304,33 +263,15 @@ final class HeapBridgeSupportSpec: HeapSpec {
             it("does not throw when all options are provided") {
                 _ = try webConsumer.handleInvocation(method: method, arguments: [
                     "identity": "user-1",
-                    "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
                 ])
             }
-            
-            it("does not throw when the timestamp is omitted") {
-                _ = try webConsumer.handleInvocation(method: method, arguments: [
-                    "identity": "user-1",
-                ])
-            }
-            
             it("throws when identity is omitted") {
-                expect(try webConsumer.handleInvocation(method: method, arguments: [
-                    "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
-                ])).to(throwError(InvocationError.invalidParameters))
+                expect(try webConsumer.handleInvocation(method: method, arguments: [:])).to(throwError(InvocationError.invalidParameters))
             }
             
             it("throws when identity is empty") {
                 expect(try webConsumer.handleInvocation(method: method, arguments: [
                     "identity": "",
-                    "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
-                ])).to(throwError(InvocationError.invalidParameters))
-            }
-            
-            it("throws when javascriptEpochTimestamp is not a number") {
-                expect(try webConsumer.handleInvocation(method: method, arguments: [
-                    "identity": "user-1",
-                    "javascriptEpochTimestamp": "something else",
                 ])).to(throwError(InvocationError.invalidParameters))
             }
             
@@ -341,51 +282,15 @@ final class HeapBridgeSupportSpec: HeapSpec {
                 ])
                 expect(consumer.stateManager.current?.environment.identity).to(equal("user-1"))
             }
-            
-            it("uses the passed in time for the session start time if starting a new session") {
-                let timestamp = Date().addingTimeInterval(3000)
-                consumer.startRecording("11")
-                _ = try webConsumer.handleInvocation(method: method, arguments: [
-                    "identity": "user-1",
-                    "javascriptEpochTimestamp": timestamp.timeIntervalSince1970 * 1000,
-                ])
-                expect(consumer.stateManager.current?.sessionInfo.time.date).to(beCloseTo(timestamp))
-            }
         }
         
         describeMethod("resetIdentity") { method in
-            
-            it("does not throw when all options are provided") {
-                _ = try webConsumer.handleInvocation(method: method, arguments: [
-                    "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
-                ])
-            }
-            
-            it("does not throw when the timestamp is omitted") {
-                _ = try webConsumer.handleInvocation(method: method, arguments: [:])
-            }
-            
-            it("throws when javascriptEpochTimestamp is not a number") {
-                expect(try webConsumer.handleInvocation(method: method, arguments: [
-                    "javascriptEpochTimestamp": "something else",
-                ])).to(throwError(InvocationError.invalidParameters))
-            }
             
             it("resets the identity") {
                 consumer.startRecording("11")
                 consumer.identify("user-1")
                 _ = try webConsumer.handleInvocation(method: method, arguments: [:])
                 expect(consumer.stateManager.current?.environment.hasIdentity).to(beFalse())
-            }
-            
-            it("uses the passed in time for the session start time if starting a new session") {
-                let timestamp = Date().addingTimeInterval(3000)
-                consumer.startRecording("11")
-                consumer.identify("user-1")
-                _ = try webConsumer.handleInvocation(method: method, arguments: [
-                    "javascriptEpochTimestamp": timestamp.timeIntervalSince1970 * 1000,
-                ])
-                expect(consumer.stateManager.current?.sessionInfo.time.date).to(beCloseTo(timestamp))
             }
         }
         
@@ -549,33 +454,14 @@ final class HeapBridgeSupportSpec: HeapSpec {
             
             describeMethod("sessionId") { method in
                 
-                it("does not throw when all options are provided") {
-                    _ = try webConsumer.handleInvocation(method: method, arguments: [
-                        "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
-                    ])
-                }
-                
-                it("does not throw when the timestamp is omitted") {
-                    _ = try webConsumer.handleInvocation(method: method, arguments: [:])
-                }
-                
-                it("throws when javascriptEpochTimestamp is not a number") {
-                    expect(try webConsumer.handleInvocation(method: method, arguments: [
-                        "javascriptEpochTimestamp": "something else",
-                    ])).to(throwError(InvocationError.invalidParameters))
-                }
-                
                 it("returns the session id when Heap is recording and the session is not expired") {
                     consumer.startRecording("11")
                     expect(try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(equal(consumer.activeSession!.sessionId))
                 }
                 
                 it("returns null when Heap is recording and the session is expired") {
-                    let timestamp = Date().addingTimeInterval(3000)
-                    consumer.startRecording("11")
-                    let sessionId = try webConsumer.handleInvocation(method: method, arguments: [
-                        "javascriptEpochTimestamp": timestamp.timeIntervalSince1970 * 1000,
-                    ])
+                    consumer.startRecording("11", timestamp: Date().addingTimeInterval(-3000))
+                    let sessionId = try webConsumer.handleInvocation(method: method, arguments: [:])
                     expect(sessionId).to(beNil())
                 }
                 
@@ -586,29 +472,10 @@ final class HeapBridgeSupportSpec: HeapSpec {
             
             describeMethod("fetchSessionId") { method in
                 
-                it("does not throw when all options are provided") {
-                    _ = try webConsumer.handleInvocation(method: method, arguments: [
-                        "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
-                    ])
-                }
-                
-                it("does not throw when the timestamp is omitted") {
+                it("starts a new session if expired") {
+                    consumer.startRecording("11", timestamp: Date().addingTimeInterval(-3000))
                     _ = try webConsumer.handleInvocation(method: method, arguments: [:])
-                }
-                
-                it("throws when javascriptEpochTimestamp is not a number") {
-                    expect(try webConsumer.handleInvocation(method: method, arguments: [
-                        "javascriptEpochTimestamp": "something else",
-                    ])).to(throwError(InvocationError.invalidParameters))
-                }
-                
-                it("uses the passed-in time for the session start time when extending the session") {
-                    let timestamp = Date().addingTimeInterval(3000)
-                    consumer.startRecording("11")
-                    _ = try webConsumer.handleInvocation(method: method, arguments: [
-                        "javascriptEpochTimestamp": timestamp.timeIntervalSince1970 * 1000,
-                    ])
-                    expect(consumer.stateManager.current?.sessionInfo.time.date).to(beCloseTo(timestamp))
+                    expect(consumer.stateManager.current?.sessionInfo.time.date).to(beCloseTo(Date(), within: 1))
                 }
                 
                 it("returns the session id when Heap is recording") {
