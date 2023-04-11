@@ -16,7 +16,7 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    HeapLogger.sharedInstance.logLevel = HeapLogLevelDebug;
+    Heap.sharedInstance.logLevel = HeapLogLevelDebug;
     [Heap.sharedInstance startRecording:@"11"];
     return YES;
 }

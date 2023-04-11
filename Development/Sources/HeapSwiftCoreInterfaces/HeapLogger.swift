@@ -108,6 +108,13 @@ class DefaultLogChannel: LogChannel {
     }
 }
 
+/// DO NOT USE
+/// This class is an internal implementation detail of the SDK and should NOT be used
+/// directly by developers implementing the SDK. It is public for internal purposes only.
+///
+/// Please refer to the SDK documentation for the appropriate public classes and methods
+/// to use when integrating the SDK into your project.
+///
 /// Central logging class for all log messages that are printed from the Heap SDK.
 /// All log messages and exceptions must go through this logger to respect client
 /// defined log levels.

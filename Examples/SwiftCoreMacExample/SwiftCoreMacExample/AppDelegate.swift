@@ -13,7 +13,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
-        HeapLogger.shared.logLevel = .debug
+        Heap.shared.logLevel = .debug
         Heap.shared.startRecording("11")
     }
 }

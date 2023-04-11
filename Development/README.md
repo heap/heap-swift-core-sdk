@@ -47,11 +47,11 @@ Heap can be initialized using `Heap.shared.startRecording("YOUR_APP_ID")`.  Once
 If at any point you wish to disable tracking, simply call `Heap.shared.stopRecording()`.
 
 By default, Heap will log messages that will be informative in a production environment.  To enable messages that may be helpful in a
-development environment, use `HeapLogger.shared.logLevel = .debug`.  To enable messages for troubleshooting complex issues, use
-`HeapLogger.shared.loglevel = .trace`.
+development environment, use `Heap.shared.logLevel = .debug`.  To enable messages for troubleshooting complex issues, use
+`Heap.shared.loglevel = .trace`.
 
 Log messages will appear in the Xcode log window and, with the exception of trace messages, will also appear in Console.app. You can
-redirect messages to another channel implementing `LogChannel` and setting `HeapLogger.shared.logChannel to an instance of your class.
+redirect messages to another channel implementing `LogChannel` and setting `Heap.shared.logChannel` to an instance of your class.
 
 # Dependencies
 

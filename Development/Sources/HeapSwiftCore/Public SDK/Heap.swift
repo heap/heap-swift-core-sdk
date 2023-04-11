@@ -123,4 +123,17 @@ public class Heap: NSObject, HeapProtocol {
     public func removeRuntimeBridge(_ bridge: RuntimeBridge) {
         consumer.removeRuntimeBridge(bridge)
     }
+    
+    /// The level of logging to be performed by the HeapLogger.
+    @objc
+    public var logLevel: LogLevel {
+       get { HeapLogger.shared.logLevel }
+       set { HeapLogger.shared.logLevel = newValue }
+    }
+    
+    /// The logging channel to route all logs
+    public var logChannel: LogChannel {
+       get { HeapLogger.shared.logChannel }
+       set { HeapLogger.shared.logChannel = newValue }
+    }
 }

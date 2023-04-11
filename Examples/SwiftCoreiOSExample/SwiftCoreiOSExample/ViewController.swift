@@ -11,8 +11,7 @@ class ViewController: UIViewController {
     
     @IBAction func butonClicked(_ sender: Any?) {
         
-        HeapLogger.shared.debug("👍 Button was clicked, and tracked",
-                                source: "SwiftCoreiOSExample")
+        print("👍 Button was clicked, and tracked")
         Heap.shared.track("Button Clicked")
     }
 }
