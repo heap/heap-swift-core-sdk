@@ -338,3 +338,17 @@ endif
 		'${INTERFACES_VERSION}' \
 		"heapcdn" \
 		'ios/heap-swift-core-interfaces-${INTERFACES_VERSION}.zip'
+
+test_core_podspec: add_prerelease_pod_repo
+	./DevTools/ValidatePodspec.sh HeapSwiftCore ReleaseTester
+
+test_interfaces_podspec: add_prerelease_pod_repo
+	./DevTools/ValidatePodspec.sh HeapSwiftCoreInterfaces InterfacesReleaseTester
+
+deploy_core_podspec:
+	@echo "--- Deploying HeapSwiftCore.podspec"
+	pod trunk push HeapSwiftCore.podspec
+
+deploy_interfaces_podspec:
+	@echo "--- Deploying HeapSwiftCoreInterfaces.podspec"
+	pod trunk push HeapSwiftCoreInterfaces.podspec

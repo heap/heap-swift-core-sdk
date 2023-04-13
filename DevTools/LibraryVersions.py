@@ -122,10 +122,10 @@ def main(args):
   if opts.validate and opts.print:
     parser.error('--print and --validate are mutually exclusive.')
   
-  if opts.library == 'core':
+  if opts.library == 'core' or opts.library == 'HeapSwiftCore':
     podspec_path = os.path.join(_PROJECT_ROOT, 'HeapSwiftCore.podspec')
     version_swift_path = os.path.join(_PROJECT_ROOT, 'Development/Sources/HeapSwiftCore/Version.swift')
-  elif opts.library == 'interfaces':
+  elif opts.library == 'interfaces' or opts.library == 'HeapSwiftCoreInterfaces':
     podspec_path = os.path.join(_PROJECT_ROOT, 'HeapSwiftCoreInterfaces.podspec')
     version_swift_path = None
   else:
