@@ -19,7 +19,7 @@ extension Message {
 
         expect(file: file, line: line, hasTime).to(beTrue())
         if let timestamp = timestamp {
-            expect(file: file, line: line, time).to(equal(.init(date: timestamp)))
+            expect(file: file, line: line, time.date).to(beCloseTo(timestamp))
         }
 
         if let eventProperties = eventProperties {

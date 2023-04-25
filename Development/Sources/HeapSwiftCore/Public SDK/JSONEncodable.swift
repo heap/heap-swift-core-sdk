@@ -85,3 +85,11 @@ extension Optional: JSONEncodable where Wrapped: JSONEncodable
 {
     public func _toHeapJSON() -> JSON { self.map({ $0._toHeapJSON() }) ?? JSON.null }
 }
+
+struct AnyJSONEncodable: JSONEncodable {
+    let wrapped: JSONEncodable
+    
+    func _toHeapJSON() -> JSON {
+        return wrapped._toHeapJSON()
+    }
+}

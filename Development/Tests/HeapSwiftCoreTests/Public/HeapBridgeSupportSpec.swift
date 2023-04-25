@@ -228,7 +228,7 @@ final class HeapBridgeSupportSpec: HeapSpec {
                         "b": "2",
                         "c": false,
                         "d": 1.5,
-                    ],
+                    ] as [String : Any],
                     "sourceLibrary": [
                         "name": "my source",
                         "version": "1.0.0",
@@ -236,7 +236,7 @@ final class HeapBridgeSupportSpec: HeapSpec {
                         "properties": [
                             "foo": "bar",
                         ],
-                    ],
+                    ] as [String : Any],
                     "javascriptEpochTimestamp": timestamp.timeIntervalSince1970 * 1000,
                 ])
                 let user = try dataStore.assertOnlyOneUserToUpload()
@@ -255,6 +255,417 @@ final class HeapBridgeSupportSpec: HeapSpec {
                 expect(customEvent.properties["b"]).to(equal(.init(value: "2")))
                 expect(customEvent.properties["c"]).to(equal(.init(value: "false")))
                 expect(customEvent.properties["d"]).to(equal(.init(value: "1.5")))
+            }
+            
+            context("with trackPageview") {
+                
+                it("applies the provided pageview to the event") {
+                    
+                    consumer.startRecording("11")
+                    let result = try webConsumer.handleInvocation(method: "trackPageview", arguments: [
+                        "properties": [ "componentOrClassName": "Passed in pageview component", ],
+                    ]).assertTrackPageviewResponse(isPrecondition: true)
+                    
+                    _ = try webConsumer.handleInvocation(method: "trackPageview", arguments: [
+                        "properties": [ "componentOrClassName": "Last pageview component", ],
+                    ])
+                    
+                    _ = try webConsumer.handleInvocation(method: method, arguments: [
+                        "event": "my-event",
+                        "pageviewKey": result.pageviewKey,
+                    ])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    
+                    let message = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)[4]
+                    expect(message.pageviewInfo.componentOrClassName).to(equal("Passed in pageview component"))
+                }
+                
+                it("applies the last pageview if the passed in pageview is no longer available") {
+                    
+                    consumer.startRecording("11")
+                    let result = try webConsumer.handleInvocation(method: "trackPageview", arguments: [
+                        "properties": [ "componentOrClassName": "Passed in pageview component", ],
+                    ]).assertTrackPageviewResponse(isPrecondition: true)
+                    
+                    _ = try webConsumer.handleInvocation(method: "trackPageview", arguments: [
+                        "properties": [ "componentOrClassName": "Last pageview component", ],
+                        "deadKeys": [ result.pageviewKey, ], // Invalidate the key
+                    ])
+                    
+                    _ = try webConsumer.handleInvocation(method: method, arguments: [
+                        "event": "my-event",
+                        "pageviewKey": result.pageviewKey,
+                    ])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    
+                    let message = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)[4]
+                    expect(message.pageviewInfo.componentOrClassName).to(equal("Last pageview component"))
+                }
+            }
+        }
+        
+        describeMethod("trackPageview") { method in
+            
+            it("does not throw when all options are provided") {
+                _ = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "componentOrClassName": "My Component",
+                        "title": "My page",
+                        "url": "https://example.com/",
+                        "sourceProperties": [
+                            "a": 1,
+                            "b": "2",
+                            "c": false,
+                            "d": 1.5,
+                        ] as [String : Any],
+                    ] as [String : Any],
+                    "sourceLibrary": [
+                        "name": "my source",
+                        "version": "1.0.0",
+                        "platform": "my platform",
+                    ],
+                    "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
+                    "deadKeys": ["a", "b", "c"],
+                ])
+            }
+            
+            it("does not throw when the timestamp is omitted") {
+                _ = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "componentOrClassName": "My Component",
+                        "title": "My page",
+                        "url": "https://example.com/",
+                        "sourceProperties": [
+                            "a": 1,
+                            "b": "2",
+                            "c": false,
+                            "d": 1.5,
+                        ] as [String : Any],
+                    ] as [String : Any],
+                    "sourceLibrary": [
+                        "name": "my source",
+                        "version": "1.0.0",
+                        "platform": "my platform",
+                    ],
+                    "deadKeys": ["a", "b", "c"],
+                ])
+            }
+            
+            it("does not throw when sourceLibrary is omitted") {
+                _ = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "componentOrClassName": "My Component",
+                        "title": "My page",
+                        "url": "https://example.com/",
+                        "sourceProperties": [
+                            "a": 1,
+                            "b": "2",
+                            "c": false,
+                            "d": 1.5,
+                        ] as [String : Any],
+                    ] as [String : Any],
+                    "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
+                    "deadKeys": ["a", "b", "c"],
+                ])
+            }
+            
+            it("does not throw when the deadKeys is omitted") {
+                _ = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "componentOrClassName": "My Component",
+                        "title": "My page",
+                        "url": "https://example.com/",
+                        "sourceProperties": [
+                            "a": 1,
+                            "b": "2",
+                            "c": false,
+                            "d": 1.5,
+                        ] as [String : Any],
+                    ] as [String : Any],
+                    "sourceLibrary": [
+                        "name": "my source",
+                        "version": "1.0.0",
+                        "platform": "my platform",
+                    ],
+                    "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
+                ])
+            }
+            
+            it("does not throw when properties.componentOrClassName is omitted") {
+                _ = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "title": "My page",
+                        "url": "https://example.com/",
+                        "sourceProperties": [
+                            "a": 1,
+                            "b": "2",
+                            "c": false,
+                            "d": 1.5,
+                        ] as [String : Any],
+                    ] as [String : Any],
+                ])
+            }
+            
+            it("does not throw when properties.title is omitted") {
+                _ = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "componentOrClassName": "My Component",
+                        "url": "https://example.com/",
+                        "sourceProperties": [
+                            "a": 1,
+                            "b": "2",
+                            "c": false,
+                            "d": 1.5,
+                        ] as [String : Any],
+                    ] as [String : Any],
+                ])
+            }
+            
+            it("does not throw when properties.url is omitted") {
+                _ = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "componentOrClassName": "My Component",
+                        "title": "My page",
+                        "sourceProperties": [
+                            "a": 1,
+                            "b": "2",
+                            "c": false,
+                            "d": 1.5,
+                        ] as [String : Any],
+                    ] as [String : Any],
+                ])
+            }
+            
+            it("does not throw when properties.sourceProperties is omitted") {
+                _ = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "componentOrClassName": "My Component",
+                        "title": "My page",
+                        "url": "https://example.com/",
+                    ] as [String : Any],
+                ])
+            }
+            
+            it("does not throw when passed unknown properties") {
+                _ = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "foo": "bar",
+                    ] as [String : Any],
+                ])
+            }
+
+            it("does not throw when passed unsupported source property types") {
+                _ = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "componentOrClassName": "My Component",
+                        "title": "My page",
+                        "sourceProperties": ["UNKNOWN": ["a", "b"]],
+                    ] as [String : Any],
+                ])
+            }
+            
+            it("throws when properties is omitted") {
+                expect(try webConsumer.handleInvocation(method: method, arguments: [:])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("throws when properties is not an object") {
+                expect(try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": "something else",
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("throws when properties.componentOrClassName is not a string") {
+                expect(try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "componentOrClassName": 42,
+                    ] as [String : Any],
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("throws when properties.title is not a string") {
+                expect(try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "title": 42,
+                    ] as [String : Any],
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("throws when properties.url is not a string") {
+                expect(try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "url": 42,
+                    ] as [String : Any],
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("throws when properties.url is not a valid url") {
+                expect(try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "url": "http:\\\\example.com",
+                    ] as [String : Any],
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("throws when properties.sourceProperties is not an object") {
+                expect(try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": ["sourceProperties": "something else"],
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("throws when javascriptEpochTimestamp is not a number") {
+                expect(try webConsumer.handleInvocation(method: method, arguments: [
+                    "event": "my-event",
+                    "javascriptEpochTimestamp": "something else",
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("throws when sourceLibrary is not an object") {
+                expect(try webConsumer.handleInvocation(method: method, arguments: [
+                    "event": "my-event",
+                    "sourceLibrary": "something else",
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("throws when sourceLibrary.name is omitted") {
+                expect(try webConsumer.handleInvocation(method: method, arguments: [
+                    "event": "my-event",
+                    "sourceLibrary": [
+                        "version": "1.0.0",
+                        "platform": "my platform",
+                    ],
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("throws when sourceLibrary.version is omitted") {
+                expect(try webConsumer.handleInvocation(method: method, arguments: [
+                    "event": "my-event",
+                    "sourceLibrary": [
+                        "name": "my source",
+                        "platform": "my platform",
+                    ],
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("throws when sourceLibrary.platform is omitted") {
+                expect(try webConsumer.handleInvocation(method: method, arguments: [
+                    "event": "my-event",
+                    "sourceLibrary": [
+                        "name": "my source",
+                        "version": "1.0.0",
+                    ],
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("populates the event correctly") {
+                consumer.startRecording("11")
+                let timestamp = Date().addingTimeInterval(30)
+                _ = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "componentOrClassName": "My Component",
+                        "title": "My page",
+                        "url": "https://example.com/path/to/resource.jsp?state=AAABBBCCCDDD#!/elsewhere",
+                        "sourceProperties": [
+                            "a": 1,
+                            "b": "2",
+                            "c": false,
+                            "d": 1.5,
+                        ] as [String : Any],
+                    ] as [String : Any],
+                    "sourceLibrary": [
+                        "name": "my source",
+                        "version": "1.0.0",
+                        "platform": "my platform",
+                        "properties": [
+                            "foo": "bar",
+                        ],
+                    ] as [String : Any],
+                    "javascriptEpochTimestamp": timestamp.timeIntervalSince1970 * 1000,
+                ])
+                let user = try dataStore.assertOnlyOneUserToUpload()
+                let message = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)[2]
+                
+                message.expectPageviewMessage(user: user, timestamp: timestamp, hasSourceLibrary: true, sourceLibrary: .with({
+                    $0.name = "my source"
+                    $0.version = "1.0.0"
+                    $0.platform = "my platform"
+                    $0.properties = [ "foo": "bar".protoValue ]
+                }))
+                
+                let pageviewInfo = message.pageviewInfo
+                expect(pageviewInfo.componentOrClassName).to(equal("My Component"))
+                expect(pageviewInfo.title).to(equal("My page"))
+                expect(pageviewInfo.url.domain).to(equal("example.com"))
+                expect(pageviewInfo.url.path).to(equal("/path/to/resource.jsp"))
+                expect(pageviewInfo.url.query).to(equal("state=AAABBBCCCDDD"))
+                expect(pageviewInfo.url.hash).to(equal("!/elsewhere"))
+                expect(pageviewInfo.sourceProperties["a"]).to(equal(.init(value: "1")))
+                expect(pageviewInfo.sourceProperties["b"]).to(equal(.init(value: "2")))
+                expect(pageviewInfo.sourceProperties["c"]).to(equal(.init(value: "false")))
+                expect(pageviewInfo.sourceProperties["d"]).to(equal(.init(value: "1.5")))
+            }
+            
+            it("returns a valid payload") {
+                consumer.startRecording("11")
+                let result = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [String : Any](),
+                ])
+                
+                try result.assertTrackPageviewResponse()
+            }
+            
+            it("returns a stored pageview key") {
+                consumer.startRecording("11")
+                let result = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [String : Any](),
+                ]).assertTrackPageviewResponse(isPrecondition: true)
+
+                expect(webConsumer.pageviews[result.pageviewKey]).notTo(beNil())
+            }
+            
+            it("returns a stored pageview key") {
+                consumer.startRecording("11")
+                let result = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [String : Any](),
+                ]).assertTrackPageviewResponse(isPrecondition: true)
+
+                expect(result.sessionId).to(equal(consumer.sessionId))
+            }
+            
+            it("returns the passed dead keys as removedKeys") {
+                consumer.startRecording("11")
+                let result = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [String : Any](),
+                    "deadKeys": ["a", "b", "c"],
+                ]).assertTrackPageviewResponse(isPrecondition: true)
+                
+                expect(result.removedKeys).to(equal(["a", "b", "c"]))
+            }
+            
+            it("removes dead keys from the pageviews array") {
+                consumer.startRecording("11")
+                let result = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [String : Any](),
+                ])
+                
+                guard let result = result else {
+                    throw TestFailure("PRECONDITION: Call returned nil")
+                }
+                
+                guard
+                    case let .object(dictionary) = result._toHeapJSON(),
+                    case let .string(pageviewKey) = dictionary["pageviewKey"]
+                else {
+                    throw TestFailure("PRECONDITION: \((try result.toJSONString()) ?? "nil") does not match expectations")
+                }
+                
+                _ = try webConsumer.handleInvocation(method: method, arguments: [
+                    "properties": [String : Any](),
+                    "deadKeys": [ pageviewKey ]
+                ])
+                
+                expect(webConsumer.pageviews.keys).notTo(contain(pageviewKey))
             }
         }
         
@@ -327,7 +738,7 @@ final class HeapBridgeSupportSpec: HeapSpec {
                         "b": "2",
                         "c": false,
                         "d": 1.5,
-                    ],
+                    ] as [String : Any],
                 ])
                 
                 let user = try dataStore.assertOnlyOneUserToUpload()
@@ -369,7 +780,7 @@ final class HeapBridgeSupportSpec: HeapSpec {
                             "b": "2",
                             "c": false,
                             "d": 1.5,
-                        ],
+                        ] as [String : Any],
                     ])
                     
                     expect(consumer.eventProperties["a"]).to(equal(.init(value: "1")))
@@ -675,5 +1086,36 @@ final class HeapBridgeSupportSpec: HeapSpec {
                 }
             }
         }
+    }
+}
+
+extension JSONEncodable? {
+    
+    @discardableResult
+    func assertTrackPageviewResponse(file: StaticString = #file, line: UInt = #line, isPrecondition: Bool = false) throws -> (pageviewKey: String, sessionId: String, removedKeys: [String]) {
+        
+        let prefix = isPrecondition ? "PRECONDITION: " : "";
+        
+        guard let result = self else {
+            throw TestFailure(prefix + "Result was nil.")
+        }
+        
+        guard
+            case let .object(dictionary) = result._toHeapJSON(),
+            case let .string(pageviewKey) = dictionary["pageviewKey"],
+            case let .string(sessionId) = dictionary["sessionId"],
+            case let .array(removedKeysRaw) = dictionary["removedKeys"]
+        else {
+            throw TestFailure(prefix + "\((try result.toJSONString()) ?? "nil") does not have required fields.")
+        }
+        
+        let removedKeys = try removedKeysRaw.map {
+            guard case let .string(key) = $0 else {
+                throw TestFailure(prefix + "Key \($0) is not a string.")
+            }
+            return key
+        }
+        
+        return (pageviewKey, sessionId, removedKeys)
     }
 }

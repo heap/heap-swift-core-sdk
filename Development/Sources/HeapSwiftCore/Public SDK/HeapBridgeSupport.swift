@@ -8,6 +8,8 @@ public enum InvocationError: Error {
 
 public class HeapBridgeSupport
 {
+    var pageviews: [String: Pageview] = [:]
+    
     let eventConsumer: any HeapProtocol
     let uploader: any UploaderProtocol
     
@@ -28,6 +30,8 @@ public class HeapBridgeSupport
             return try stopRecording()
         case "track":
             return try track(arguments: arguments)
+        case "trackPageview":
+            return try trackPageview(arguments: arguments)
         case "identify":
             return try identify(arguments: arguments)
         case "resetIdentity":
@@ -81,8 +85,39 @@ public class HeapBridgeSupport
         let timestamp = try getOptionalTimestamp(arguments, methodName: "track")
         let sourceInfo = try getOptionalSourceLibrary(arguments, methodName: "track")
         let properties = try getOptionalParameterDictionary(named: "properties", from: arguments, message: "HeapBridgeSupport.track received invalid properties and will not complete the bridged method call.")
-        eventConsumer.track(event, properties: properties, timestamp: timestamp, sourceInfo: sourceInfo, pageview: nil)
+        let pageview = try getOptionalPageview(from: arguments, methodName: "track")
+        eventConsumer.track(event, properties: properties, timestamp: timestamp, sourceInfo: sourceInfo, pageview: pageview)
         return nil
+    }
+    
+    func trackPageview(arguments: [String: Any]) throws -> JSONEncodable? {
+        
+        let pageviewKey = UUID().uuidString
+        let properties = try getPageviewProperties(from: arguments, methodName: "trackPageview")
+        let timestamp = try getOptionalTimestamp(arguments, methodName: "trackPageview")
+        let sourceInfo = try getOptionalSourceLibrary(arguments, methodName: "trackPageview")
+        
+        let deadKeys = try getOptionalArrayOfStrings(named: "deadKeys", from: arguments, message: "HeapBridgeSupport.trackPageview received an invalid list of dead keys and will not complete the bridged method call.")
+        
+        for key in deadKeys {
+            pageviews[key] = nil
+        }
+        
+        let pageview = eventConsumer.trackPageview(properties, timestamp: timestamp, sourceInfo: sourceInfo, bridge: self, userInfo: pageviewKey)
+        
+        guard let pageview = pageview else {
+            return [
+                "removedKeys": deadKeys,
+            ]
+        }
+        
+        pageviews[pageviewKey] = pageview
+        
+        return [
+            "pageviewKey": AnyJSONEncodable(wrapped: pageviewKey),
+            "sessionId": AnyJSONEncodable(wrapped: pageview.sessionId),
+            "removedKeys": AnyJSONEncodable(wrapped: deadKeys),
+        ]
     }
     
     func identify(arguments: [String: Any]) throws -> JSONEncodable? {
@@ -225,6 +260,40 @@ extension HeapBridgeSupport {
         return Date(timeIntervalSince1970: timestamp / 1000)
     }
     
+    func getOptionalUrl(named name: String, from arguments: [String: Any], message: @autoclosure () -> String) throws -> URL? {
+        guard let string = try getOptionalString(named: name, from: arguments, message: message()) else { return nil }
+        
+        guard let url = URL(string: string) else {
+            HeapLogger.shared.debug(message())
+            throw InvocationError.invalidParameters
+        }
+        
+        return url
+    }
+    
+    func getOptionalPageview(from arguments: [String: Any], methodName: String) throws -> Pageview? {
+        guard let pageviewKey = try getOptionalString(named: "pageviewKey", from: arguments, message: "HeapBridgeSupport.\(methodName) received an invalid pageview key and will not complete the bridged method call.") else { return nil }
+        
+        guard let pageview = pageviews[pageviewKey] else {
+            HeapLogger.shared.trace("The passed in pageview key \(pageviewKey) does not exist. It may have been culled.")
+            return nil
+        }
+        
+        return pageview
+    }
+    
+    func getOptionalArrayOfStrings(named name: String, from arguments: [String: Any], message: @autoclosure () -> String) throws -> [String] {
+        guard let rawArray = arguments[name] else {
+            return []
+        }
+        
+        guard let value = rawArray as? [String] else {
+            HeapLogger.shared.debug(message())
+            throw InvocationError.invalidParameters
+        }
+        return value
+    }
+    
     func getOptionalSourceLibrary(_ arguments: [String: Any], methodName: String) throws -> SourceInfo? {
         func errorMessage() -> String {
             "HeapBridgeSupport.\(methodName) received an invalid sourceLibrary and will not complete the bridged method call."
@@ -286,5 +355,54 @@ extension HeapBridgeSupport {
         }
         
         return [Option: Any].init(keysAndValues, uniquingKeysWith: { $1 })
+    }
+    
+    func getPageviewProperties(from arguments: [String: Any], methodName: String) throws -> PageviewProperties {
+        
+        func errorMessage() -> String {
+            "HeapBridgeSupport.\(methodName) received an invalid properties and will not complete the bridged method call."
+        }
+        
+        guard let rawDictionary = arguments["properties"],
+              let dictionary = rawDictionary as? [String: Any] else {
+            HeapLogger.shared.debug(errorMessage())
+            throw InvocationError.invalidParameters
+        }
+        
+        return try .with {
+            $0.componentOrClassName = try getOptionalString(named: "componentOrClassName", from: dictionary, message: errorMessage())
+            $0.title = try getOptionalString(named: "title", from: dictionary, message: errorMessage())
+            $0.url = try getOptionalUrl(named: "url", from: dictionary, message: errorMessage())
+            $0.sourceProperties = try getOptionalParameterDictionary(named: "sourceProperties", from: dictionary, message: errorMessage())
+        }
+    }
+}
+
+extension HeapBridgeSupport: RuntimeBridge {
+    
+    // TODO: Package all of these as invocations, send to the delegate, and wait for a response.
+    
+    public func didStartRecording(options: [HeapSwiftCoreInterfaces.Option : Any], complete: @escaping () -> Void) {
+        complete()
+    }
+    
+    public func didStopRecording(complete: @escaping () -> Void) {
+        complete()
+    }
+    
+    public func sessionDidStart(sessionId: String, timestamp: Date, foregrounded: Bool, complete: @escaping () -> Void) {
+        complete()
+    }
+    
+    public func applicationDidEnterForeground(timestamp: Date, complete: @escaping () -> Void) {
+        complete()
+    }
+    
+    public func applicationDidEnterBackground(timestamp: Date, complete: @escaping () -> Void) {
+        complete()
+    }
+    
+    public func reissuePageview(_ pageview: HeapSwiftCoreInterfaces.Pageview, sessionId: String, timestamp: Date, complete: @escaping (HeapSwiftCoreInterfaces.Pageview?) -> Void) {
+        complete(nil)
     }
 }
