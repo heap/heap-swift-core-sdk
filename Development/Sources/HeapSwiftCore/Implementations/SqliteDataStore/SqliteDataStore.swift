@@ -28,6 +28,7 @@ extension Operation {
 class SqliteDataStore: DataStoreProtocol {
     
     private let connection: SqliteConnection
+    internal let dataStoreSettings: DataStoreSettings
     
     func performOnSqliteQueue(waitUntilFinished: Bool = false, block: @escaping (_ connection: SqliteConnection) throws -> Void) {
         OperationQueue.sqliteDataStoreQueue.addOperations([
@@ -35,8 +36,9 @@ class SqliteDataStore: DataStoreProtocol {
         ], waitUntilFinished: waitUntilFinished)
     }
     
-    init(databaseUrl: URL) {
+    init(databaseUrl: URL, settings: DataStoreSettings = .default) {
         connection = SqliteConnection(at: databaseUrl)
+        dataStoreSettings = settings
         
         performOnSqliteQueue { connection in
             
@@ -167,6 +169,8 @@ On Conflict (environmentId, userId, name) Do Update
 Insert Into Sessions (environmentId, userId, sessionId, lastEventDate) Values (?1, ?2, ?3, ?4);
 """, parameters: [environmentId, userId, sessionId, lastEventDate])
             
+            guard self.isWithinMessageSizeLimit(payload) else { return }
+            
             try connection.perform(query: """
 Insert Into PendingMessages (environmentId, userId, sessionId, payload) Values (?1, ?2, ?3, ?4);
 """, parameters: [environmentId, userId, sessionId, payload])
@@ -181,6 +185,8 @@ Insert Into PendingMessages (environmentId, userId, sessionId, payload) Values (
             let sessionId = message.sessionInfo.id
             let lastEventDate = message.time.date
             let payload = try message.serializedData()
+            
+            guard self.isWithinMessageSizeLimit(payload) else { return }
             
             try connection.perform(query: """
 Insert Into PendingMessages (environmentId, userId, sessionId, payload) Values (?1, ?2, ?3, ?4);

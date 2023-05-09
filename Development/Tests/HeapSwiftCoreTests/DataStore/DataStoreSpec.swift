@@ -11,7 +11,9 @@ class DataStoreSpec: HeapSpec {
             var dataStore: InMemoryDataStore! = nil
             
             beforeEach {
-                dataStore = InMemoryDataStore()
+                dataStore = InMemoryDataStore(settings: .init(
+                    messageByteLimit: 20_000
+                ))
             }
             
             spec(dataStore: { dataStore })
@@ -42,6 +44,8 @@ class DataStoreSpec: HeapSpec {
 extension SqliteDataStore {
     class func temporary() -> SqliteDataStore {
         let databaseUrl = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        return .init(databaseUrl: databaseUrl)
+        return .init(databaseUrl: databaseUrl, settings: .init(
+            messageByteLimit: 20_000
+        ))
     }
 }

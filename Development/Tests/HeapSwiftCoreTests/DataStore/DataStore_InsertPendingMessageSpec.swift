@@ -50,6 +50,58 @@ final class DataStore_InsertPendingMessageSpec: DataStoreSpec {
                 
                 expect(dataStore().getPendingEncodedMessages(environmentId: "11", userId: "123", sessionId: "456", messageLimit: .max, byteLimit: .max).map(\.payload)).to(equal(messages), description: "The messages should have been inserted in order")
             }
+            
+            it("doesn't insert messages in the queue that exceed the byte limit") {
+                let fakeSession = FakeSession(environmentId: "11", userId: "123", sessionId: "456")
+                let timestamp = fakeSession.sessionMessage.time.date
+                dataStore().createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
+                dataStore().createSessionIfNeeded(with: fakeSession.sessionMessage)
+                
+                // Compute the number of properties that can fit under the limit
+                let targetSizeInBytes = dataStore().dataStoreSettings.messageByteLimit
+                let maxKeySize = 512
+                let maxValueSize = 1024
+                let skeletonSize = try fakeSession.customEventMessage(name: "skeleton-event",
+                                                                      properties: [:],
+                                                                      timestamp: timestamp).serializedData().count
+                
+                let value = Value(value: String(repeating: "v", count: maxValueSize))
+                let propertySize = try fakeSession.customEventMessage(name: "property-event",
+                                                                      properties: [String(repeating: "k", count: maxKeySize):value],
+                                                                      timestamp: timestamp).serializedData().count - skeletonSize
+                
+                let totalProperties = (targetSizeInBytes - skeletonSize) / (propertySize)
+                
+                
+                // Create those properties
+                var properties: [String: Value] = [:]
+                
+                for i in 0..<totalProperties {
+                    let identifierSize = "\(i)".count
+                    let keyBase = String(repeating: "k", count: maxKeySize - identifierSize)
+                    let key = "\(keyBase)\(i)"
+                    properties[key] = value
+                }
+                
+                // This message should be within the size limits and get added
+                dataStore().insertPendingMessage(fakeSession.customEventMessage(name: "my-event-under",
+                                                                                properties: properties,
+                                                                                timestamp: timestamp))
+                
+                // Session + first pending message
+                expect(dataStore().getPendingEncodedMessages(environmentId: "11", userId: "123", sessionId: "456", messageLimit: .max, byteLimit: .max).map(\.1)).to(haveCount(2))
+                
+                // Add overflow key
+                properties[String(repeating: "o", count: maxKeySize)] = value
+                
+                // This message should be too big to add
+                dataStore().insertPendingMessage(fakeSession.customEventMessage(name: "my-event-over",
+                                                                                properties: properties,
+                                                                                timestamp: timestamp))
+                
+                // Session + first pending message (second excluded)
+                expect(dataStore().getPendingEncodedMessages(environmentId: "11", userId: "123", sessionId: "456", messageLimit: .max, byteLimit: .max).map(\.1)).to(haveCount(2))
+            }
         }
     }
     

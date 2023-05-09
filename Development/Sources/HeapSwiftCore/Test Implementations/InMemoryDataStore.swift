@@ -32,7 +32,12 @@ struct InMemorySession {
 class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
 
     var identifier = 0
-
+    let dataStoreSettings: DataStoreSettings
+        
+    init(settings: DataStoreSettings = .default) {
+        dataStoreSettings = settings
+    }
+    
     func nextIdentifier() -> Int {
         identifier += 1
         return identifier
@@ -125,6 +130,8 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
 
         do {
             let data = try message.serializedData()
+            guard self.isWithinMessageSizeLimit(data) else { return }
+            
             let sessionId = message.sessionInfo.id
 
             try with(environmentId: message.envID, userId: message.userID, {
@@ -141,7 +148,8 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
 
         do {
             let data = try message.serializedData()
-
+            guard self.isWithinMessageSizeLimit(data) else { return }
+            
             try with(environmentId: message.envID, userId: message.userID, sessionId: message.sessionInfo.id) {
                 $0.messages.append((nextIdentifier(), data))
             }

@@ -58,7 +58,20 @@ Pending User Properties: \(pendingUserProperties)
 
 typealias MessageIdentifier = Int
 
+struct DataStoreSettings {
+    var messageByteLimit: Int
+
+    static let `default` = DataStoreSettings(
+        
+        // Collectors are only able to write a message downstream if the size is less than 0.8MB
+        // 1024 * 1024 * 0.75 bytes
+        messageByteLimit: 786_432
+    )
+}
+
 protocol DataStoreProtocol {
+    
+    var dataStoreSettings: DataStoreSettings { get }
 
     func createNewUserIfNeeded(environmentId: String, userId: String, identity: String?, creationDate: Date)
     func setIdentityIfNull(environmentId: String, userId: String, identity: String)
@@ -79,4 +92,18 @@ protocol DataStoreProtocol {
     func deleteSession(environmentId: String, userId: String, sessionId: String)
 
     func pruneOldData(activeEnvironmentId: String, activeUserId: String, activeSessionId: String, minLastMessageDate: Date, minUserCreationDate: Date)
+}
+
+extension DataStoreProtocol {
+    
+    func isWithinMessageSizeLimit(_ serializedMessage: Data) -> Bool {
+        let sizeLimit = self.dataStoreSettings.messageByteLimit
+        let messageSize = serializedMessage.count
+        if messageSize > sizeLimit {
+            HeapLogger.shared.warn("An event was dropped because it was too large.")
+            HeapLogger.shared.trace("The message size (\(messageSize) bytes) exceeded the maximum allowed size (\(sizeLimit) bytes)")
+            return false
+        }
+        return true
+    }
 }
