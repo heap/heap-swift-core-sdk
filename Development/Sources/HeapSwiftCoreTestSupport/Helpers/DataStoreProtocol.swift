@@ -23,7 +23,7 @@ extension DataStoreProtocol {
     
     @discardableResult
     func assertExactPendingMessagesCountInOnlySession(for user: UserToUpload, count: Int, file: StaticString = #file, line: UInt = #line) throws -> [Message] {
-        let messages = try getPendingMessagesInOnlySession(for: user)
+        let messages = try getPendingMessagesInOnlySession(for: user, file: file, line: line)
         guard messages.count == count else {
             throw TestFailure("Expected exactly \(count) messages, but got \(messages.count)", file: file, line: line)
         }

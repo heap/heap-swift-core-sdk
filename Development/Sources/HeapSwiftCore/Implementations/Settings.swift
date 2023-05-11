@@ -80,3 +80,29 @@ extension FieldSettings {
         return instance
     }
 }
+
+struct BehaviorSettings {
+    var startSessionImmediately: Bool
+    
+    static let `default` = BehaviorSettings(
+        startSessionImmediately: false
+    )
+}
+
+extension BehaviorSettings {
+    
+    init(with options: [Option: Any]) {
+        
+        let base = Self.default
+        
+        self.init(
+            startSessionImmediately: options.boolean(at: .startSessionImmediately) ?? base.startSessionImmediately
+        )
+    }
+    
+    static func with(_ config: (_ settings: inout Self) -> Void) -> Self {
+        var instance = Self.default
+        config(&instance)
+        return instance
+    }
+}

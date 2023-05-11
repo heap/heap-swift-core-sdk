@@ -32,7 +32,7 @@ final class EventConsumer_TrackSpec: HeapSpec {
                 consumer.startRecording("11")
 
                 let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 2)
+                expect(user.sessionIds).to(beEmpty(), description: "No events should have been sent, so there shouldn't be a session.")
             }
             
             it("doesn't track an event after `stopRecording` is called") {
@@ -205,7 +205,7 @@ final class EventConsumer_TrackSpec: HeapSpec {
                     let name = String(repeating: "あ", count: 513)
                     consumer.track(name)
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 2)
+                    expect(user.sessionIds).to(beEmpty(), description: "The event should have been suppressed, so the first session should not have started.")
                 }
 
                 it("records events sequentially on the main thread") {

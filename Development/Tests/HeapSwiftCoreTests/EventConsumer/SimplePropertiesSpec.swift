@@ -80,7 +80,11 @@ final class EventConsumer_SimplePropertiesSpec: HeapSpec {
                 expect(consumer.getSessionId()).to(beNil())
             }
             
-            // TODO: it("returns nil when Heap is recording and the first session has not yet started")
+            it("returns nil when Heap is recording and the first session has not yet started") {
+                _ = dataStore.applyIdentifiedState(to: "11")
+                consumer.startRecording("11")
+                expect(consumer.getSessionId()).to(beNil())
+            }
             
             it("returns a value when Heap is recording and the session has not expired") {
                 _ = dataStore.applyIdentifiedState(to: "11")

@@ -51,7 +51,36 @@ final class EventConsumer_GetSessionIdSpec: HeapSpec {
                     consumer.startRecording("11")
                 }
                 
-                // TODO: context("called before the first session starts")
+                context("called before the first session starts") {
+                    
+                    var sessionTimestamp: Date!
+                    var sessionId: String?
+                    
+                    beforeEach {
+                        sessionTimestamp = Date()
+                        sessionId = consumer.fetchSessionId(timestamp: sessionTimestamp)
+                    }
+                    
+                    it("creates a new session") {
+                        
+                        guard let sessionId = consumer.activeOrExpiredSessionId else {
+                            throw TestFailure("fetchSessionId should have created a new session.")
+                        }
+
+                        expect(sessionId).to(beAValidId())
+            
+                        let user = try dataStore.assertOnlyOneUserToUpload()
+                        expect(user.sessionIds.count).to(equal(1))
+                    }
+                    
+                    it("extends the session") {
+                        try consumer.assertSessionWasExtended(from: sessionTimestamp)
+                    }
+
+                    it("returns a current session id") {
+                        expect(sessionId).to(equal(consumer.activeOrExpiredSessionId))
+                    }
+                }
 
                 context("called before the session expires") {
 
@@ -73,7 +102,7 @@ final class EventConsumer_GetSessionIdSpec: HeapSpec {
                         expect(user.sessionIds.count).to(equal(1))
                     }
                         
-                    it("does not extend the session") {
+                    it("extends the session") {
                         try consumer.assertSessionWasExtended(from: sessionTimestamp)
                     }
 

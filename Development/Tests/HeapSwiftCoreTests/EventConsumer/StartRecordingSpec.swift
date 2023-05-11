@@ -89,13 +89,21 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                 }
             }
             
-            // TODO: it("does not create a session")
-
-            // TODO: Rename to include "when called with startSessionImmediately"
-            it("creates a new session with a synthesized pageview") {
-
+            it("creates an expired session") {
                 let sessionTimestamp = Date()
                 consumer.startRecording("11", timestamp: sessionTimestamp)
+                
+                guard let sessionId = consumer.activeOrExpiredSessionId else {
+                    throw TestFailure("Starting recording should have created an expired session.")
+                }
+                expect(sessionId).to(beEmpty())
+                expect(consumer.sessionExpirationTime).to(equal(Date(timeIntervalSince1970: 0)))
+            }
+
+            it("creates a new session with a synthesized pageview when called with startSessionImmediately") {
+
+                let sessionTimestamp = Date()
+                consumer.startRecording("11", with: [ .startSessionImmediately: true ], timestamp: sessionTimestamp)
 
                 let user = try dataStore.assertOnlyOneUserToUpload()
 
@@ -110,29 +118,26 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                 messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: sessionTimestamp, eventProperties: consumer.eventProperties)
             }
 
-            // TODO: Rename to include "when called with startSessionImmediately"
-            it("extends the session") {
+            it("extends the session when called with startSessionImmediately") {
 
                 let sessionTimestamp = Date()
-                consumer.startRecording("11", timestamp: sessionTimestamp)
+                consumer.startRecording("11", with: [ .startSessionImmediately: true ], timestamp: sessionTimestamp)
 
                 try consumer.assertSessionWasExtended(from: sessionTimestamp)
             }
 
-            // TODO: We need to pass in startSessionImmediately because a single session is our proxy for only starting once. No rename.
             it("only runs once when called repeatedly with the same options") {
-                consumer.startRecording("11", with: [ .myOption: true ])
-                consumer.startRecording("11", with: [ .myOption: true ])
-                consumer.startRecording("11", with: [ .myOption: true ])
+                consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true ])
+                consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true ])
+                consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true ])
 
                 let user = try dataStore.assertOnlyOneUserToUpload()
                 expect(user.sessionIds).to(haveCount(1))
             }
 
-            // TODO: We need to pass in startSessionImmediately because multiple sessions is our proxy. No rename.
             it("reinitializes with a new session when called with different options") {
-                consumer.startRecording("11", with: [ .myOption: true ])
-                consumer.startRecording("11", with: [ .myOption: false ])
+                consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true ])
+                consumer.startRecording("11", with: [ .myOption: false, .startSessionImmediately: true ])
 
                 let user = try dataStore.assertOnlyOneUserToUpload(message: "Calling the method multiple times, even with different options, should not have produced multiple users.")
                 expect(user.sessionIds).to(haveCount(2))
@@ -153,14 +158,13 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                 expect(Set(usersToUpload.map(\.userId))).to(haveCount(3), description: "Each environment should have its own persisted user ID")
             }
             
-            // TODO: Rename to include "when called with startSessionImmediately"
-            it("creates new sessions when switching environments") {
-                consumer.startRecording("11")
-                consumer.startRecording("12")
-                consumer.startRecording("13")
-                consumer.startRecording("11")
-                consumer.startRecording("12")
-                consumer.startRecording("13")
+            it("creates new sessions when switching environments when called with startSessionImmediately") {
+                consumer.startRecording("11", with: [ .startSessionImmediately: true ])
+                consumer.startRecording("12", with: [ .startSessionImmediately: true ])
+                consumer.startRecording("13", with: [ .startSessionImmediately: true ])
+                consumer.startRecording("11", with: [ .startSessionImmediately: true ])
+                consumer.startRecording("12", with: [ .startSessionImmediately: true ])
+                consumer.startRecording("13", with: [ .startSessionImmediately: true ])
 
                 let usersToUpload = dataStore.usersToUpload()
 
@@ -182,8 +186,7 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                 expect(dataStore.usersToUpload()).to(haveCount(1), description: "Data store should have purged three users and created one more")
             }
             
-            // TODO: Rename to include "when called with startSessionImmediately"
-            context("with a source and bridge added") {
+            context("with a source and bridge added when called with startSessionImmediately") {
                 
                 var bridge: CountingRuntimeBridge!
                 var source: CountingSource!
@@ -195,7 +198,7 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                     consumer.addRuntimeBridge(bridge)
                     consumer.addSource(source, isDefault: false)
                     
-                    consumer.startRecording("11")
+                    consumer.startRecording("11", with: [ .startSessionImmediately: true ])
                 }
                 
                 it("calls .didStartRecording and .sessionDidStart on sources and bridges") {
@@ -236,14 +239,12 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                         .didStartRecording,
                         .sessionDidStart,
                         .didStartRecording,
-                        .sessionDidStart,
                     ]))
                     
                     expect(source.calls).to(equal([
                         .didStartRecording,
                         .sessionDidStart,
                         .didStartRecording,
-                        .sessionDidStart,
                     ]))
                 }
             }

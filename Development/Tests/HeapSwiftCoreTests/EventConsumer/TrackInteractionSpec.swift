@@ -47,7 +47,7 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                 consumer.startRecording("11")
 
                 let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 2)
+                expect(user.sessionIds).to(beEmpty(), description: "No events should have been sent, so there shouldn't be a session.")
             }
             
             it("doesn't track an interaction after `stopRecording` is called") {
@@ -67,11 +67,16 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                 }
             }
             
-            // TODO: it("starts a session if Heap is recording but the first session has not started")
+            it("starts a session if Heap is recording but the first session has not started") {
+                consumer.startRecording("11")
+                consumer.trackInteraction(interaction: .touch, nodes: testNodesA)
+                
+                expect(consumer.activeOrExpiredSessionId).to(beAValidId())
+            }
             
             it("starts a new session if the session has expired") {
                 
-                consumer.startRecording("11", with: [:])
+                consumer.startRecording("11")
                 let (sessionTimestamp, originalSessionId) = consumer.ensureSessionExistsUsingTrack()
                 
                 consumer.trackInteraction(interaction: .touch, nodes: testNodesA, timestamp: sessionTimestamp.addingTimeInterval(3000))

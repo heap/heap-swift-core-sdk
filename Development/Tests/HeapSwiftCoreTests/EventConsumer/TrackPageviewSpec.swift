@@ -33,7 +33,7 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                 consumer.startRecording("11")
 
                 let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 2)
+                expect(user.sessionIds).to(beEmpty(), description: "No events should have been sent, so there shouldn't be a session.")
             }
             
             it("doesn't track a pageview after `stopRecording` is called") {
@@ -64,7 +64,55 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     try dataStore.assertOnlyOneUserToUpload()
                 }
                 
-                // TODO: context("called before the first session starts")
+                context("called before the first session starts") {
+                    
+                    var trackTimestamp: Date!
+                    var pageview: Pageview!
+                    var finalState: State!
+
+                    beforeEach {
+                        trackTimestamp = Date()
+                        pageview = consumer.trackPageview(.with({ $0.title = "page 1" }), timestamp: trackTimestamp)
+                        finalState = consumer.stateManager.current
+                    }
+
+                    it("creates a new session") {
+                        
+                        guard let sessionId = consumer.activeOrExpiredSessionId else {
+                            throw TestFailure("trackPageview should have created a new session.")
+                        }
+
+                        expect(sessionId).to(beAValidId())
+                        
+                        let user = try dataStore.assertOnlyOneUserToUpload()
+                        expect(user.sessionIds.count).to(equal(1))
+                    }
+                        
+                    it("extends the session") {
+                        try consumer.assertSessionWasExtended(from: trackTimestamp)
+                    }
+                    
+                    it("sets lastPageviewInfo") {
+                        expect(finalState.lastPageviewInfo).to(equal(pageview._pageviewInfo))
+                    }
+                    
+                    it("does not modify unattributedPageviewInfo") {
+                        expect(finalState.unattributedPageviewInfo).notTo(equal(pageview._pageviewInfo))
+                    }
+                    
+                    it("returns a pageview with the final session ID") {
+                        expect(pageview.sessionId).to(equal(finalState.sessionInfo.id))
+                    }
+
+                    it("adds the pageview message at the end of the new session") {
+                        let user = try dataStore.assertOnlyOneUserToUpload()
+                        let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 3)
+                        messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, eventProperties: consumer.eventProperties)
+                        
+                        messages[2].expectPageviewMessage(user: user, timestamp: trackTimestamp, sessionMessage: messages[0])
+                        expect(messages[2].pageviewInfo).to(equal(pageview._pageviewInfo))
+                    }
+                }
 
                 context("called before the session expires") {
 

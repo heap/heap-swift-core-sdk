@@ -164,7 +164,7 @@ final class EventConsumer_ResetIdentitySpec: HeapSpec {
                     }
                     
                     it("notifies bridges and sources about the new session") {
-                        expect(bridge.sessions).to(haveCount(2))
+                        expect(bridge.sessions).to(haveCount(1))
                         expect(source.sessions).to(equal(bridge.sessions))
                     }
                     

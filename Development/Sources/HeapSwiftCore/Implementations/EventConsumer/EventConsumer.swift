@@ -55,7 +55,7 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
                 environmentId: environment.envID,
                 userId: environment.userID,
                 identity: environment.hasIdentity ? environment.identity : nil,
-                creationDate: sessionInfo.time.date)
+                creationDate: timestamp)
         } else if updateResults.outcomes.identitySet {
             dataStore.setIdentityIfNull(environmentId: environment.envID, userId: environment.userID, identity: environment.identity)
         }

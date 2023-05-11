@@ -86,9 +86,16 @@ final class DelegateManagerSpec: HeapSpec {
                 expect(delegateManager.current.defaultSource).to(beNil())
             }
             
-            // TODO: it("calls `didStartRecording` but not `sessionDidStart` if there's a current envrionment and the first session has not started yet")
+            it("calls `didStartRecording` but not `sessionDidStart` if there's a current environment and the first session has not started yet") {
+                let currentState = State(environmentId: "1", userId: "2", sessionId: "3", timestamp: Date(timeIntervalSince1970: 0))
+                delegateManager.addSource(sourceA1, isDefault: false, timestamp: .init(), currentState: currentState)
+                
+                expect(sourceA1.calls).to(equal([
+                    .didStartRecording
+                ] + foregroundEventIfForegrounded()))
+            }
             
-            it("calls `didStartRecording` and `sessionDidStart` if there's a current envrionment and the session has not expired") {
+            it("calls `didStartRecording` and `sessionDidStart` if there's a current environment and the session has not expired") {
                 
                 let currentState = State(environmentId: "1", userId: "2", sessionId: "3")
                 
@@ -100,7 +107,7 @@ final class DelegateManagerSpec: HeapSpec {
                 ] + foregroundEventIfForegrounded()))
             }
             
-            it("calls `didStartRecording` but not `sessionDidStart` if there's a current envrionment and the session has expired") {
+            it("calls `didStartRecording` but not `sessionDidStart` if there's a current environment and the session has expired") {
                 
                 let currentState = State(environmentId: "1", userId: "2", sessionId: "3")
                 
@@ -113,7 +120,7 @@ final class DelegateManagerSpec: HeapSpec {
             
             // TODO: Test applicationDidEntereForeground
             
-            it("does not call `didStartRecording` and `sessionDidStart` if there's not a envrionment") {
+            it("does not call `didStartRecording` and `sessionDidStart` if there's not a environment") {
                 
                 delegateManager.addSource(sourceA1, isDefault: false, timestamp: .init(), currentState: nil)
                 
@@ -146,7 +153,7 @@ final class DelegateManagerSpec: HeapSpec {
                 ]))
             }
             
-            it("does not call `didStopRecording` on the removed source if there is not a current envrionment") {
+            it("does not call `didStopRecording` on the removed source if there is not a current environment") {
                 
                 delegateManager.addSource(sourceA1, isDefault: false, timestamp: .init(), currentState: nil)
                 delegateManager.addSource(sourceA2, isDefault: false, timestamp: .init(), currentState: nil)
@@ -197,7 +204,7 @@ final class DelegateManagerSpec: HeapSpec {
                 ]))
             }
             
-            it("does not call `didStopRecording` if there is not a current envrionment") {
+            it("does not call `didStopRecording` if there is not a current environment") {
                 delegateManager.addSource(sourceA1, isDefault: false, timestamp: .init(), currentState: nil)
                 delegateManager.removeSource("A", currentState: nil)
 
@@ -222,9 +229,18 @@ final class DelegateManagerSpec: HeapSpec {
                 expect(delegateManager.current.runtimeBridges.map({ $0 as? CountingRuntimeBridge})).to(equal([bridge1]))
             }
             
-            // TODO: it("calls `didStartRecording` but not `sessionDidStart` if there's a current envrionment and the first session has not started yet")
+            it("calls `didStartRecording` but not `sessionDidStart` if there's a current environment and the first session has not started yet") {
+                
+                let currentState = State(environmentId: "1", userId: "2", sessionId: "3", timestamp: Date(timeIntervalSince1970: 0))
+                
+                delegateManager.addRuntimeBridge(bridge1, timestamp: .init(), currentState: currentState)
+                
+                expect(bridge1.calls).to(equal([
+                    .didStartRecording,
+                ] + foregroundEventIfForegrounded()))
+            }
             
-            it("calls `didStartRecording` and `sessionDidStart` if there's a current envrionment and the session has not expired") {
+            it("calls `didStartRecording` and `sessionDidStart` if there's a current environment and the session has not expired") {
                 
                 let currentState = State(environmentId: "1", userId: "2", sessionId: "3")
                 
@@ -236,7 +252,7 @@ final class DelegateManagerSpec: HeapSpec {
                 ] + foregroundEventIfForegrounded()))
             }
             
-            it("calls `didStartRecording` but not `sessionDidStart` if there's a current envrionment and the session has expired") {
+            it("calls `didStartRecording` but not `sessionDidStart` if there's a current environment and the session has expired") {
                 
                 let currentState = State(environmentId: "1", userId: "2", sessionId: "3")
                 
@@ -249,7 +265,7 @@ final class DelegateManagerSpec: HeapSpec {
 
             // TODO: Test applicationDidEntereForeground
             
-            it("does not call `didStartRecording` and `sessionDidStart` if there's not a envrionment") {
+            it("does not call `didStartRecording` and `sessionDidStart` if there's not a environment") {
                 
                 delegateManager.addRuntimeBridge(bridge1, timestamp: .init(), currentState: nil)
                 
@@ -306,7 +322,7 @@ final class DelegateManagerSpec: HeapSpec {
                 ]))
             }
             
-            it("does not call `didStopRecording` if there is not a current envrionment") {
+            it("does not call `didStopRecording` if there is not a current environment") {
                 
                 delegateManager.addRuntimeBridge(bridge1, timestamp: .init(), currentState: nil)
                 delegateManager.removeRuntimeBridge(bridge1, currentState: nil)

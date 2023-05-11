@@ -5,6 +5,7 @@ struct State {
     let options: [Option: Any]
     let sdkInfo: SDKInfo
     let fieldSettings: FieldSettings
+    let behaviorSettings: BehaviorSettings
     
     var environment: EnvironmentState
     var sessionInfo: SessionInfo
@@ -28,6 +29,7 @@ struct State {
         
         options = sanitizedOptions
         fieldSettings = .init(with: sanitizedOptions)
+        behaviorSettings = .init(with: sanitizedOptions)
         sdkInfo = .current(with: fieldSettings)
         
         // Init with placeholder data while we get started. Otherwise, we have to recreate logic here.
@@ -64,9 +66,13 @@ extension State {
         self.init(partialWith: loadedEnvironment, sanitizedOptions: sanitizedOptions)
         
         if !environment.hasUserID {
-            createUserAndSession(identity: nil, at: timestamp, outcomes: &outcomes)
-        } else {
+            createUser(identity: nil, outcomes: &outcomes)
+        }
+        
+        if behaviorSettings.startSessionImmediately {
             createSession(at: timestamp, outcomes: &outcomes)
+        } else {
+            createExpiredSession()
         }
     }
     
@@ -79,6 +85,10 @@ extension State {
         outcomes.sessionCreated = true
     }
     
+    mutating func createExpiredSession() {
+        sessionInfo = .init()
+    }
+    
     mutating func createSessionIfExpired(extendIfNotExpired: Bool, at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
         if sessionExpirationDate < timestamp {
             createSession(at: timestamp, outcomes: &outcomes)
@@ -87,7 +97,7 @@ extension State {
         }
     }
     
-    mutating func createUserAndSession(identity: String?, at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
+    mutating func createUser(identity: String?, outcomes: inout UpdateResults.Outcomes) {
         environment.userID = generateRandomHeapId()
         if let identity = identity {
             environment.identity = identity
@@ -97,10 +107,13 @@ extension State {
         }
         environment.properties.removeAll()
         outcomes.userCreated = true
-
-        createSession(at: timestamp, outcomes: &outcomes)
     }
     
+    mutating func createUserAndSession(identity: String?, at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
+        createUser(identity: identity, outcomes: &outcomes)
+        createSession(at: timestamp, outcomes: &outcomes)
+    }
+ 
     mutating func extendSessionAndSetLastPageview(_ pageviewInfo: inout PageviewInfo, outcomes: inout UpdateResults.Outcomes) {
         createSessionIfExpired(extendIfNotExpired: true, at: pageviewInfo.time.date, outcomes: &outcomes)
         

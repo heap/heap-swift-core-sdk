@@ -262,7 +262,35 @@ final class EventConsumer_IdentifySpec: HeapSpec {
                         }
                     }
                     
-                    // TODO: context("called with a valid identity, before the session first has started")
+                    context("called with a valid identity, before the first session has started") {
+                        
+                        var identifyTimestamp: Date!
+                        var originalSessionId: String?
+                        
+                        beforeEach {
+                            identifyTimestamp = Date()
+                            originalSessionId = consumer.activeOrExpiredSessionId
+                            consumer.identify("user1", timestamp: identifyTimestamp)
+                        }
+                        
+                        it("creates a new session and pageview for the new user") {
+                            expect(consumer.activeOrExpiredSessionId).notTo(beNil())
+                            expect(consumer.activeOrExpiredSessionId).notTo(equal(originalSessionId))
+                            
+                            let user = try dataStore.assertUserToUploadExists(with: consumer.userId!)
+                            let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 2)
+                            messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: identifyTimestamp, eventProperties: consumer.eventProperties)
+                        }
+                        
+                        it("notifies bridges and sources about the new session") {
+                            expect(bridge.sessions).to(haveCount(1))
+                            expect(source.sessions).to(equal(bridge.sessions))
+                        }
+                        
+                        it("extends the session") {
+                            try consumer.assertSessionWasExtended(from: identifyTimestamp)
+                        }
+                    }
                     
                     context("called with a valid identity, before the session expires") {
 

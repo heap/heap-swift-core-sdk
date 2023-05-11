@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added option startSessionImmediately to begin tracking sessions immediately.
+
+### Changed
+
+- Default behavior for sessions has been changed (startSessionImmediately = false).  
+  Tracking of sessions is now delayed until an event is tracked:
+  - `Heap.shared.track()`
+  - `Heap.shared.trackPageview()`
+  - `Heap.shared.trackInteraction()`
+  - `Heap.shared.uncommittedInteractionEvent()`
+  - `Heap.shared.fetchSessionId()`
+
 ## [0.1.2]
 
 ### Changed
