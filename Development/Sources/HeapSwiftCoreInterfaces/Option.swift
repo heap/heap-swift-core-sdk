@@ -93,6 +93,7 @@ public extension Option {
     static let disablePageviewTitleCapture = register(name: "disablePageviewTitleCapture", type: .boolean)
     static let disableInteractionAutocapture = register(name: "disableInteractionAutocapture", type: .boolean)
     static let disableInteractionTextCapture = register(name: "disableInteractionTextCapture", type: .boolean)
+    static let startSessionImmediately = register(name: "startSessionImmediately", type: .boolean)
     static let disableInteractionAccessibilityLabelCapture = register(name: "disableInteractionAccessibilityLabelCapture", type: .boolean)
     static let disableInteractionReferencingPropertyCapture = register(name: "disableInteractionReferencingPropertyCapture", type: .boolean)
     static let interactionHierarchyCaptureLimit = register(name: "interactionHierarchyCaptureLimit", type: .integer)
@@ -119,6 +120,7 @@ extension Option {
             Option.disablePageviewTitleCapture,
             Option.disableInteractionAutocapture,
             Option.disableInteractionTextCapture,
+            Option.startSessionImmediately,
             Option.disableInteractionAccessibilityLabelCapture,
             Option.disableInteractionReferencingPropertyCapture,
             Option.interactionHierarchyCaptureLimit,
