@@ -865,13 +865,17 @@ final class HeapBridgeSupportSpec: HeapSpec {
             
             describeMethod("sessionId") { method in
                 
+                // TODO: it("returns null when Heap is recording and the first session has not yet started")
+                
                 it("returns the session id when Heap is recording and the session is not expired") {
                     consumer.startRecording("11")
-                    expect(try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(equal(consumer.activeSession!.sessionId))
+                    let (_, sessionId) = consumer.ensureSessionExistsUsingTrack()
+                    expect(try webConsumer.handleInvocation(method: method, arguments: [:]) as! String?).to(equal(sessionId))
                 }
                 
                 it("returns null when Heap is recording and the session is expired") {
                     consumer.startRecording("11", timestamp: Date().addingTimeInterval(-3000))
+                    _ = consumer.ensureSessionExistsUsingTrack(timestamp: Date().addingTimeInterval(-3000))
                     let sessionId = try webConsumer.handleInvocation(method: method, arguments: [:])
                     expect(sessionId).to(beNil())
                 }

@@ -56,29 +56,30 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
             
             context("Heap is recording") {
 
-                var sessionTimestamp: Date!
-                var originalSessionId: String?
-
                 beforeEach {
-                    sessionTimestamp = Date()
-                    consumer.startRecording("11", timestamp: sessionTimestamp)
-                    originalSessionId = consumer.activeOrExpiredSessionId
+                    consumer.startRecording("11")
                 }
+
+                it("does not create a new user") {
+                    try dataStore.assertOnlyOneUserToUpload()
+                }
+                
+                // TODO: context("called before the first session starts")
 
                 context("called before the session expires") {
 
+                    var sessionTimestamp: Date!
+                    var originalSessionId: String?
                     var trackTimestamp: Date!
                     var pageview: Pageview!
                     var finalState: State!
 
                     beforeEach {
+                        (sessionTimestamp, originalSessionId) = consumer.ensureSessionExistsUsingTrack()
+                        
                         trackTimestamp = sessionTimestamp.addingTimeInterval(60)
                         pageview = consumer.trackPageview(.with({ $0.title = "page 1" }), timestamp: trackTimestamp)
                         finalState = consumer.stateManager.current
-                    }
-
-                    it("does not create a new user") {
-                        try dataStore.assertOnlyOneUserToUpload()
                     }
 
                     it("does not create a new session") {
@@ -105,28 +106,28 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
 
                     it("adds the pageview message at the end of the current session") {
                         let user = try dataStore.assertOnlyOneUserToUpload()
-                        let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 3)
-                        messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: sessionTimestamp, eventProperties: consumer.eventProperties)
+                        let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 4)
+                        messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, eventProperties: consumer.eventProperties)
                         
-                        messages[2].expectPageviewMessage(user: user, timestamp: trackTimestamp, sessionMessage: messages[0])
-                        expect(messages[2].pageviewInfo).to(equal(pageview._pageviewInfo))
+                        messages[3].expectPageviewMessage(user: user, timestamp: trackTimestamp, sessionMessage: messages[0])
+                        expect(messages[3].pageviewInfo).to(equal(pageview._pageviewInfo))
                     }
                 }
 
                 context("called after the session expires") {
                     
+                    var sessionTimestamp: Date!
+                    var originalSessionId: String?
                     var trackTimestamp: Date!
                     var pageview: Pageview!
                     var finalState: State!
 
                     beforeEach {
+                        (sessionTimestamp, originalSessionId) = consumer.ensureSessionExistsUsingTrack()
+                        
                         trackTimestamp = sessionTimestamp.addingTimeInterval(600)
                         pageview = consumer.trackPageview(.with({ $0.title = "page 1" }), timestamp: trackTimestamp)
                         finalState = consumer.stateManager.current
-                    }
-
-                    it("does not create a new user") {
-                        try dataStore.assertOnlyOneUserToUpload()
                     }
 
                     it("creates a new session") {
@@ -146,10 +147,6 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     
                     it("sets lastPageviewInfo") {
                         expect(finalState.lastPageviewInfo).to(equal(pageview._pageviewInfo))
-                    }
-                    
-                    it("does not modify unattributedPageviewInfo") {
-                        expect(finalState.unattributedPageviewInfo).notTo(equal(pageview._pageviewInfo))
                     }
                     
                     it("returns a pageview with the final session ID") {
@@ -195,7 +192,7 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
 
                 it("populates the pageview info correctly") {
                     
-                    let trackTimestamp = sessionTimestamp!
+                    let trackTimestamp = Date()
                     _ = consumer.trackPageview(.with({
                         $0.componentOrClassName = "MyViewController"
                         $0.title = "Home screen"
@@ -210,7 +207,7 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     let pageviewMessage = messages[2]
                     let pageviewInfo = messages[2].pageviewInfo
 
-                    messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: sessionTimestamp, eventProperties: consumer.eventProperties)
+                    messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, eventProperties: consumer.eventProperties)
                     
                     pageviewMessage.expectPageviewMessage(user: user, sessionMessage: sessionMessage)
                     

@@ -66,7 +66,18 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                     try dataStore.assertExactPendingMessagesCount(for: user, sessionId: sessionId, count: 2)
                 }
             }
-
+            
+            // TODO: it("starts a session if Heap is recording but the first session has not started")
+            
+            it("starts a new session if the session has expired") {
+                
+                consumer.startRecording("11", with: [:])
+                let (sessionTimestamp, originalSessionId) = consumer.ensureSessionExistsUsingTrack()
+                
+                consumer.trackInteraction(interaction: .touch, nodes: testNodesA, timestamp: sessionTimestamp.addingTimeInterval(3000))
+                expect(consumer.activeOrExpiredSessionId).notTo(equal(originalSessionId))
+            }
+            
             context("Heap is recording") {
                 
                 var sessionTimestamp: Date!
@@ -76,8 +87,8 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                 beforeEach {
                     sessionTimestamp = Date()
                     consumer.startRecording("11", timestamp: sessionTimestamp)
-                    originalSessionId = consumer.activeOrExpiredSessionId
                     pageview = consumer.trackPageview(.with({ $0.title = "page 1" }), timestamp: sessionTimestamp)
+                    originalSessionId = consumer.activeOrExpiredSessionId
                 }
                 
                 it("tracks interactions") {

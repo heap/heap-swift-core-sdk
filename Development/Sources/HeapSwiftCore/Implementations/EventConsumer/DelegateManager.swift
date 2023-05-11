@@ -51,7 +51,14 @@ class DelegateManager {
             source.didStartRecording(options: currentState.options, complete: {})
             
             onMainThread {
-                source.sessionDidStart(sessionId: currentState.sessionInfo.id, timestamp: timestamp, foregrounded: Event.AppVisibility.current == .foregrounded, complete: {})
+                let foregrounded = Event.AppVisibility.current == .foregrounded
+                if timestamp < currentState.sessionExpirationDate {
+                    source.sessionDidStart(sessionId: currentState.sessionInfo.id, timestamp: timestamp, foregrounded: foregrounded, complete: {})
+                }
+                
+                if foregrounded {
+                    source.applicationDidEnterForeground(timestamp: timestamp, complete: {})
+                }
             }
         }
     }
@@ -94,7 +101,14 @@ class DelegateManager {
             bridge.didStartRecording(options: currentState.options, complete: {})
             
             onMainThread {
-                bridge.sessionDidStart(sessionId: currentState.sessionInfo.id, timestamp: timestamp, foregrounded: Event.AppVisibility.current == .foregrounded, complete: {})
+                let foregrounded = Event.AppVisibility.current == .foregrounded
+                if timestamp < currentState.sessionExpirationDate {
+                    bridge.sessionDidStart(sessionId: currentState.sessionInfo.id, timestamp: timestamp, foregrounded: foregrounded, complete: {})
+                }
+                
+                if foregrounded {
+                    bridge.applicationDidEnterForeground(timestamp: timestamp, complete: {})
+                }
             }
         }
     }

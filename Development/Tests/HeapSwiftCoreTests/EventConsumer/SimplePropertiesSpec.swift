@@ -80,16 +80,24 @@ final class EventConsumer_SimplePropertiesSpec: HeapSpec {
                 expect(consumer.getSessionId()).to(beNil())
             }
             
+            // TODO: it("returns nil when Heap is recording and the first session has not yet started")
+            
             it("returns a value when Heap is recording and the session has not expired") {
                 _ = dataStore.applyIdentifiedState(to: "11")
                 consumer.startRecording("11")
-                expect(consumer.getSessionId()).notTo(beNil())
+                let (sessionTimestamp, expectedSessionId) = consumer.ensureSessionExistsUsingTrack()
+                let sessionId = consumer.getSessionId(timestamp: sessionTimestamp.addingTimeInterval(60))
+                expect(sessionId).notTo(beNil())
+                expect(sessionId).to(equal(expectedSessionId))
             }
             
             it("returns nil when Heap is recording and the session has expired") {
                 _ = dataStore.applyIdentifiedState(to: "11")
                 consumer.startRecording("11")
-                expect(consumer.getSessionId(timestamp: Date().addingTimeInterval(3000))).to(beNil())
+                let (sessionTimestamp, previousSessionId) = consumer.ensureSessionExistsUsingTrack()
+                let sessionId = consumer.getSessionId(timestamp: sessionTimestamp.addingTimeInterval(3000))
+                expect(previousSessionId).toNot(beNil(), description: "PRECONDITION: The previous session does not exist.")
+                expect(sessionId).to(beNil())
             }
         }
     }

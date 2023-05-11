@@ -128,7 +128,7 @@ extension Message {
         expect(file: file, line: line, hasPageviewInfo).to(beTrue(), description: "The event must have pageview info")
 
         if let pageviewMessage = pageviewMessage {
-            expect(pageviewInfo).to(equal(pageviewMessage.pageviewInfo), description: "The event and pageview have matching pageviewInfo")
+            expect(file: file, line: line, pageviewInfo).to(equal(pageviewMessage.pageviewInfo), description: "The event and pageview have matching pageviewInfo")
         }
     }
     

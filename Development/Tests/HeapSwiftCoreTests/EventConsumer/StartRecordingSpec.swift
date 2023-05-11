@@ -88,7 +88,10 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                     expect(user.pendingUserProperties).to(equal([:]))
                 }
             }
+            
+            // TODO: it("does not create a session")
 
+            // TODO: Rename to include "when called with startSessionImmediately"
             it("creates a new session with a synthesized pageview") {
 
                 let sessionTimestamp = Date()
@@ -107,6 +110,7 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                 messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: sessionTimestamp, eventProperties: consumer.eventProperties)
             }
 
+            // TODO: Rename to include "when called with startSessionImmediately"
             it("extends the session") {
 
                 let sessionTimestamp = Date()
@@ -115,6 +119,7 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                 try consumer.assertSessionWasExtended(from: sessionTimestamp)
             }
 
+            // TODO: We need to pass in startSessionImmediately because a single session is our proxy for only starting once. No rename.
             it("only runs once when called repeatedly with the same options") {
                 consumer.startRecording("11", with: [ .myOption: true ])
                 consumer.startRecording("11", with: [ .myOption: true ])
@@ -124,6 +129,7 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                 expect(user.sessionIds).to(haveCount(1))
             }
 
+            // TODO: We need to pass in startSessionImmediately because multiple sessions is our proxy. No rename.
             it("reinitializes with a new session when called with different options") {
                 consumer.startRecording("11", with: [ .myOption: true ])
                 consumer.startRecording("11", with: [ .myOption: false ])
@@ -132,7 +138,7 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                 expect(user.sessionIds).to(haveCount(2))
             }
 
-            it("creates new users and sessions when switching environments") {
+            it("creates new users when switching environments") {
                 consumer.startRecording("11")
                 consumer.startRecording("12")
                 consumer.startRecording("13")
@@ -145,6 +151,20 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                 expect(usersToUpload).to(haveCount(3))
                 expect(Set(usersToUpload.map(\.environmentId))).to(equal(["11", "12", "13"]))
                 expect(Set(usersToUpload.map(\.userId))).to(haveCount(3), description: "Each environment should have its own persisted user ID")
+            }
+            
+            // TODO: Rename to include "when called with startSessionImmediately"
+            it("creates new sessions when switching environments") {
+                consumer.startRecording("11")
+                consumer.startRecording("12")
+                consumer.startRecording("13")
+                consumer.startRecording("11")
+                consumer.startRecording("12")
+                consumer.startRecording("13")
+
+                let usersToUpload = dataStore.usersToUpload()
+
+                expect(usersToUpload).to(haveCount(3))
                 expect(usersToUpload.map(\.sessionIds)).to(allPass(haveCount(2)), description: "Each environment should have its own sessions, and switching should have produced new sessions")
             }
 
@@ -162,6 +182,7 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                 expect(dataStore.usersToUpload()).to(haveCount(1), description: "Data store should have purged three users and created one more")
             }
             
+            // TODO: Rename to include "when called with startSessionImmediately"
             context("with a source and bridge added") {
                 
                 var bridge: CountingRuntimeBridge!

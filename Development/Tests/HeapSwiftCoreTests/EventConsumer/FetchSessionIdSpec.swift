@@ -47,22 +47,23 @@ final class EventConsumer_GetSessionIdSpec: HeapSpec {
 
             context("Heap is recording") {
 
-                var sessionTimestamp: Date!
-                var originalSessionId: String?
-
                 beforeEach {
-                    sessionTimestamp = Date()
-                    consumer.startRecording("11", timestamp: sessionTimestamp)
-                    originalSessionId = consumer.activeOrExpiredSessionId
+                    consumer.startRecording("11")
                 }
+                
+                // TODO: context("called before the first session starts")
 
                 context("called before the session expires") {
 
+                    var sessionTimestamp: Date!
+                    var originalSessionId: String?
                     var fetchSessionIdTimestamp: Date!
                     var sessionId: String?
 
                     beforeEach {
-                        fetchSessionIdTimestamp = sessionTimestamp.addingTimeInterval(60)
+                        (sessionTimestamp, originalSessionId) = consumer.ensureSessionExistsUsingTrack()
+                        
+                        fetchSessionIdTimestamp = sessionTimestamp.addingTimeInterval(60) // Before the session expires
                         sessionId = consumer.fetchSessionId(timestamp: fetchSessionIdTimestamp)
                     }
 
@@ -83,10 +84,14 @@ final class EventConsumer_GetSessionIdSpec: HeapSpec {
 
                 context("called after the session expires") {
 
+                    var sessionTimestamp: Date!
+                    var originalSessionId: String?
                     var fetchSessionIdTimestamp: Date!
                     var sessionId: String?
 
                     beforeEach {
+                        (sessionTimestamp, originalSessionId) = consumer.ensureSessionExistsUsingTrack()
+                        
                         fetchSessionIdTimestamp = sessionTimestamp.addingTimeInterval(600)
                         sessionId = consumer.fetchSessionId(timestamp: fetchSessionIdTimestamp)
                     }

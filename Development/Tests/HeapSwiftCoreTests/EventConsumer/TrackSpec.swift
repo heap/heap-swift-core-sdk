@@ -55,20 +55,18 @@ final class EventConsumer_TrackSpec: HeapSpec {
             
             context("Heap is recording") {
 
-                var sessionTimestamp: Date!
-                var originalSessionId: String?
-
                 beforeEach {
-                    sessionTimestamp = Date()
-                    consumer.startRecording("11", timestamp: sessionTimestamp)
-                    originalSessionId = consumer.activeOrExpiredSessionId
+                    consumer.startRecording("11")
                 }
 
                 context("called before the session expires") {
 
+                    var sessionTimestamp: Date!
+                    var originalSessionId: String?
                     var trackTimestamp: Date!
 
                     beforeEach {
+                        (sessionTimestamp, originalSessionId) = consumer.ensureSessionExistsUsingIdentify()
                         trackTimestamp = sessionTimestamp.addingTimeInterval(60)
                         consumer.track("my-event", timestamp: trackTimestamp)
                     }
@@ -90,16 +88,19 @@ final class EventConsumer_TrackSpec: HeapSpec {
                     it("adds the event to the current session") {
                         let user = try dataStore.assertOnlyOneUserToUpload()
                         let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 3)
-                        messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: sessionTimestamp, eventProperties: consumer.eventProperties)
+                        messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, eventProperties: consumer.eventProperties)
                         messages[2].expectEventMessage(user: user, timestamp: trackTimestamp, hasSourceLibrary: false, eventProperties: consumer.eventProperties, pageviewMessage: messages[1])
                     }
                 }
 
                 context("called after the session expires") {
-
+                    
+                    var sessionTimestamp: Date!
+                    var originalSessionId: String?
                     var trackTimestamp: Date!
 
                     beforeEach {
+                        (sessionTimestamp, originalSessionId) = consumer.ensureSessionExistsUsingIdentify()
                         trackTimestamp = sessionTimestamp.addingTimeInterval(600)
                         consumer.track("my-event", timestamp: trackTimestamp)
                     }
@@ -153,7 +154,7 @@ final class EventConsumer_TrackSpec: HeapSpec {
 
                 it("populates the event correctly") {
 
-                    let trackTimestamp = sessionTimestamp!
+                    let trackTimestamp = Date()
                     consumer.track("my-event", properties: ["a": 1, "b": "2", "c": false], timestamp: trackTimestamp)
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
@@ -162,7 +163,7 @@ final class EventConsumer_TrackSpec: HeapSpec {
                     let pageviewMessage = messages[1]
                     let eventMessage = messages[2]
 
-                    messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: sessionTimestamp, eventProperties: consumer.eventProperties)
+                    messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, eventProperties: consumer.eventProperties)
 
                     let event = try eventMessage.assertEventMessage(user: user, timestamp: trackTimestamp, hasSourceLibrary: false, eventProperties: consumer.eventProperties, pageviewMessage: pageviewMessage)
                     let customEvent = try event.assertIsCustomEvent()

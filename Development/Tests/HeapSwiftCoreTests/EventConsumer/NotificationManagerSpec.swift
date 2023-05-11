@@ -34,6 +34,9 @@ final class NotificationManagerSpec: HeapSpec {
             delegateManager.addSource(sourceA1, isDefault: false, timestamp: .init(), currentState: currentState)
             delegateManager.addRuntimeBridge(bridge1, timestamp: .init(), currentState: currentState)
             
+            sourceA1.calls.removeAll()
+            bridge1.calls.removeAll()
+            
             HeapLogger.shared.logLevel = .trace
         }
         
@@ -56,14 +59,10 @@ final class NotificationManagerSpec: HeapSpec {
 #endif
                 
                 expect(sourceA1.calls).toEventually(equal([
-                    .didStartRecording,
-                    .sessionDidStart,
                     .applicationDidEnterForeground,
                 ]))
                 
                 expect(bridge1.calls).toEventually(equal([
-                    .didStartRecording,
-                    .sessionDidStart,
                     .applicationDidEnterForeground,
                 ]))
             }
@@ -79,14 +78,10 @@ final class NotificationManagerSpec: HeapSpec {
 #endif
                 
                 expect(sourceA1.calls).to(equal([
-                    .didStartRecording,
-                    .sessionDidStart,
                     .applicationDidEnterBackground,
                 ]))
                 
                 expect(bridge1.calls).to(equal([
-                    .didStartRecording,
-                    .sessionDidStart,
                     .applicationDidEnterBackground,
                 ]))
             }
@@ -99,14 +94,10 @@ final class NotificationManagerSpec: HeapSpec {
                 xit("calls windowSceneDidEnterForeground on UIScene.willEnterForegroundNotification post") {
 
                     expect(sourceA1.calls).to(equal([
-                        .didStartRecording,
-                        .sessionDidStart,
                         .windowSceneDidEnterForeground,
                     ]))
                     
                     expect(bridge1.calls).to(equal([
-                        .didStartRecording,
-                        .sessionDidStart,
                         .windowSceneDidEnterForeground,
                     ]))
                 }
@@ -116,14 +107,10 @@ final class NotificationManagerSpec: HeapSpec {
                 xit("calls windowSceneDidEnterBackground on UIScene.didEnterBackgroundNotification post") {
                           
                     expect(sourceA1.calls).to(equal([
-                        .didStartRecording,
-                        .sessionDidStart,
                         .windowSceneDidEnterBackground,
                     ]))
                     
                     expect(bridge1.calls).to(equal([
-                        .didStartRecording,
-                        .sessionDidStart,
                         .windowSceneDidEnterBackground,
                     ]))
                 }
@@ -135,14 +122,10 @@ final class NotificationManagerSpec: HeapSpec {
                 NotificationCenter.default.post(name: NSWindow.didBecomeMainNotification, object: NSWindow())
                 
                 expect(sourceA1.calls).to(equal([
-                    .didStartRecording,
-                    .sessionDidStart,
                     .windowDidBecomeMain,
                 ]))
                 
                 expect(bridge1.calls).to(equal([
-                    .didStartRecording,
-                    .sessionDidStart,
                     .windowDidBecomeMain,
                 ]))
             }
@@ -152,14 +135,10 @@ final class NotificationManagerSpec: HeapSpec {
                 NotificationCenter.default.post(name: NSWindow.didResignMainNotification, object: NSWindow())
                 
                 expect(sourceA1.calls).to(equal([
-                    .didStartRecording,
-                    .sessionDidStart,
                     .windowDidResignMain,
                 ]))
                 
                 expect(bridge1.calls).to(equal([
-                    .didStartRecording,
-                    .sessionDidStart,
                     .windowDidResignMain,
                 ]))
             }
@@ -184,15 +163,8 @@ final class NotificationManagerSpec: HeapSpec {
                 NotificationCenter.default.post(name: WKExtension.applicationDidEnterBackgroundNotification, object: nil)
 #endif
 
-                expect(sourceA1.calls).to(equal([
-                    .didStartRecording,
-                    .sessionDidStart,
-                ]))
-                
-                expect(bridge1.calls).to(equal([
-                    .didStartRecording,
-                    .sessionDidStart,
-                ]))
+                expect(sourceA1.calls).to(beEmpty())
+                expect(bridge1.calls).to(beEmpty())
             }
         }
         
@@ -211,14 +183,10 @@ final class NotificationManagerSpec: HeapSpec {
 #endif
 
                 expect(sourceA1.calls).toEventually(equal([
-                    .didStartRecording,
-                    .sessionDidStart,
                     .applicationDidEnterForeground
                 ]))
                 
                 expect(bridge1.calls).toEventually(equal([
-                    .didStartRecording,
-                    .sessionDidStart,
                     .applicationDidEnterForeground
                 ]))
             }

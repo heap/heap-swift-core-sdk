@@ -14,6 +14,6 @@ extension State {
         sessionInfo = .init(newSessionAt: timestamp, id: sessionId)
         unattributedPageviewInfo = initialPageviewInfo
         lastPageviewInfo = initialPageviewInfo
-        sessionExpirationDate = timestamp
+        sessionExpirationDate = timestamp.addingTimeInterval(300)
     }
 }

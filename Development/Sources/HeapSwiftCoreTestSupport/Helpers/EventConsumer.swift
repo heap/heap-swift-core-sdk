@@ -18,4 +18,14 @@ extension EventConsumer {
             throw TestFailure("Expected session to be extended 300 seconds after \(date) but it is at \(sessionExpirationTime.timeIntervalSince(date)) seconds", file: file, line: line)
         }
     }
+    
+    func ensureSessionExistsUsingTrack(timestamp: Date = .init()) -> (Date, String?) {
+        track("START SESSION", timestamp: timestamp)
+        return (timestamp, activeOrExpiredSessionId)
+    }
+    
+    func ensureSessionExistsUsingIdentify(timestamp: Date = .init()) -> (Date, String?) {
+        identify("SESSION START", timestamp: timestamp)
+        return (timestamp, activeOrExpiredSessionId)
+    }
 }

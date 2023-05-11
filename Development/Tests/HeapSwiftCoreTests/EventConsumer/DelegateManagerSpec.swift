@@ -86,7 +86,9 @@ final class DelegateManagerSpec: HeapSpec {
                 expect(delegateManager.current.defaultSource).to(beNil())
             }
             
-            it("calls `didStartRecording` and `sessionDidStart` if there's a current envrionment") {
+            // TODO: it("calls `didStartRecording` but not `sessionDidStart` if there's a current envrionment and the first session has not started yet")
+            
+            it("calls `didStartRecording` and `sessionDidStart` if there's a current envrionment and the session has not expired") {
                 
                 let currentState = State(environmentId: "1", userId: "2", sessionId: "3")
                 
@@ -95,8 +97,21 @@ final class DelegateManagerSpec: HeapSpec {
                 expect(sourceA1.calls).to(equal([
                     .didStartRecording,
                     .sessionDidStart,
-                ]))
+                ] + foregroundEventIfForegrounded()))
             }
+            
+            it("calls `didStartRecording` but not `sessionDidStart` if there's a current envrionment and the session has expired") {
+                
+                let currentState = State(environmentId: "1", userId: "2", sessionId: "3")
+                
+                delegateManager.addSource(sourceA1, isDefault: false, timestamp: currentState.sessionExpirationDate.addingTimeInterval(1), currentState: currentState)
+                
+                expect(sourceA1.calls).to(equal([
+                    .didStartRecording,
+                ] + foregroundEventIfForegrounded()))
+            }
+            
+            // TODO: Test applicationDidEntereForeground
             
             it("does not call `didStartRecording` and `sessionDidStart` if there's not a envrionment") {
                 
@@ -126,6 +141,7 @@ final class DelegateManagerSpec: HeapSpec {
                 expect(sourceA1.calls).to(equal([
                     .didStartRecording,
                     .sessionDidStart,
+                ] + foregroundEventIfForegrounded() + [
                     .didStopRecording,
                 ]))
             }
@@ -206,7 +222,9 @@ final class DelegateManagerSpec: HeapSpec {
                 expect(delegateManager.current.runtimeBridges.map({ $0 as? CountingRuntimeBridge})).to(equal([bridge1]))
             }
             
-            it("calls `didStartRecording` and `sessionDidStart` if there's a current envrionment") {
+            // TODO: it("calls `didStartRecording` but not `sessionDidStart` if there's a current envrionment and the first session has not started yet")
+            
+            it("calls `didStartRecording` and `sessionDidStart` if there's a current envrionment and the session has not expired") {
                 
                 let currentState = State(environmentId: "1", userId: "2", sessionId: "3")
                 
@@ -215,8 +233,21 @@ final class DelegateManagerSpec: HeapSpec {
                 expect(bridge1.calls).to(equal([
                     .didStartRecording,
                     .sessionDidStart,
-                ]))
+                ] + foregroundEventIfForegrounded()))
             }
+            
+            it("calls `didStartRecording` but not `sessionDidStart` if there's a current envrionment and the session has expired") {
+                
+                let currentState = State(environmentId: "1", userId: "2", sessionId: "3")
+                
+                delegateManager.addRuntimeBridge(bridge1, timestamp: currentState.sessionExpirationDate.addingTimeInterval(1), currentState: currentState)
+                
+                expect(bridge1.calls).to(equal([
+                    .didStartRecording,
+                ] + foregroundEventIfForegrounded()))
+            }
+
+            // TODO: Test applicationDidEntereForeground
             
             it("does not call `didStartRecording` and `sessionDidStart` if there's not a envrionment") {
                 
@@ -260,7 +291,7 @@ final class DelegateManagerSpec: HeapSpec {
                 expect(delegateManager.current.runtimeBridges.map({ $0 as? CountingRuntimeBridge})).to(equal([bridge2]))
             }
             
-            it("calls `didStopRecording` if there is a current envrironment") {
+            it("calls `didStopRecording` if there is a current envrironment and the session has not expired") {
                 
                 let currentState = State(environmentId: "1", userId: "2", sessionId: "3")
                 
@@ -270,6 +301,7 @@ final class DelegateManagerSpec: HeapSpec {
                 expect(bridge1.calls).to(equal([
                     .didStartRecording,
                     .sessionDidStart,
+                ] + foregroundEventIfForegrounded() + [
                     .didStopRecording,
                 ]))
             }
@@ -291,5 +323,13 @@ final class DelegateManagerSpec: HeapSpec {
                 expect(bridge1.calls).to(beEmpty())
             }
         }
+    }
+}
+
+func foregroundEventIfForegrounded() -> [DelegateCall] {
+    if Event.AppVisibility.current == .foregrounded {
+        return [ .applicationDidEnterForeground ]
+    } else {
+        return []
     }
 }

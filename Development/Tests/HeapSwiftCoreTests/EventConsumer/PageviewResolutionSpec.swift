@@ -61,6 +61,7 @@ final class PageviewResolutionSpec: HeapSpec {
                         bridge = CountingRuntimeBridge()
                         defaultSource = CountingSource(name: "A", version: "1")
                         consumer.addSource(defaultSource, isDefault: true)
+                        defaultSource.calls.removeAll()
                     }
                     
                     context("the pageview has a bridge") {
@@ -103,8 +104,6 @@ final class PageviewResolutionSpec: HeapSpec {
                             bridge.resolveReissuePageview(stalePageview2)
                             
                             expect(defaultSource.calls).toEventually(equal([
-                                .didStartRecording,
-                                .sessionDidStart,
                                 .sessionDidStart,
                                 .activePageview,
                             ]))
@@ -119,8 +118,6 @@ final class PageviewResolutionSpec: HeapSpec {
                             bridge.resolveReissuePageview(nil)
                             
                             expect(defaultSource.calls).toEventually(equal([
-                                .didStartRecording,
-                                .sessionDidStart,
                                 .sessionDidStart,
                                 .activePageview,
                             ]))
@@ -133,6 +130,7 @@ final class PageviewResolutionSpec: HeapSpec {
                             let source = CountingSource(name: "B", version: "1")
                             let sourceInfo = SourceInfo(name: "B", version: "1", platform: "bridged")
                             consumer.addSource(source)
+                            source.calls.removeAll()
 
                             let session2Timestamp = Date().addingTimeInterval(1000)
                             let stalePageview = consumer.trackPageview(.with({ $0.title = "A" }), sourceInfo: sourceInfo, bridge: bridge)
@@ -141,15 +139,11 @@ final class PageviewResolutionSpec: HeapSpec {
                             bridge.resolveReissuePageview(nil)
                             
                             expect(defaultSource.calls).toEventually(equal([
-                                .didStartRecording,
-                                .sessionDidStart,
                                 .sessionDidStart,
                                 .activePageview,
                             ]))
                             
                             expect(source.calls).to(equal([
-                                .didStartRecording,
-                                .sessionDidStart,
                                 .sessionDidStart,
                             ]))
                         }
@@ -161,6 +155,7 @@ final class PageviewResolutionSpec: HeapSpec {
                             let source = CountingSource(name: "B", version: "1")
                             let sourceInfo = SourceInfo(name: "B", version: "1", platform: "bridged")
                             consumer.addSource(source)
+                            source.calls.removeAll()
 
                             let session2Timestamp = Date().addingTimeInterval(1000)
                             let stalePageview = consumer.trackPageview(.with({ $0.title = "A" }), bridge: bridge)
@@ -169,15 +164,11 @@ final class PageviewResolutionSpec: HeapSpec {
                             bridge.resolveReissuePageview(nil)
                             
                             expect(defaultSource.calls).toEventually(equal([
-                                .didStartRecording,
-                                .sessionDidStart,
                                 .sessionDidStart,
                                 .activePageview,
                             ]))
                             
                             expect(source.calls).to(equal([
-                                .didStartRecording,
-                                .sessionDidStart,
                                 .sessionDidStart,
                             ]))
                         }
@@ -187,6 +178,7 @@ final class PageviewResolutionSpec: HeapSpec {
                             let source = CountingSource(name: "B", version: "1")
                             let sourceInfo = SourceInfo(name: "B", version: "1", platform: "bridged")
                             consumer.addSource(source)
+                            source.calls.removeAll()
                             
                             let session2Timestamp = Date().addingTimeInterval(1000)
                             
@@ -197,15 +189,11 @@ final class PageviewResolutionSpec: HeapSpec {
                             consumer.track("event", timestamp: session2Timestamp, sourceInfo: sourceInfo, pageview: stalePageview)
                             
                             expect(defaultSource.calls).toEventually(equal([
-                                .didStartRecording,
-                                .sessionDidStart,
                                 .sessionDidStart,
                                 .activePageview,
                             ]))
                             
                             expect(source.calls).to(equal([
-                                .didStartRecording,
-                                .sessionDidStart,
                                 .sessionDidStart,
                             ]))
                         }
@@ -223,6 +211,8 @@ final class PageviewResolutionSpec: HeapSpec {
                             eventSource = CountingSource(name: "B", version: "1")
                             consumer.addSource(pageviewSource)
                             consumer.addSource(eventSource)
+                            pageviewSource.calls.removeAll()
+                            eventSource.calls.removeAll()
                             
                             pageviewSourceInfo = SourceInfo(name: "A", version: "1", platform: "test host")
                             eventSourceInfo = SourceInfo(name: "B", version: "1", platform: "test host")
@@ -235,8 +225,6 @@ final class PageviewResolutionSpec: HeapSpec {
                             consumer.track("event", timestamp: session2Timestamp, sourceInfo: eventSourceInfo, pageview: stalePageview)
                             
                             expect(pageviewSource.calls).toEventually(equal([
-                                .didStartRecording,
-                                .sessionDidStart,
                                 .sessionDidStart,
                                 .reissuePageview,
                             ]))
@@ -266,8 +254,6 @@ final class PageviewResolutionSpec: HeapSpec {
                             consumer.track("event", timestamp: session2Timestamp, sourceInfo: eventSourceInfo, pageview: stalePageview)
                             
                             expect(eventSource.calls).toEventually(equal([
-                                .didStartRecording,
-                                .sessionDidStart,
                                 .sessionDidStart,
                                 .activePageview,
                             ]))
@@ -283,8 +269,6 @@ final class PageviewResolutionSpec: HeapSpec {
                             pageviewSource.resolveReissuePageview(stalePageview2)
                             
                             expect(eventSource.calls).toEventually(equal([
-                                .didStartRecording,
-                                .sessionDidStart,
                                 .sessionDidStart,
                                 .activePageview,
                             ]))
@@ -299,8 +283,6 @@ final class PageviewResolutionSpec: HeapSpec {
                             pageviewSource.resolveReissuePageview(nil)
                             
                             expect(eventSource.calls).toEventually(equal([
-                                .didStartRecording,
-                                .sessionDidStart,
                                 .sessionDidStart,
                                 .activePageview,
                             ]))
@@ -322,6 +304,8 @@ final class PageviewResolutionSpec: HeapSpec {
                         defaultSource = CountingSource(name: "B", version: "1")
                         consumer.addSource(source)
                         consumer.addSource(defaultSource, isDefault: true)
+                        source.calls.removeAll()
+                        defaultSource.calls.removeAll()
                         
                         sourceInfo = SourceInfo(name: "A", version: "1", platform: "test host")
                     }
@@ -330,8 +314,6 @@ final class PageviewResolutionSpec: HeapSpec {
                         
                         consumer.track("event", sourceInfo: sourceInfo)
                         expect(source.calls).toEventually(equal([
-                            .didStartRecording,
-                            .sessionDidStart,
                             .activePageview,
                         ]))
                     }
@@ -356,8 +338,6 @@ final class PageviewResolutionSpec: HeapSpec {
                         consumer.track("event", sourceInfo: .init(name: "C", version: "1", platform: "nonexistant"))
                         
                         expect(defaultSource.calls).toEventually(equal([
-                            .didStartRecording,
-                            .sessionDidStart,
                             .activePageview,
                         ]))
                     }
@@ -373,8 +353,6 @@ final class PageviewResolutionSpec: HeapSpec {
                         source.resolveActivePageview(stalePageview)
                         
                         expect(defaultSource.calls).toEventually(equal([
-                            .didStartRecording,
-                            .sessionDidStart,
                             .sessionDidStart,
                             .activePageview,
                         ]))
@@ -387,8 +365,6 @@ final class PageviewResolutionSpec: HeapSpec {
                         source.resolveActivePageview(nil)
                         
                         expect(defaultSource.calls).toEventually(equal([
-                            .didStartRecording,
-                            .sessionDidStart,
                             .activePageview,
                         ]))
                     }
@@ -401,14 +377,13 @@ final class PageviewResolutionSpec: HeapSpec {
                     beforeEach {
                         defaultSource = CountingSource(name: "A", version: "1")
                         consumer.addSource(defaultSource, isDefault: true)
+                        defaultSource.calls.removeAll()
                     }
                     
                     it("requests the active pageview from the default source") {
                         
                         consumer.track("event")
                         expect(defaultSource.calls).toEventually(equal([
-                            .didStartRecording,
-                            .sessionDidStart,
                             .activePageview,
                         ]))
                     }
