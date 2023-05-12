@@ -113,6 +113,27 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
                 }
             }
         }
+        
+        if updateResults.outcomes.currentStarted {
+            // Switch to the main thread so we can check Event.AppVisibility.current.
+            onMainThread {
+                
+                if Event.AppVisibility.current == .foregrounded {
+                    
+                    for (sourceName, source) in snapshot.sources {
+                        source.applicationDidEnterForeground(timestamp: timestamp) {
+                            HeapLogger.shared.trace("Source [\(sourceName)] has completed all work related to session initialization.")
+                        }
+                    }
+                    
+                    for bridge in snapshot.runtimeBridges {
+                        bridge.applicationDidEnterForeground(timestamp: timestamp) {
+                            HeapLogger.shared.trace("Bridge of type [\(type(of: bridge))] has completed all work related to session initialization.")
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

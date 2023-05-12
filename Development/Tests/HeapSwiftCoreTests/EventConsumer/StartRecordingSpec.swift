@@ -186,7 +186,64 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                 expect(dataStore.usersToUpload()).to(haveCount(1), description: "Data store should have purged three users and created one more")
             }
             
-            context("with a source and bridge added when called with startSessionImmediately") {
+            context("with a source and bridge added") {
+                
+                var bridge: CountingRuntimeBridge!
+                var source: CountingSource!
+
+                beforeEach {
+                    bridge = CountingRuntimeBridge()
+                    source = CountingSource(name: "A", version: "1")
+                    
+                    consumer.addRuntimeBridge(bridge)
+                    consumer.addSource(source, isDefault: false)
+                    
+                    consumer.startRecording("11")
+                }
+                
+                it("calls .didStartRecording on sources and bridges") {
+
+                    expect(bridge.calls).to(equal([
+                        .didStartRecording,
+                    ] + foregroundEventIfForegrounded()))
+                    
+                    expect(source.calls).to(equal([
+                        .didStartRecording,
+                    ] + foregroundEventIfForegrounded()))
+                }
+                
+                it("calls .didStopRecording on sources and bridges") {
+
+                    bridge.calls.removeAll()
+                    source.calls.removeAll()
+                    consumer.stopRecording()
+                    
+                    expect(bridge.calls).to(equal([
+                        .didStopRecording
+                    ]))
+                    
+                    expect(source.calls).to(equal([
+                        .didStopRecording
+                    ]))
+                }
+                
+                it("does not call .didStopRecording on sources and bridges when called twice") {
+
+                    bridge.calls.removeAll()
+                    source.calls.removeAll()
+                    consumer.startRecording("12")
+                    
+                    expect(bridge.calls).to(equal([
+                        .didStartRecording,
+                    ] + foregroundEventIfForegrounded()))
+                    
+                    expect(source.calls).to(equal([
+                        .didStartRecording,
+                    ] + foregroundEventIfForegrounded()))
+                }
+            }
+            
+            context("with a source and bridge added, called with startSessionImmediately") {
                 
                 var bridge: CountingRuntimeBridge!
                 var source: CountingSource!
@@ -206,46 +263,44 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                     expect(bridge.calls).to(equal([
                         .didStartRecording,
                         .sessionDidStart,
-                    ]))
+                    ] + foregroundEventIfForegrounded()))
                     
                     expect(source.calls).to(equal([
                         .didStartRecording,
                         .sessionDidStart,
-                    ]))
+                    ] + foregroundEventIfForegrounded()))
                 }
                 
                 it("calls .didStopRecording on sources and bridges") {
 
+                    bridge.calls.removeAll()
+                    source.calls.removeAll()
                     consumer.stopRecording()
                     
                     expect(bridge.calls).to(equal([
-                        .didStartRecording,
-                        .sessionDidStart,
                         .didStopRecording
                     ]))
                     
                     expect(source.calls).to(equal([
-                        .didStartRecording,
-                        .sessionDidStart,
                         .didStopRecording
                     ]))
                 }
                 
                 it("does not call .didStopRecording on sources and bridges when called twice") {
 
-                    consumer.startRecording("12")
+                    bridge.calls.removeAll()
+                    source.calls.removeAll()
+                    consumer.startRecording("12", with: [ .startSessionImmediately: true ])
                     
                     expect(bridge.calls).to(equal([
                         .didStartRecording,
                         .sessionDidStart,
-                        .didStartRecording,
-                    ]))
+                    ] + foregroundEventIfForegrounded()))
                     
                     expect(source.calls).to(equal([
                         .didStartRecording,
                         .sessionDidStart,
-                        .didStartRecording,
-                    ]))
+                    ] + foregroundEventIfForegrounded()))
                 }
             }
             
