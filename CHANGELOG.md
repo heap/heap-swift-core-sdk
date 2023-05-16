@@ -7,14 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0]
+
 ### Added
 
-- Added option startSessionImmediately to begin tracking sessions immediately.
+- Added option `startSessionImmediately` to begin tracking sessions immediately.
 
 ### Changed
 
-- Default behavior for sessions has been changed (startSessionImmediately = false).  
-  Tracking of sessions is now delayed until an event is tracked:
+- Default behavior for sessions has been changed (`startSessionImmediately = false`).  
+  Tracking of sessions is now delayed until one of the following is called:
   - `Heap.shared.track()`
   - `Heap.shared.trackPageview()`
   - `Heap.shared.trackInteraction()`
@@ -47,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
+[0.2.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.1.2...0.2.0
 [0.1.2]: https://github.com/heap/heap-swift-core-sdk/compare/0.1.1...0.1.2
 [0.1.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.1.0
