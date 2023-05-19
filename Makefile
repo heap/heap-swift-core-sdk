@@ -32,7 +32,7 @@ define run_unit_tests
 	-rm build/.success
 
 	-(cd Development && xcodebuild \
-		-scheme HeapSwiftCore-Package \
+		-scheme HeapSwiftCoreDevelopment \
 		$(2) \
 		-resultBundlePath ${MAKE_DIR}/build/reports/$(1).xcresult \
 		clean test \
@@ -314,7 +314,6 @@ interfaces_xcframework:
 # (CI) Builds and zips the interfaces XCFramework.
 # This can be run locally to determine why it is breaking on the CDN.
 
-	./DevTools/RecreateInterfacesProject.sh
 	./DevTools/BuildInterfacesFramework.sh "${INTERFACES_VERSION}"
 	./DevTools/CreateInterfacesXcframework.sh "${INTERFACES_VERSION}"
 

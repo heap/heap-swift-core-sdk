@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "HeapSwiftCore",
+    name: "HeapSwiftCoreDevelopment",
     platforms: [
         .macOS(.v10_14),
         .iOS(.v12),
@@ -15,9 +15,6 @@ let package = Package(
         .library(
             name: "HeapSwiftCore",
             targets: ["HeapSwiftCore"]),
-        .library(
-            name: "HeapSwiftCoreInterfaces",
-            targets: ["HeapSwiftCoreInterfaces"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
@@ -31,8 +28,10 @@ let package = Package(
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
                 "HeapSwiftCoreInterfaces",
             ]),
-        .target(
-            name: "HeapSwiftCoreInterfaces"
+        .binaryTarget(
+            name: "HeapSwiftCoreInterfaces",
+            url: "https://cdn.heapanalytics.com/ios/heap-swift-core-interfaces-0.1.1.zip", // END HeapSwiftCoreInterfaces URL
+            checksum: "4ea57ee3bebaf3c6e9a12277bdbb38473557d1e1e829e3829abf72abc8a7f8fd" // END HeapSwiftCoreInterfaces checksum
         ),
         .target(
             name: "HeapSwiftCoreTestSupport",

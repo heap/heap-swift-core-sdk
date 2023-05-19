@@ -17,6 +17,16 @@ env:
 
 steps:
 
+# Builds
+
+  - label: "Build heap-swift-core-interfaces"
+    timeout_in_minutes: 10
+    command:  "make interfaces_xcframework"
+    agents:
+      queue: "macos"
+    artifact_paths:
+      - "build/xcframework/*.zip"
+
 # Unit Tests
 
   - label: "iOS 12.4 - iPhone - Unit Test Suite"

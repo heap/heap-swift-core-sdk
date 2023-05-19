@@ -17,7 +17,7 @@ function realpath {
 VERSION=$1
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 BUILD_DIR="${SCRIPT_DIR}/../build"
-PROJECT_DIR="${SCRIPT_DIR}/../build/interfaces"
+PROJECT_DIR="${SCRIPT_DIR}/../HeapSwiftCoreInterfaces"
 ARCHIVE_DIR="${BUILD_DIR}/xcframework.intermediates"
 
 cd "${PROJECT_DIR}"
@@ -35,7 +35,7 @@ function build_project {
 
     while [ -z "${SUCCESS}" ] && [ "$ATTEMPT" -le "$MAX_ATTEMPTS" ]; do
         set -o pipefail && xcodebuild archive \
-            -scheme HeapSwiftCoreInterfaces-Package \
+            -scheme HeapSwiftCoreInterfaces \
             -configuration Release \
             -destination "${destination}" \
             -archivePath "${ARCHIVE_DIR}/${archive}.xcarchive" \
