@@ -19,13 +19,19 @@ steps:
 
 # Builds
 
-  - label: "Build heap-swift-core-interfaces"
+  - label: "Validate HeapSwiftCoreInterfaces podspec"
     timeout_in_minutes: 10
-    command:  "make interfaces_xcframework"
+    command:  "make test_interfaces_podspec"
     agents:
       queue: "macos"
     artifact_paths:
       - "build/xcframework/*.zip"
+
+  - label: "Validate HeapSwiftCore podspec"
+    timeout_in_minutes: 10
+    command:  "make test_core_podspec"
+    agents:
+      queue: "macos"
 
 # Unit Tests
 

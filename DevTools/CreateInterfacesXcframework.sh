@@ -19,7 +19,8 @@ function realpath {
 
 VERSION=$1
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
-BUILD_DIR="${SCRIPT_DIR}/../build"
+ROOT_DIR="${SCRIPT_DIR}/.."
+BUILD_DIR="${ROOT_DIR}/build"
 ARCHIVE_DIR="${BUILD_DIR}/xcframework.intermediates"
 
 DEST_DIR="${BUILD_DIR}/xcframework"
@@ -47,6 +48,9 @@ xcodebuild -create-xcframework \
     -framework "${ARCHIVE_DIR}/appletvsimulator.xcarchive/${FRAMEWORK_PATH}" \
     -debug-symbols "${ARCHIVE_DIR}/appletvsimulator.xcarchive/${SYMBOLS_PATH}" \
     -output "${BUILD_DIR}/xcframework/HeapSwiftCoreInterfaces.xcframework"
+
+cp "${ROOT_DIR}/LICENSE.txt" "${DEST_DIR}/LICENSE.txt"
+cp "${ROOT_DIR}/HeapSwiftCoreInterfaces.podspec" "${DEST_DIR}/HeapSwiftCoreInterfaces.podspec"
 
 cd "${DEST_DIR}"
 zip -r "heap-swift-core-interfaces-${VERSION}.zip" .

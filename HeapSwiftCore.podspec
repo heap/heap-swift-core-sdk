@@ -18,7 +18,7 @@ Pod::Spec.new do |s|
   s.source_files = 'Development/Sources/HeapSwiftCore/**/*.swift'
   
   s.dependency 'SwiftProtobuf', '~> 1.6'
-  s.dependency 'HeapSwiftCoreInterfaces', '0.1.1'
+  s.dependency 'HeapSwiftCoreInterfaces', '0.1.2'
   
   s.swift_versions = ['5.0']
 end

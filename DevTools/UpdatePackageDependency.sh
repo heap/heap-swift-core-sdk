@@ -13,9 +13,7 @@ function realpath {
 }
 
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
-BUILD_DIR="${SCRIPT_DIR}/../build"
-RESOURCE_DIR="${SCRIPT_DIR}/Resources"
-DEST_DIR="${SCRIPT_DIR}/.."
+ROOT_DIR="${SCRIPT_DIR}/.."
 
 TMP_DIR=$(mktemp -d -t heap-swift-core)
 CHECKSUM_DIR="${TMP_DIR}/Checksum"
@@ -25,10 +23,6 @@ VERSION=$1
 ZIP_FILE="heap-swift-core-interfaces-${VERSION}.zip"
 ZIP_URL="https://cdn.heapanalytics.com/ios/${ZIP_FILE}"
 ZIP_PATH="${TMP_DIR}/${ZIP_FILE}"
-
-SOURCE_PACKAGE_FILE="${RESOURCE_DIR}/Package-HeapSwiftCore.swift"
-BUILD_PACKAGE_FILE="${BUILD_DIR}/Package-HeapSwiftCore.swift"
-DEST_PACKAGE_FILE="${DEST_DIR}/Package.swift"
 
 echo "${SOURCE_PACKAGE_FILE}"
 
@@ -48,9 +42,14 @@ CHECKSUM=$(swift package compute-checksum "${ZIP_PATH}")
 
 echo "Computed checksum ${CHECKSUM}"
 
-mkdir -p "${BUILD_DIR}"
-sed "s#{URL}#${ZIP_URL}#;s#{CHECKSUM}#${CHECKSUM}#;" "${SOURCE_PACKAGE_FILE}" > "${BUILD_PACKAGE_FILE}"
+URL_PART="url: \"${ZIP_URL}\", // END HeapSwiftCoreInterfaces URL"
+CHECKSUM_PART="checksum: \"${CHECKSUM}\" // END HeapSwiftCoreInterfaces checksum"
 
-echo "Generated build file"
-cat "${BUILD_PACKAGE_FILE}"
-cp "${BUILD_PACKAGE_FILE}" "${DEST_PACKAGE_FILE}"
+for PACKAGE_FILE in "${ROOT_DIR}/Package.swift" "${ROOT_DIR}/Development/Package.swift"; do
+  echo "Updating ${PACKAGE_FILE}"
+
+  sed -i '' \
+    -e "s#url:.*END HeapSwiftCoreInterfaces URL#${URL_PART}#g" \
+    -e "s#checksum:.*END HeapSwiftCoreInterfaces checksum#${CHECKSUM_PART}#g" \
+    "${PACKAGE_FILE}"
+done

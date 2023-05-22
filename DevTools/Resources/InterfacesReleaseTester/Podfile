@@ -1,0 +1,4 @@
+target 'InterfacesReleaseTester' do
+    use_frameworks!
+    pod 'HeapSwiftCoreInterfaces', :path => '../HeapSwiftCoreInterfaces'
+end

@@ -1,5 +1,5 @@
 #! /usr/bin/python3
-# DevTools/LibraryVersions.py - Helper for the library's version number
+# DevTools/UpdatePodspecDependency.py - Helper for injecting HeapSwiftCoreInterfaces into HeapSwiftCore.
 #
 # Copyright (c) 2014 - 2017 Apple Inc. and the project authors
 # Copyright (c) 2022 - 2023 Heap Inc.

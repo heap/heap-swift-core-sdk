@@ -1,0 +1,4 @@
+target 'ReleaseTester' do
+    use_frameworks!
+    pod 'HeapSwiftCore', :path => '../../../' # Relative to build/pod-test/ReleaseTester/
+end

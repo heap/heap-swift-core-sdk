@@ -9,9 +9,6 @@
 		macos_sample_app \
 		ios_sample_app \
 		ios_sample_extension \
-		add_prerelease_pod_repo \
-		remove_prerelease_pod_repo \
-		push_prerelease_podspec \
 		protobufs
 
 PUBLIC_REPO := git@github.com:heap/heap-swift-core-sdk.git
@@ -232,29 +229,6 @@ ios_sample_extension:
 		clean build \
 	| xcbeautify
 
-add_prerelease_pod_repo:
-# (LOCAL) Adds the pre-release CocoaPods repo to the current machine.
-
-	@if [ ! -d ~/.cocoapods/repos/pre-release-cocoapods ]; then \
-		pod repo add pre-release-cocoapods git@github.com:heap/pre-release-cocoapods.git main; \
-	else \
-		echo "Repo pre-release-cocoapods was already added."; \
-	fi
-
-remove_prerelease_pod_repo:
-# (LOCAL) Removes the pre-release CocoaPods repo from current machine.
-
-	@if [ -d ~/.cocoapods/repos/pre-release-cocoapods ]; then \
-		pod repo remove pre-release-cocoapods; \
-	else \
-		echo "Repo pre-release-cocoapods was already removed."; \
-	fi
-
-push_prerelease_podspec: add_prerelease_pod_repo
-# (LOCAL) Pushes HeapSwiftCore to the pre-release CocoaPods repo.
-
-	pod repo push pre-release-cocoapods HeapSwiftCore.podspec
-
 protobufs:
 # (LOCAL) Rebuilds the protobuf Swift files.
 
@@ -307,7 +281,7 @@ apply_interfaces_to_public_packages:
 # (LOCAL) Updates HeapSwiftCore.podspec and Package.swift with the current version of HeapSwiftCoreInterfaces.
 # This is to be run after the interfaces are deployed to the CDN.
 
-	./DevTools/GeneratePublicPackage.sh "${INTERFACES_VERSION}"
+	./DevTools/UpdatePackageDependency.sh "${INTERFACES_VERSION}"
 	./DevTools/UpdatePodspecDependency.py --library=core HeapSwiftCoreInterfaces "${INTERFACES_VERSION}"
 
 interfaces_xcframework:
@@ -338,11 +312,11 @@ endif
 		"heapcdn" \
 		'ios/heap-swift-core-interfaces-${INTERFACES_VERSION}.zip'
 
-test_core_podspec: add_prerelease_pod_repo
-	./DevTools/ValidatePodspec.sh HeapSwiftCore ReleaseTester
+test_core_podspec:
+	./DevTools/ValidateCorePodspec.sh
 
-test_interfaces_podspec: add_prerelease_pod_repo
-	./DevTools/ValidatePodspec.sh HeapSwiftCoreInterfaces InterfacesReleaseTester
+test_interfaces_podspec: interfaces_xcframework
+	./DevTools/ValidateInterfacesPodspec.sh
 
 deploy_core_podspec:
 	@echo "--- Deploying HeapSwiftCore.podspec"
