@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1]
+
+### Fixed
+
+- Added missing Objective-C module to HeapSwiftCoreInterfaces to unblock CocoaPods release.
+
 ## [0.2.0]
 
 ### Added
@@ -49,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
+[0.2.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.1.2...0.2.0
 [0.1.2]: https://github.com/heap/heap-swift-core-sdk/compare/0.1.1...0.1.2
 [0.1.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.1.0...0.1.1
