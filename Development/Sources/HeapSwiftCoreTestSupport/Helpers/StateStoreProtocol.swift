@@ -19,4 +19,11 @@ extension StateStoreProtocol {
         save(state)
         return state
     }
+    
+    func applyApplicationInfo(to environmentId: String, applicationInfo: ApplicationInfo) -> EnvironmentState {
+        var state = loadState(for: environmentId)
+        state.lastObservedVersion = applicationInfo
+        save(state)
+        return state
+    }
 }

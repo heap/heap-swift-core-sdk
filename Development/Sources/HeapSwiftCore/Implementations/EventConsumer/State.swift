@@ -51,6 +51,8 @@ struct State {
             var identityReset = false
             var wasAlreadyUnindentified = false
             var wasAlreadyIdentified = false
+            var versionChanged = false
+            var lastObservedVersion: ApplicationInfo? = nil
         }
 
         let previous: State?
@@ -83,7 +85,21 @@ extension State {
         lastPageviewInfo = initialPageviewInfo
         sessionExpirationDate = timestamp.advancedBySessionExpirationTimeout()
         outcomes.sessionCreated = true
+        
+        checkForVersionChange(outcomes: &outcomes)
     }
+    
+    mutating func checkForVersionChange(outcomes: inout UpdateResults.Outcomes) {
+        
+        let previousVersion = environment.hasLastObservedVersion ? environment.lastObservedVersion : nil
+        let currentVersion = sdkInfo.applicationInfo
+        if currentVersion != previousVersion {
+            environment.lastObservedVersion = currentVersion
+            outcomes.versionChanged = true
+            outcomes.lastObservedVersion = previousVersion
+        }
+    }
+    
     
     mutating func createExpiredSession() {
         sessionInfo = .init()

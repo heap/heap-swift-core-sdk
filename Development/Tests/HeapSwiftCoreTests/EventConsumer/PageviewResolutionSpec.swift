@@ -35,7 +35,7 @@ final class PageviewResolutionSpec: HeapSpec {
                     consumer.track("event", pageview: Pageview.none)
                     
                     let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)
                     
                     expect(messages.last?.pageviewInfo).to(equal(consumer.stateManager.current?.unattributedPageviewInfo))
                 }
@@ -47,7 +47,7 @@ final class PageviewResolutionSpec: HeapSpec {
                     consumer.track("event", pageview: pageview)
                     
                     let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 6)
                     
                     expect(messages.last?.pageviewInfo).to(equal(pageview?._pageviewInfo))
                 }
@@ -328,7 +328,7 @@ final class PageviewResolutionSpec: HeapSpec {
                         source.resolveActivePageview(pageview)
                         
                         let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                        let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)
+                        let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 6)
                         
                         expect(messages.last?.pageviewInfo).to(equal(pageview?._pageviewInfo))
                     }
@@ -398,7 +398,7 @@ final class PageviewResolutionSpec: HeapSpec {
                         defaultSource.resolveActivePageview(pageview)
                         
                         let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                        let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)
+                        let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 6)
                         
                         expect(messages.last?.pageviewInfo).to(equal(pageview?._pageviewInfo))
                     }
@@ -431,7 +431,7 @@ final class PageviewResolutionSpec: HeapSpec {
                         defaultSource.resolveActivePageview(nil)
                         
                         let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                        let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)
+                        let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 6)
                         
                         expect(messages.last?.pageviewInfo).to(equal(lastPageview?._pageviewInfo))
                     }
@@ -446,7 +446,7 @@ final class PageviewResolutionSpec: HeapSpec {
                         consumer.track("event")
                         
                         let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                        let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)
+                        let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 6)
                         
                         expect(messages.last?.pageviewInfo).to(equal(lastPageview?._pageviewInfo))
                     }

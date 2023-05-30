@@ -596,6 +596,53 @@ extension CoreSdk_V1_Interaction.BuiltinKind: CaseIterable {
 
 #endif  // swift(>=4.2)
 
+struct CoreSdk_V1_VersionChange {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var previousVersion: CoreSdk_V1_ApplicationInfo {
+    get {return _previousVersion ?? CoreSdk_V1_ApplicationInfo()}
+    set {_previousVersion = newValue}
+  }
+  /// Returns true if `previousVersion` has been explicitly set.
+  var hasPreviousVersion: Bool {return self._previousVersion != nil}
+  /// Clears the value of `previousVersion`. Subsequent reads from it will return its default value.
+  mutating func clearPreviousVersion() {self._previousVersion = nil}
+
+  var currentVersion: CoreSdk_V1_ApplicationInfo {
+    get {return _currentVersion ?? CoreSdk_V1_ApplicationInfo()}
+    set {_currentVersion = newValue}
+  }
+  /// Returns true if `currentVersion` has been explicitly set.
+  var hasCurrentVersion: Bool {return self._currentVersion != nil}
+  /// Clears the value of `currentVersion`. Subsequent reads from it will return its default value.
+  mutating func clearCurrentVersion() {self._currentVersion = nil}
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+
+  fileprivate var _previousVersion: CoreSdk_V1_ApplicationInfo? = nil
+  fileprivate var _currentVersion: CoreSdk_V1_ApplicationInfo? = nil
+}
+
+struct CoreSdk_V1_ComponentTransition {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// List of components that have gone from invisible to visible.
+  var invisibleToVisible: [CoreSdk_V1_ElementNode] = []
+
+  /// List of components that have gone from visible to invisible.
+  var visibleToInvisible: [CoreSdk_V1_ElementNode] = []
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
 /// Event property definition
 struct CoreSdk_V1_Event {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
@@ -622,6 +669,24 @@ struct CoreSdk_V1_Event {
     set {kind = .interaction(newValue)}
   }
 
+  /// See VersionChange message definition
+  var versionChange: CoreSdk_V1_VersionChange {
+    get {
+      if case .versionChange(let v)? = kind {return v}
+      return CoreSdk_V1_VersionChange()
+    }
+    set {kind = .versionChange(newValue)}
+  }
+
+  /// See component transition definition
+  var componentTransition: CoreSdk_V1_ComponentTransition {
+    get {
+      if case .componentTransition(let v)? = kind {return v}
+      return CoreSdk_V1_ComponentTransition()
+    }
+    set {kind = .componentTransition(newValue)}
+  }
+
   /// Mobile app_visibility_state
   var appVisibilityState: CoreSdk_V1_Event.AppVisibility {
     get {return _appVisibilityState ?? .unknownUnspecified}
@@ -639,6 +704,10 @@ struct CoreSdk_V1_Event {
     case custom(CoreSdk_V1_Event.Custom)
     /// See interaction message definition
     case interaction(CoreSdk_V1_Interaction)
+    /// See VersionChange message definition
+    case versionChange(CoreSdk_V1_VersionChange)
+    /// See component transition definition
+    case componentTransition(CoreSdk_V1_ComponentTransition)
 
   #if !swift(>=4.1)
     static func ==(lhs: CoreSdk_V1_Event.OneOf_Kind, rhs: CoreSdk_V1_Event.OneOf_Kind) -> Bool {
@@ -652,6 +721,14 @@ struct CoreSdk_V1_Event {
       }()
       case (.interaction, .interaction): return {
         guard case .interaction(let l) = lhs, case .interaction(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      case (.versionChange, .versionChange): return {
+        guard case .versionChange(let l) = lhs, case .versionChange(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      case (.componentTransition, .componentTransition): return {
+        guard case .componentTransition(let l) = lhs, case .componentTransition(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
       default: return false
@@ -894,6 +971,12 @@ struct CoreSdk_V1_Message {
   /// Clears the value of `sessionReplay`. Subsequent reads from it will return its default value.
   mutating func clearSessionReplay() {_uniqueStorage()._sessionReplay = nil}
 
+  /// Components that are user visible at the time the message is fired.
+  var activeContexts: [CoreSdk_V1_ElementNode] {
+    get {return _storage._activeContexts}
+    set {_uniqueStorage()._activeContexts = newValue}
+  }
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   enum OneOf_Kind: Equatable {
@@ -953,6 +1036,41 @@ struct CoreSdk_V1_MessageBatch {
   init() {}
 }
 
+/// PostMobileTrackRequest
+struct CoreSdk_V1_PostMobileTrackRequest {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var messageBatch: CoreSdk_V1_MessageBatch {
+    get {return _messageBatch ?? CoreSdk_V1_MessageBatch()}
+    set {_messageBatch = newValue}
+  }
+  /// Returns true if `messageBatch` has been explicitly set.
+  var hasMessageBatch: Bool {return self._messageBatch != nil}
+  /// Clears the value of `messageBatch`. Subsequent reads from it will return its default value.
+  mutating func clearMessageBatch() {self._messageBatch = nil}
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+
+  fileprivate var _messageBatch: CoreSdk_V1_MessageBatch? = nil
+}
+
+/// PostMobileTrackResponse
+struct CoreSdk_V1_PostMobileTrackResponse {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var status: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
 #if swift(>=5.5) && canImport(_Concurrency)
 extension CoreSdk_V1_Utm: @unchecked Sendable {}
 extension CoreSdk_V1_SessionReplayInfo: @unchecked Sendable {}
@@ -965,6 +1083,8 @@ extension CoreSdk_V1_ElementNode: @unchecked Sendable {}
 extension CoreSdk_V1_Interaction: @unchecked Sendable {}
 extension CoreSdk_V1_Interaction.OneOf_Kind: @unchecked Sendable {}
 extension CoreSdk_V1_Interaction.BuiltinKind: @unchecked Sendable {}
+extension CoreSdk_V1_VersionChange: @unchecked Sendable {}
+extension CoreSdk_V1_ComponentTransition: @unchecked Sendable {}
 extension CoreSdk_V1_Event: @unchecked Sendable {}
 extension CoreSdk_V1_Event.OneOf_Kind: @unchecked Sendable {}
 extension CoreSdk_V1_Event.AppVisibility: @unchecked Sendable {}
@@ -972,6 +1092,8 @@ extension CoreSdk_V1_Event.Custom: @unchecked Sendable {}
 extension CoreSdk_V1_Message: @unchecked Sendable {}
 extension CoreSdk_V1_Message.OneOf_Kind: @unchecked Sendable {}
 extension CoreSdk_V1_MessageBatch: @unchecked Sendable {}
+extension CoreSdk_V1_PostMobileTrackRequest: @unchecked Sendable {}
+extension CoreSdk_V1_PostMobileTrackResponse: @unchecked Sendable {}
 #endif  // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -1614,11 +1736,93 @@ extension CoreSdk_V1_Interaction.BuiltinKind: SwiftProtobuf._ProtoNameProviding 
   ]
 }
 
+extension CoreSdk_V1_VersionChange: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".VersionChange"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "previous_version"),
+    2: .standard(proto: "current_version"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._previousVersion) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._currentVersion) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._previousVersion {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._currentVersion {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: CoreSdk_V1_VersionChange, rhs: CoreSdk_V1_VersionChange) -> Bool {
+    if lhs._previousVersion != rhs._previousVersion {return false}
+    if lhs._currentVersion != rhs._currentVersion {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension CoreSdk_V1_ComponentTransition: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".ComponentTransition"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "invisible_to_visible"),
+    2: .standard(proto: "visible_to_invisible"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.invisibleToVisible) }()
+      case 2: try { try decoder.decodeRepeatedMessageField(value: &self.visibleToInvisible) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.invisibleToVisible.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.invisibleToVisible, fieldNumber: 1)
+    }
+    if !self.visibleToInvisible.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.visibleToInvisible, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: CoreSdk_V1_ComponentTransition, rhs: CoreSdk_V1_ComponentTransition) -> Bool {
+    if lhs.invisibleToVisible != rhs.invisibleToVisible {return false}
+    if lhs.visibleToInvisible != rhs.visibleToInvisible {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
 extension CoreSdk_V1_Event: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Event"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "custom"),
     2: .same(proto: "interaction"),
+    3: .standard(proto: "version_change"),
+    4: .standard(proto: "component_transition"),
     20: .standard(proto: "app_visibility_state"),
   ]
 
@@ -1654,6 +1858,32 @@ extension CoreSdk_V1_Event: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
           self.kind = .interaction(v)
         }
       }()
+      case 3: try {
+        var v: CoreSdk_V1_VersionChange?
+        var hadOneofValue = false
+        if let current = self.kind {
+          hadOneofValue = true
+          if case .versionChange(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.kind = .versionChange(v)
+        }
+      }()
+      case 4: try {
+        var v: CoreSdk_V1_ComponentTransition?
+        var hadOneofValue = false
+        if let current = self.kind {
+          hadOneofValue = true
+          if case .componentTransition(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.kind = .componentTransition(v)
+        }
+      }()
       case 20: try { try decoder.decodeSingularEnumField(value: &self._appVisibilityState) }()
       default: break
       }
@@ -1673,6 +1903,14 @@ extension CoreSdk_V1_Event: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
     case .interaction?: try {
       guard case .interaction(let v)? = self.kind else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    }()
+    case .versionChange?: try {
+      guard case .versionChange(let v)? = self.kind else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    }()
+    case .componentTransition?: try {
+      guard case .componentTransition(let v)? = self.kind else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
     }()
     case nil: break
     }
@@ -1756,6 +1994,7 @@ extension CoreSdk_V1_Message: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
     15: .same(proto: "user"),
     16: .standard(proto: "session_replay_info"),
     17: .standard(proto: "session_replay"),
+    18: .standard(proto: "active_contexts"),
   ]
 
   fileprivate class _StorageClass {
@@ -1773,6 +2012,7 @@ extension CoreSdk_V1_Message: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
     var _kind: CoreSdk_V1_Message.OneOf_Kind?
     var _sessionReplayInfo: CoreSdk_V1_SessionReplayInfo? = nil
     var _sessionReplay: String? = nil
+    var _activeContexts: [CoreSdk_V1_ElementNode] = []
 
     static let defaultInstance = _StorageClass()
 
@@ -1793,6 +2033,7 @@ extension CoreSdk_V1_Message: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
       _kind = source._kind
       _sessionReplayInfo = source._sessionReplayInfo
       _sessionReplay = source._sessionReplay
+      _activeContexts = source._activeContexts
     }
   }
 
@@ -1876,6 +2117,7 @@ extension CoreSdk_V1_Message: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
         }()
         case 16: try { try decoder.decodeSingularMessageField(value: &_storage._sessionReplayInfo) }()
         case 17: try { try decoder.decodeSingularStringField(value: &_storage._sessionReplay) }()
+        case 18: try { try decoder.decodeRepeatedMessageField(value: &_storage._activeContexts) }()
         default: break
         }
       }
@@ -1946,6 +2188,9 @@ extension CoreSdk_V1_Message: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
       try { if let v = _storage._sessionReplay {
         try visitor.visitSingularStringField(value: v, fieldNumber: 17)
       } }()
+      if !_storage._activeContexts.isEmpty {
+        try visitor.visitRepeatedMessageField(value: _storage._activeContexts, fieldNumber: 18)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -1969,6 +2214,7 @@ extension CoreSdk_V1_Message: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
         if _storage._kind != rhs_storage._kind {return false}
         if _storage._sessionReplayInfo != rhs_storage._sessionReplayInfo {return false}
         if _storage._sessionReplay != rhs_storage._sessionReplay {return false}
+        if _storage._activeContexts != rhs_storage._activeContexts {return false}
         return true
       }
       if !storagesAreEqual {return false}
@@ -2005,6 +2251,74 @@ extension CoreSdk_V1_MessageBatch: SwiftProtobuf.Message, SwiftProtobuf._Message
 
   static func ==(lhs: CoreSdk_V1_MessageBatch, rhs: CoreSdk_V1_MessageBatch) -> Bool {
     if lhs.events != rhs.events {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension CoreSdk_V1_PostMobileTrackRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".PostMobileTrackRequest"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "message_batch"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._messageBatch) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._messageBatch {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: CoreSdk_V1_PostMobileTrackRequest, rhs: CoreSdk_V1_PostMobileTrackRequest) -> Bool {
+    if lhs._messageBatch != rhs._messageBatch {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension CoreSdk_V1_PostMobileTrackResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".PostMobileTrackResponse"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "status"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.status) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.status.isEmpty {
+      try visitor.visitSingularStringField(value: self.status, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: CoreSdk_V1_PostMobileTrackResponse, rhs: CoreSdk_V1_PostMobileTrackResponse) -> Bool {
+    if lhs.status != rhs.status {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

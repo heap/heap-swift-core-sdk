@@ -307,7 +307,7 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                     "javascriptEpochTimestamp": timestamp.timeIntervalSince1970 * 1000,
                 ])
                 let user = try dataStore.assertOnlyOneUserToUpload()
-                let message = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)[2]
+                let message = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)[3]
                 
                 message.expectPageviewMessage(user: user, timestamp: timestamp, hasSourceLibrary: true, sourceLibrary: .with({
                     $0.name = "my source"
@@ -414,7 +414,7 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                     
                     let user = try dataStore.assertOnlyOneUserToUpload()
                     
-                    let message = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)[4]
+                    let message = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 6)[5]
                     expect(message.pageviewInfo.componentOrClassName).to(equal("Passed in pageview component"))
                 }
                 
@@ -437,7 +437,7 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                     
                     let user = try dataStore.assertOnlyOneUserToUpload()
                     
-                    let message = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)[4]
+                    let message = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 6)[5]
                     expect(message.pageviewInfo.componentOrClassName).to(equal("Last pageview component"))
                 }
             }

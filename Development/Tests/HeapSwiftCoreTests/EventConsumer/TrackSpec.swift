@@ -87,9 +87,9 @@ final class EventConsumer_TrackSpec: HeapSpec {
 
                     it("adds the event to the current session") {
                         let user = try dataStore.assertOnlyOneUserToUpload()
-                        let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 3)
+                        let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 4)
                         messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, eventProperties: consumer.eventProperties)
-                        messages[2].expectEventMessage(user: user, timestamp: trackTimestamp, hasSourceLibrary: false, eventProperties: consumer.eventProperties, pageviewMessage: messages[1])
+                        messages[3].expectEventMessage(user: user, timestamp: trackTimestamp, hasSourceLibrary: false, eventProperties: consumer.eventProperties, pageviewMessage: messages[1])
                     }
                 }
 
@@ -158,10 +158,10 @@ final class EventConsumer_TrackSpec: HeapSpec {
                     consumer.track("my-event", properties: ["a": 1, "b": "2", "c": false], timestamp: trackTimestamp)
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
 
                     let pageviewMessage = messages[1]
-                    let eventMessage = messages[2]
+                    let eventMessage = messages[3]
 
                     messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, eventProperties: consumer.eventProperties)
 
@@ -185,8 +185,8 @@ final class EventConsumer_TrackSpec: HeapSpec {
                     ])
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
-                    let event = try messages[2].assertEventMessage(user: user)
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
+                    let event = try messages[3].assertEventMessage(user: user)
                     let customEvent = try event.assertIsCustomEvent()
                     
                     expect(customEvent.properties).to(equal([
@@ -198,7 +198,7 @@ final class EventConsumer_TrackSpec: HeapSpec {
                     let name = String(repeating: "あ", count: 512)
                     consumer.track(name)
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
                 }
                 
                 it("does not send event where the event name is above the maximum length") {
@@ -218,12 +218,12 @@ final class EventConsumer_TrackSpec: HeapSpec {
                     }
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 1002)
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 1003)
 
                     expect(messages.map(\.id)).to(allBeUniqueAndValidIds())
 
                     for n in 1...1000 {
-                        let eventMessage = messages[n + 1]
+                        let eventMessage = messages[n + 2]
                         let event = try eventMessage.assertEventMessage(user: user, pageviewMessage: messages[1])
                         let customEvent = try event.assertIsCustomEvent()
                         expect(customEvent.name).to(equal("event-\(n)"), description: "Event received out of order")
@@ -246,12 +246,12 @@ final class EventConsumer_TrackSpec: HeapSpec {
                     CFRunLoopRunInMode(.defaultMode, 0.5, false)
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 1002)
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 1003)
 
                     expect(messages.map(\.id)).to(allBeUniqueAndValidIds())
 
                     for n in 1...1000 {
-                        let eventMessage = messages[n + 1]
+                        let eventMessage = messages[n + 2]
                         let event = try eventMessage.assertEventMessage(user: user, pageviewMessage: messages[1])
                         let customEvent = try event.assertIsCustomEvent()
                         expect(customEvent.name).to(equal("event-\(n)"), description: "Event received out of order")
@@ -264,7 +264,7 @@ final class EventConsumer_TrackSpec: HeapSpec {
                     consumer.track("my-event", sourceInfo: sourceInfo)
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
 
                     var sourceLibrary = LibraryInfo()
                     sourceLibrary.name = "heap-turbo-pascal"
@@ -275,7 +275,7 @@ final class EventConsumer_TrackSpec: HeapSpec {
                         "b": .init(value: "false"),
                     ]
 
-                    messages[2].expectEventMessage(user: user, hasSourceLibrary: true, sourceLibrary: sourceLibrary)
+                    messages[3].expectEventMessage(user: user, hasSourceLibrary: true, sourceLibrary: sourceLibrary)
                 }
 
                 it("uses the current event properties") {
@@ -286,9 +286,9 @@ final class EventConsumer_TrackSpec: HeapSpec {
                     consumer.removeEventProperty("b")
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
 
-                    messages[2].expectEventMessage(user: user, eventProperties: [
+                    messages[3].expectEventMessage(user: user, eventProperties: [
                         "a": .init(value: "1"),
                         "b": .init(value: "2"),
                     ])

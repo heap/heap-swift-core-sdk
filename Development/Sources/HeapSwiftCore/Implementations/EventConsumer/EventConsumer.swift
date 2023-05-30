@@ -71,6 +71,12 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
             dataStore.insertPendingMessage(pageviewMessage)
         }
 
+        if updateResults.outcomes.versionChanged {
+
+            let message = Message(forVersionChangeEventAt: timestamp, sourceLibrary: nil, in: state, previousVersion: updateResults.outcomes.lastObservedVersion)
+            dataStore.insertPendingMessage(message)
+        }
+
         if updateResults.outcomes.currentStarted {
             
             for (sourceName, source) in snapshot.sources {
@@ -202,7 +208,6 @@ extension EventConsumer {
         
         let pendingEvent = PendingEvent(partialEventMessage: message, toBeCommittedTo: dataStore)
         pendingEvent.setKind(.custom(name: event, properties: sanitizedProperties.mapValues(\.protoValue)))
-        
         PageviewResolver.resolvePageviewInfo(requestedPageview: pageview, eventSourceName: sourceInfo?.name, timestamp: timestamp, delegates: delegateManager.current, state: state) {
             pendingEvent.setPageviewInfo($0)
         }

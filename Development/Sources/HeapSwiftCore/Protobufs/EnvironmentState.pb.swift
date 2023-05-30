@@ -47,12 +47,22 @@ struct EnvironmentState {
 
   var properties: Dictionary<String,CoreSdk_V1_Value> = [:]
 
+  var lastObservedVersion: CoreSdk_V1_ApplicationInfo {
+    get {return _lastObservedVersion ?? CoreSdk_V1_ApplicationInfo()}
+    set {_lastObservedVersion = newValue}
+  }
+  /// Returns true if `lastObservedVersion` has been explicitly set.
+  var hasLastObservedVersion: Bool {return self._lastObservedVersion != nil}
+  /// Clears the value of `lastObservedVersion`. Subsequent reads from it will return its default value.
+  mutating func clearLastObservedVersion() {self._lastObservedVersion = nil}
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 
   fileprivate var _userID: String? = nil
   fileprivate var _identity: String? = nil
+  fileprivate var _lastObservedVersion: CoreSdk_V1_ApplicationInfo? = nil
 }
 
 #if swift(>=5.5) && canImport(_Concurrency)
@@ -68,6 +78,7 @@ extension EnvironmentState: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
     2: .standard(proto: "user_id"),
     3: .same(proto: "identity"),
     4: .same(proto: "properties"),
+    7: .standard(proto: "last_observed_version"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -80,6 +91,7 @@ extension EnvironmentState: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
       case 2: try { try decoder.decodeSingularStringField(value: &self._userID) }()
       case 3: try { try decoder.decodeSingularStringField(value: &self._identity) }()
       case 4: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,CoreSdk_V1_Value>.self, value: &self.properties) }()
+      case 7: try { try decoder.decodeSingularMessageField(value: &self._lastObservedVersion) }()
       default: break
       }
     }
@@ -102,6 +114,9 @@ extension EnvironmentState: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
     if !self.properties.isEmpty {
       try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,CoreSdk_V1_Value>.self, value: self.properties, fieldNumber: 4)
     }
+    try { if let v = self._lastObservedVersion {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -110,6 +125,7 @@ extension EnvironmentState: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
     if lhs._userID != rhs._userID {return false}
     if lhs._identity != rhs._identity {return false}
     if lhs.properties != rhs.properties {return false}
+    if lhs._lastObservedVersion != rhs._lastObservedVersion {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

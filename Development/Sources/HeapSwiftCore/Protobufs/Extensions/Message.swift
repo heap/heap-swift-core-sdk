@@ -43,4 +43,19 @@ extension Message {
         }
         self.kind = .event(.init())
     }
+    
+    init(forVersionChangeEventAt timestamp: Date, sourceLibrary: LibraryInfo?, in state: State, previousVersion: ApplicationInfo?) {
+        self.init(forPartialEventAt: timestamp, sourceLibrary: sourceLibrary, in: state)
+        self.pageviewInfo = state.unattributedPageviewInfo
+        
+        let versionChange = VersionChange.with {
+            if let previousVersion = previousVersion {
+                $0.previousVersion = previousVersion
+            }
+            $0.currentVersion = state.sdkInfo.applicationInfo
+        }
+        
+        self.event.kind = .versionChange(versionChange)
+        self.event.appVisibilityState = .current
+    }
 }

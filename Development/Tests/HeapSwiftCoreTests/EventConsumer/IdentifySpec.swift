@@ -273,12 +273,12 @@ final class EventConsumer_IdentifySpec: HeapSpec {
                             consumer.identify("user1", timestamp: identifyTimestamp)
                         }
                         
-                        it("creates a new session and pageview for the new user") {
+                        it("creates a new session, pageview, and version change event for the new user") {
                             expect(consumer.activeOrExpiredSessionId).notTo(beNil())
                             expect(consumer.activeOrExpiredSessionId).notTo(equal(originalSessionId))
                             
                             let user = try dataStore.assertUserToUploadExists(with: consumer.userId!)
-                            let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 2)
+                            let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 3)
                             messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: identifyTimestamp, eventProperties: consumer.eventProperties)
                         }
                         

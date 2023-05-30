@@ -7,4 +7,6 @@ message EnvironmentState {
   optional string user_id = 2;
   optional string identity = 3;
   map<string, core_sdk.v1.Value> properties = 4;
+    
+  optional core_sdk.v1.ApplicationInfo last_observed_version = 7;
 }

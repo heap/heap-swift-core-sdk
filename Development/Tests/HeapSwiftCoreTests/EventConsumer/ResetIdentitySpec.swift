@@ -124,7 +124,7 @@ final class EventConsumer_ResetIdentitySpec: HeapSpec {
                     beforeEach {
                         sessionTimestamp = Date()
                         resetTimestamp = sessionTimestamp.addingTimeInterval(60)
-                        consumer.startRecording("11", timestamp: sessionTimestamp)
+                        consumer.startRecording("11", with: [.startSessionImmediately: true], timestamp: sessionTimestamp)
                         originalSessionId = consumer.activeOrExpiredSessionId
                         consumer.resetIdentity(timestamp: resetTimestamp)
                     }
@@ -164,7 +164,7 @@ final class EventConsumer_ResetIdentitySpec: HeapSpec {
                     }
                     
                     it("notifies bridges and sources about the new session") {
-                        expect(bridge.sessions).to(haveCount(1))
+                        expect(bridge.sessions).to(haveCount(2))
                         expect(source.sessions).to(equal(bridge.sessions))
                     }
                     

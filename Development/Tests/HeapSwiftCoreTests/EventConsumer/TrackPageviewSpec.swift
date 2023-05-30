@@ -106,11 +106,11 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
 
                     it("adds the pageview message at the end of the new session") {
                         let user = try dataStore.assertOnlyOneUserToUpload()
-                        let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 3)
+                        let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 4)
                         messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, eventProperties: consumer.eventProperties)
                         
-                        messages[2].expectPageviewMessage(user: user, timestamp: trackTimestamp, sessionMessage: messages[0])
-                        expect(messages[2].pageviewInfo).to(equal(pageview._pageviewInfo))
+                        messages[3].expectPageviewMessage(user: user, timestamp: trackTimestamp, sessionMessage: messages[0])
+                        expect(messages[3].pageviewInfo).to(equal(pageview._pageviewInfo))
                     }
                 }
 
@@ -154,11 +154,11 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
 
                     it("adds the pageview message at the end of the current session") {
                         let user = try dataStore.assertOnlyOneUserToUpload()
-                        let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 4)
+                        let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 5)
                         messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, eventProperties: consumer.eventProperties)
                         
-                        messages[3].expectPageviewMessage(user: user, timestamp: trackTimestamp, sessionMessage: messages[0])
-                        expect(messages[3].pageviewInfo).to(equal(pageview._pageviewInfo))
+                        messages[4].expectPageviewMessage(user: user, timestamp: trackTimestamp, sessionMessage: messages[1])
+                        expect(messages[4].pageviewInfo).to(equal(pageview._pageviewInfo))
                     }
                 }
 
@@ -249,11 +249,11 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     }), timestamp: trackTimestamp)
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
 
                     let sessionMessage = messages[0]
-                    let pageviewMessage = messages[2]
-                    let pageviewInfo = messages[2].pageviewInfo
+                    let pageviewMessage = messages[3]
+                    let pageviewInfo = messages[3].pageviewInfo
 
                     messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, eventProperties: consumer.eventProperties)
                     
@@ -283,8 +283,8 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     }))
                     
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
-                    let pageviewInfo = messages[2].pageviewInfo
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
+                    let pageviewInfo = messages[3].pageviewInfo
                     
                     expect(pageviewInfo.sourceProperties).to(equal([
                         "a": .init(value: String(repeating: "あ", count: 1024)),
@@ -300,8 +300,8 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     }))
                     
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
-                    let pageviewInfo = messages[2].pageviewInfo
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
+                    let pageviewInfo = messages[3].pageviewInfo
                     
                     expect(pageviewInfo.title).to(equal(expectedValue))
                 }
@@ -316,13 +316,13 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     }
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 1002)
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 1003)
 
                     expect(messages.map(\.id)).to(allBeUniqueAndValidIds())
 
                     for n in 1...1000 {
-                        let pageviewMessage = messages[n + 1]
-                        pageviewMessage.expectPageviewMessage(user: user, sessionMessage: messages[0])
+                        let pageviewMessage = messages[n + 2]
+                        pageviewMessage.expectPageviewMessage(user: user, sessionMessage: messages[1])
                         expect(pageviewMessage.pageviewInfo.title).to(equal("page-\(n)"), description: "Pageview received out of order")
                     }
                 }
@@ -343,13 +343,13 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     CFRunLoopRunInMode(.defaultMode, 0.5, false)
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 1002)
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 1003)
 
                     expect(messages.map(\.id)).to(allBeUniqueAndValidIds())
 
                     for n in 1...1000 {
-                        let pageviewMessage = messages[n + 1]
-                        pageviewMessage.expectPageviewMessage(user: user, sessionMessage: messages[0])
+                        let pageviewMessage = messages[n + 2]
+                        pageviewMessage.expectPageviewMessage(user: user, sessionMessage: messages[1])
                         expect(pageviewMessage.pageviewInfo.title).to(equal("page-\(n)"), description: "Pageview received out of order")
                     }
                 }
@@ -360,7 +360,7 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     _ = consumer.trackPageview(.with({ _ in }), sourceInfo: sourceInfo)
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
 
                     var sourceLibrary = LibraryInfo()
                     sourceLibrary.name = "heap-turbo-pascal"
@@ -371,7 +371,7 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                         "b": .init(value: "false"),
                     ]
 
-                    messages[2].expectPageviewMessage(user: user, hasSourceLibrary: true, sourceLibrary: sourceLibrary)
+                    messages[3].expectPageviewMessage(user: user, hasSourceLibrary: true, sourceLibrary: sourceLibrary)
                 }
 
                 it("uses the current event properties") {
@@ -382,9 +382,9 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     consumer.removeEventProperty("b")
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
 
-                    messages[2].expectPageviewMessage(user: user, eventProperties: [
+                    messages[3].expectPageviewMessage(user: user, eventProperties: [
                         "a": .init(value: "1"),
                         "b": .init(value: "2"),
                     ])
@@ -432,8 +432,8 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     }))
                     
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
-                    let pageviewInfo = messages[2].pageviewInfo
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
+                    let pageviewInfo = messages[3].pageviewInfo
                     
                     expect(pageviewInfo.hasTitle).to(beFalse())
                     expect(consumer.stateManager.current?.lastPageviewInfo.hasTitle).to(beFalse())
@@ -450,8 +450,8 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     consumer.track("my event")
                     
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
-                    let pageviewInfo = messages[3].pageviewInfo
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)
+                    let pageviewInfo = messages[4].pageviewInfo
                     
                     expect(pageviewInfo.hasTitle).to(beFalse())
                 }
@@ -467,8 +467,8 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     consumer.track("my event", pageview: pageview)
                     
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
-                    let pageviewInfo = messages[3].pageviewInfo
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)
+                    let pageviewInfo = messages[4].pageviewInfo
                     
                     expect(pageviewInfo.hasTitle).to(beFalse())
                 }
@@ -482,8 +482,8 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     }))
                     
                     let user = try dataStore.assertOnlyOneUserToUpload()
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
-                    let pageviewInfo = messages[2].pageviewInfo
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
+                    let pageviewInfo = messages[3].pageviewInfo
                     
                     expect(pageviewInfo.title).to(equal("FooTitle"))
                     expect(consumer.stateManager.current?.lastPageviewInfo.title).to(equal("FooTitle"))

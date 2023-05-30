@@ -100,7 +100,7 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                 expect(consumer.sessionExpirationTime).to(equal(Date(timeIntervalSince1970: 0)))
             }
 
-            it("creates a new session with a synthesized pageview when called with startSessionImmediately") {
+            it("creates a new session with a synthesized pageview and version change event when called with startSessionImmediately") {
 
                 let sessionTimestamp = Date()
                 consumer.startRecording("11", with: [ .startSessionImmediately: true ], timestamp: sessionTimestamp)
@@ -114,7 +114,7 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                 expect(sessionId).to(beAValidId())
                 expect(user.sessionIds).to(equal([sessionId]))
 
-                let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 2)
+                let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
                 messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: sessionTimestamp, eventProperties: consumer.eventProperties)
             }
 

@@ -107,12 +107,12 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                     let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
                     
                     
-                    let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: originalSessionId, count: 8)
-                    messages[3].expectInteractionEventMessage(user: user, interaction: .custom("custom"),   nodes: testNodesA.map(node),  callbackName: "callbackA", pageviewMessage: messages[2])
-                    messages[4].expectInteractionEventMessage(user: user, interaction: .builtin(.touch),    nodes: testNodesB.map(node),  callbackName: "callbackB", pageviewMessage: messages[2])
-                    messages[5].expectInteractionEventMessage(user: user, interaction: .builtin(.change),   nodes: testNodesC.map(node),  callbackName: "callbackC", pageviewMessage: messages[2])
-                    messages[6].expectInteractionEventMessage(user: user, interaction: .builtin(.click),    nodes: testNodesD.map(node),  callbackName: "callbackD", pageviewMessage: messages[2])
-                    messages[7].expectInteractionEventMessage(user: user, interaction: .custom("empty"),    nodes: [],                    callbackName: nil,         pageviewMessage: messages[2])
+                    let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: originalSessionId, count: 9)
+                    messages[4].expectInteractionEventMessage(user: user, interaction: .custom("custom"),   nodes: testNodesA.map(node),  callbackName: "callbackA", pageviewMessage: messages[3])
+                    messages[5].expectInteractionEventMessage(user: user, interaction: .builtin(.touch),    nodes: testNodesB.map(node),  callbackName: "callbackB", pageviewMessage: messages[3])
+                    messages[6].expectInteractionEventMessage(user: user, interaction: .builtin(.change),   nodes: testNodesC.map(node),  callbackName: "callbackC", pageviewMessage: messages[3])
+                    messages[7].expectInteractionEventMessage(user: user, interaction: .builtin(.click),    nodes: testNodesD.map(node),  callbackName: "callbackD", pageviewMessage: messages[3])
+                    messages[8].expectInteractionEventMessage(user: user, interaction: .custom("empty"),    nodes: [],                    callbackName: nil,         pageviewMessage: messages[3])
                 }
                 
                 it("adds interaction events to pending messages only when ready") {
@@ -121,14 +121,14 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                     else { throw TestFailure("Could not create interactionEvent") }
                     
                     let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
-                    try dataStore.assertExactPendingMessagesCount(for: user, sessionId: originalSessionId, count: 3)
+                    try dataStore.assertExactPendingMessagesCount(for: user, sessionId: originalSessionId, count: 4)
                     
                     // Not yet ready for commit
                     interactionEvent.kind = .click
                     interactionEvent.callbackName = "callbackD"
                     interactionEvent.commit()
                     
-                    try dataStore.assertExactPendingMessagesCount(for: user, sessionId: originalSessionId, count: 3)
+                    try dataStore.assertExactPendingMessagesCount(for: user, sessionId: originalSessionId, count: 4)
                     
                     // Add nodes, making it ready to commit
                     interactionEvent.nodes = testNodesD
@@ -137,8 +137,8 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                     // Test that a duplicate commit does not fire
                     interactionEvent.commit()
                     
-                    let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: originalSessionId, count: 4)
-                    messages[3].expectInteractionEventMessage(user: user, interaction: .builtin(.click),  nodes: testNodesD.map(node), callbackName: "callbackD", pageviewMessage: messages[2])
+                    let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: originalSessionId, count: 5)
+                    messages[4].expectInteractionEventMessage(user: user, interaction: .builtin(.click),  nodes: testNodesD.map(node), callbackName: "callbackD", pageviewMessage: messages[3])
                 }
                 
                 it ("preserves node data") {
