@@ -140,6 +140,10 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
                 }
             }
         }
+        
+        if updateResults.outcomes.shouldSendChangeToHeapJs {
+            NotificationCenter.default.post(name: HeapStateForHeapJSChangedNotification, object: nil)
+        }
     }
 }
 
@@ -444,6 +448,19 @@ extension EventConsumer {
         
         return state.sessionInfo.id
     }
+    
+    /// Gets the current state, creating a new session if there is no previous session or the
+    /// previous session has expired.
+    ///
+    /// This internal method is used by `fetchSessionId` and for exposing the current session to
+    /// heap.js in a webview.
+    func fetchSession(timestamp: Date) -> State? {
+        
+        let results = stateManager.createSessionIfExpired(extendIfNotExpired: false, at: timestamp)
+        handleChanges(results, timestamp: timestamp)
+        
+        return results.current
+    }
 
     func fetchSessionId(timestamp: Date = Date()) -> String? {
         
@@ -452,10 +469,7 @@ extension EventConsumer {
             return nil
         }
         
-        let results = stateManager.createSessionIfExpired(extendIfNotExpired: false, at: timestamp)
-        handleChanges(results, timestamp: timestamp)
-        
-        return results.current?.sessionInfo.id
+        return fetchSession(timestamp: timestamp)?.sessionInfo.id
     }
     
     func addSource(_ source: Source, isDefault: Bool = false, timestamp: Date = Date()) {
@@ -473,9 +487,28 @@ extension EventConsumer {
     func removeRuntimeBridge(_ bridge: RuntimeBridge) {
         delegateManager.removeRuntimeBridge(bridge, currentState: stateManager.current)
     }
+    
+    /// This extends the current session if it matches the provided value.
+    ///
+    /// The preferred expiration date is used, bounded by the core SDK and heap.js's expiration
+    /// times. This will extend the session even if it should have expired in an effort to maximize
+    /// consistency between heap.js's view of a session and the SDK's events.
+    func extendSession(sessionId: String, preferredExpirationDate: Date, timestamp: Date) {
+        let results = stateManager.extendSession(sessionId: sessionId, preferredExpirationDate: preferredExpirationDate, timestamp: timestamp)
+        handleChanges(results, timestamp: timestamp)
+        
+        if let current = results.current {
+            if current.sessionInfo.id == sessionId {
+                HeapLogger.shared.trace("Session extended to \(current.sessionExpirationDate).")
+            } else {
+                HeapLogger.shared.trace("Session was not extended because the id did not match current")
+            }
+        }
+    }
 }
 
-extension EventConsumer: HeapProtocol {
+extension EventConsumer: InternalHeapProtocol {
+    
     func startRecording(_ environmentId: String, with options: [HeapSwiftCoreInterfaces.Option : Any]) {
         startRecording(environmentId, with: options, timestamp: Date())
     }
@@ -506,6 +539,14 @@ extension EventConsumer: HeapProtocol {
     
     func addRuntimeBridge(_ bridge: HeapSwiftCoreInterfaces.RuntimeBridge) {
         addRuntimeBridge(bridge, timestamp: Date())
+    }
+    
+    func extendSession(sessionId: String, preferredExpirationDate: Date) {
+        extendSession(sessionId: sessionId, preferredExpirationDate: preferredExpirationDate, timestamp: Date())
+    }
+    
+    func fetchSession() -> State? {
+        fetchSession(timestamp: Date())
     }
 }
     

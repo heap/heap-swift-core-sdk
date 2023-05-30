@@ -61,6 +61,13 @@ struct State {
     }
 }
 
+extension State.UpdateResults.Outcomes {
+    var shouldSendChangeToHeapJs: Bool {
+        // Several state changes are ignored because they trigger session creation.
+        identitySet || sessionCreated
+    }
+}
+
 extension State {
     
     init(loadedEnvironment: EnvironmentState, sanitizedOptions: [Option: Any], at timestamp: Date, outcomes: inout State.UpdateResults.Outcomes) {
@@ -144,6 +151,21 @@ extension State {
         }
 
         lastPageviewInfo = pageviewInfo
+    }
+    
+    mutating func extendSession(sessionId: String, preferredExpirationDate: Date, timestamp: Date) {
+        
+        guard sessionInfo.id == sessionId else { return }
+        
+        let candidates = [
+            timestamp.advancedBySessionExpirationTimeout(),
+            preferredExpirationDate,
+            timestamp.advancedByHeapJsSessionExpirationTimeout(),
+        ]
+        
+        // This is a funny little idea because maybe we'll fiddle with expiration dates in the future.
+        // If the value is out of range, the minimum or maximum will get shifted in.
+        sessionExpirationDate = candidates.sorted()[1]
     }
     
     mutating func resetIdentity(at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {

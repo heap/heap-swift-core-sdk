@@ -8,6 +8,10 @@ extension Date {
     func advancedBySessionExpirationTimeout() -> Date {
         return addingTimeInterval(60 * 5)
     }
+    
+    func advancedByHeapJsSessionExpirationTimeout() -> Date {
+        return addingTimeInterval(60 * 30)
+    }
 }
 
 func onMainThread(_ block: @escaping () -> Void) {

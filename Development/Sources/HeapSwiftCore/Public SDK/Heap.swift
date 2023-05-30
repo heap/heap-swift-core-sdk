@@ -4,7 +4,7 @@ import HeapSwiftCoreInterfaces
 @objc
 public class Heap: NSObject, HeapProtocol {
 
-    internal let consumer: any HeapProtocol
+    internal let consumer: any InternalHeapProtocol
     internal let uploader: any UploaderProtocol
 
     private static let heapDirectory: URL = {
@@ -26,7 +26,7 @@ public class Heap: NSObject, HeapProtocol {
         return Heap(consumer: consumer, uploader: uploader)
     }()
 
-    private init(consumer: any HeapProtocol, uploader: any UploaderProtocol) {
+    private init(consumer: any InternalHeapProtocol, uploader: any UploaderProtocol) {
         self.consumer = consumer
         self.uploader = uploader
     }

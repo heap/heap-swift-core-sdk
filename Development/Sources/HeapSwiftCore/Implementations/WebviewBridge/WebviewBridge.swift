@@ -14,14 +14,16 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
     weak var webView: WKWebView?
     let origins: [Origin]
     let injectHeapJavaScript: Bool
+    let heapJsSettings: HeapJsSettings?
     
     // Keep a list of rejected origins so we don't log incessantly about it.
     var rejectedOriginDescriptions: Set<String> = []
 
-    init(webView: WKWebView, origins: Set<String>, injectHeapJavaScript: Bool) {
+    init(webView: WKWebView, origins: Set<String>, injectHeapJavaScript: Bool = false, bindHeapJsWith settings: HeapJsSettings? = nil) {
         self.webView = webView
         self.origins = origins.compactMap(Origin.init(rawValue:))
         self.injectHeapJavaScript = injectHeapJavaScript
+        self.heapJsSettings = settings
     }
     
     func register() {
@@ -34,11 +36,28 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
             webView.configuration.userContentController.addUserScript(WebviewBridge.embeddedScript)
         }
         
+        if heapJsSettings != nil {
+            setHeapJsCookie()
+            NotificationCenter.default.addObserver(self, selector: #selector(setHeapJsCookie), name: HeapStateForHeapJSChangedNotification, object: nil)
+        }
+        
         HeapLogger.shared.debug("Heap attached to web view with allowed origins: \(origins.map(\.description).joined(separator: ", "))")
     }
     
+    /// Removes the webview integration from the webview.
+    ///
+    /// This method is not currently called anywhere and is included just for completeness.
+    /// Each behavior that is automatic is called out in the method.
     func remove() {
+        
+        // The webview bridge has a weak reference to webView, so the message handler is
+        // automatically deallocated when `webView` is deallocated. It does not need to be manually
+        // called.
         webView?.configuration.userContentController.removeScriptMessageHandler(forName: "HeapSwiftBridge")
+        
+        // The notification center automatically removes observers when deallocated, which will
+        // occur when the webview is deallocated. It does not need to be manually called.
+        NotificationCenter.default.removeObserver(self, name: HeapStateForHeapJSChangedNotification, object: nil)
     }
     
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -78,6 +97,10 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
                 }
                 
                 return
+            } else if type == "heapjs-extend-session",
+                      let sessionId = body["sessionId"] as? String,
+                      let expirationDate = body["expirationDate"] as? Double {
+                Heap.shared.consumer.extendSession(sessionId: sessionId, preferredExpirationDate: Date(timeIntervalSince1970: expirationDate / 1000))
             }
         }
         
@@ -135,6 +158,37 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
             })
         } catch {
         }
+    }
+}
+
+extension WebviewBridge {
+    
+    @objc
+    func setHeapJsCookie() {
+        guard
+            let heapJsSettings = self.heapJsSettings,
+            let webView = self.webView
+        else { return }
+        
+        guard
+            let state = Heap.shared.consumer.fetchSession(),
+            let cookie = state.toHeapJsCookie(settings: heapJsSettings)
+        else {
+            HeapLogger.shared.warn("Failed to generate heap.js session cookie.")
+            return
+        }
+        
+        webView.configuration.websiteDataStore.httpCookieStore.setCookie(cookie)
+    }
+    
+    static func removeHeapJsCookie(for environmentId: String, from webView: WKWebView) {
+        let httpCookieStore = webView.configuration.websiteDataStore.httpCookieStore
+        let cookieName = State.heapJsCookieName(for: environmentId)
+        httpCookieStore.getAllCookies({ cookies in
+            for cookie in cookies where cookie.name == cookieName {
+                httpCookieStore.delete(cookie)
+            }
+        })
     }
 }
 

@@ -4,10 +4,10 @@ import Nimble
 @testable import HeapSwiftCore
 @testable import HeapSwiftCoreTestSupport
 
-final class EventConsumer_FetchSessionIdSpec: HeapSpec {
+final class EventConsumer_FetchSessionSpec: HeapSpec {
     
     override func spec() {
-        describe("EventConsumer.fetchSessionId") {
+        describe("EventConsumer.fetchSession") {
             
             var dataStore: InMemoryDataStore!
             var consumer: EventConsumer<InMemoryDataStore, InMemoryDataStore>!
@@ -24,24 +24,24 @@ final class EventConsumer_FetchSessionIdSpec: HeapSpec {
             }
             
             it("returns nil before `startRecording` is called") {
-                expect(consumer.fetchSessionId()).to(beNil())
+                expect(consumer.fetchSession()).to(beNil())
             }
 
             it("does not extend the session before `startRecording` is called") {
-                _ = consumer.fetchSessionId()
+                _ = consumer.fetchSession()
                 expect(consumer.sessionExpirationTime).to(beNil())
             }
             
             it("returns nil after `stopRecording` is called") {
                 consumer.startRecording("11")
                 consumer.stopRecording()
-                expect(consumer.fetchSessionId()).to(beNil())
+                expect(consumer.fetchSession()).to(beNil())
             }
             
             it("does not extend the session after `stopRecording` is called") {
                 consumer.startRecording("11")
                 consumer.stopRecording()
-                _ = consumer.fetchSessionId()
+                _ = consumer.fetchSession()
                 expect(consumer.sessionExpirationTime).to(beNil())
             }
 
@@ -54,17 +54,17 @@ final class EventConsumer_FetchSessionIdSpec: HeapSpec {
                 context("called before the first session starts") {
                     
                     var sessionTimestamp: Date!
-                    var sessionId: String?
+                    var state: State?
                     
                     beforeEach {
                         sessionTimestamp = Date()
-                        sessionId = consumer.fetchSessionId(timestamp: sessionTimestamp)
+                        state = consumer.fetchSession(timestamp: sessionTimestamp)
                     }
                     
                     it("creates a new session") {
                         
                         guard let sessionId = consumer.activeOrExpiredSessionId else {
-                            throw TestFailure("fetchSessionId should have created a new session.")
+                            throw TestFailure("fetchSession should have created a new session.")
                         }
 
                         expect(sessionId).to(beAValidId())
@@ -77,8 +77,9 @@ final class EventConsumer_FetchSessionIdSpec: HeapSpec {
                         try consumer.assertSessionWasExtended(from: sessionTimestamp)
                     }
 
-                    it("returns a current session id") {
-                        expect(sessionId).to(equal(consumer.activeOrExpiredSessionId))
+                    it("returns a current state") {
+                        expect(state?.sessionInfo).to(equal(consumer.stateManager.current?.sessionInfo))
+                        expect(state?.environment).to(equal(consumer.stateManager.current?.environment))
                     }
                 }
 
@@ -86,14 +87,14 @@ final class EventConsumer_FetchSessionIdSpec: HeapSpec {
 
                     var sessionTimestamp: Date!
                     var originalSessionId: String?
-                    var fetchSessionIdTimestamp: Date!
-                    var sessionId: String?
+                    var fetchSessionTimestamp: Date!
+                    var state: State?
 
                     beforeEach {
                         (sessionTimestamp, originalSessionId) = consumer.ensureSessionExistsUsingTrack()
                         
-                        fetchSessionIdTimestamp = sessionTimestamp.addingTimeInterval(60) // Before the session expires
-                        sessionId = consumer.fetchSessionId(timestamp: fetchSessionIdTimestamp)
+                        fetchSessionTimestamp = sessionTimestamp.addingTimeInterval(60) // Before the session expires
+                        state = consumer.fetchSession(timestamp: fetchSessionTimestamp)
                     }
 
                     it("does not create a new session") {
@@ -106,8 +107,9 @@ final class EventConsumer_FetchSessionIdSpec: HeapSpec {
                         try consumer.assertSessionWasExtended(from: sessionTimestamp)
                     }
 
-                    it("returns the current session id") {
-                        expect(sessionId).to(equal(consumer.activeOrExpiredSessionId))
+                    it("returns a current state") {
+                        expect(state?.sessionInfo).to(equal(consumer.stateManager.current?.sessionInfo))
+                        expect(state?.environment).to(equal(consumer.stateManager.current?.environment))
                     }
                 }
 
@@ -115,14 +117,14 @@ final class EventConsumer_FetchSessionIdSpec: HeapSpec {
 
                     var sessionTimestamp: Date!
                     var originalSessionId: String?
-                    var fetchSessionIdTimestamp: Date!
-                    var sessionId: String?
+                    var fetchSessionTimestamp: Date!
+                    var state: State?
 
                     beforeEach {
                         (sessionTimestamp, originalSessionId) = consumer.ensureSessionExistsUsingTrack()
                         
-                        fetchSessionIdTimestamp = sessionTimestamp.addingTimeInterval(600)
-                        sessionId = consumer.fetchSessionId(timestamp: fetchSessionIdTimestamp)
+                        fetchSessionTimestamp = sessionTimestamp.addingTimeInterval(600)
+                        state = consumer.fetchSession(timestamp: fetchSessionTimestamp)
                     }
 
                     it("does not create a new user") {
@@ -137,7 +139,7 @@ final class EventConsumer_FetchSessionIdSpec: HeapSpec {
                         expect(user.sessionIds.count).to(equal(2))
 
                         let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 2)
-                        messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: fetchSessionIdTimestamp, eventProperties: consumer.eventProperties)
+                        messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: fetchSessionTimestamp, eventProperties: consumer.eventProperties)
                     }
                     
                     it("notifies bridges and sources about the new session") {
@@ -146,11 +148,12 @@ final class EventConsumer_FetchSessionIdSpec: HeapSpec {
                     }
 
                     it("extends the session") {
-                        try consumer.assertSessionWasExtended(from: fetchSessionIdTimestamp)
+                        try consumer.assertSessionWasExtended(from: fetchSessionTimestamp)
                     }
 
-                    it("returns the current session id") {
-                        expect(sessionId).to(equal(consumer.activeOrExpiredSessionId))
+                    it("returns a current state") {
+                        expect(state?.sessionInfo).to(equal(consumer.stateManager.current?.sessionInfo))
+                        expect(state?.environment).to(equal(consumer.stateManager.current?.environment))
                     }
                 }
             }

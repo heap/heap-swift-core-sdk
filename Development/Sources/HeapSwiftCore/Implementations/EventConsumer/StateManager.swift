@@ -72,6 +72,12 @@ extension StateManager {
         }
     }
     
+    func extendSession(sessionId: String, preferredExpirationDate: Date, timestamp: Date) -> State.UpdateResults {
+        update { state, outcomes in
+            state?.extendSession(sessionId: sessionId, preferredExpirationDate: preferredExpirationDate, timestamp: timestamp)
+        }
+    }
+    
     func identify(_ identity: String, at timestamp: Date) -> State.UpdateResults {
         update { state, outcomes in
             state?.identify(identity, at: timestamp, outcomes: &outcomes)
