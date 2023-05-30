@@ -499,9 +499,9 @@ extension EventConsumer {
         
         if let current = results.current {
             if current.sessionInfo.id == sessionId {
-                HeapLogger.shared.trace("Session extended to \(current.sessionExpirationDate).")
+                HeapLogger.shared.trace("extendSession: Session \(sessionId) extended to \(current.sessionExpirationDate), \(current.sessionExpirationDate.timeIntervalSinceNow / 60) minutes from now.")
             } else {
-                HeapLogger.shared.trace("Session was not extended because the id did not match current")
+                HeapLogger.shared.trace("extendSession: Session \(sessionId) was not extended because the id did not match current session \(current.sessionInfo.id).")
             }
         }
     }
