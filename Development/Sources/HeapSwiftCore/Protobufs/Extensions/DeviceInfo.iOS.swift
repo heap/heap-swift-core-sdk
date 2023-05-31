@@ -4,12 +4,26 @@ import UIKit
 import CoreTelephony
 
 extension DeviceInfo {
+    
+    /// Returns the specific model name of the current device.
+    ///
+    /// `UIDevice.model` only provides a generic model name (e.g., "iPhone"). This method, on the other hand,
+    /// utilizes `sysctlbyname` to retrieve the detailed hardware identifier (e.g., "iPhone10,3" for iPhone X).
+    /// If `sysctlbyname` fails, the function returns `nil`.
+    var detailedModelName: String? {
+        var size: Int = 0
+        guard sysctlbyname("hw.machine", nil, &size, nil, 0) == 0 else { return nil }
+        var machine = [CChar](repeating: 0, count: size)
+        guard sysctlbyname("hw.machine", &machine, &size, nil, 0) == 0 else { return nil }
+        return String(cString: machine)
+    }
+    
     static func current(with settings: FieldSettings, includeCarrier: Bool) -> DeviceInfo {
         let device = UIDevice.current
         var deviceInfo = DeviceInfo()
         deviceInfo.type = getDeviceType(device)
         deviceInfo.platform = getPlatform(device)
-        deviceInfo.model = getMacModel() ?? device.model
+        deviceInfo.model = getMacModel() ?? deviceInfo.detailedModelName ?? device.model
         if includeCarrier,
            let carrier = getCarrier() {
             deviceInfo.carrier = carrier

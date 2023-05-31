@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Changed process to retrieve iOS device model. 'sysctlbyname' is now used to retrieve the 
+  detailed hardware identifier (e.g., "iPhone10,3"). This results in more specific 
+  model identification than the generic `UIDevice.model` approach which is now used
+  as a fallback.
+
 ## [0.2.1]
 
 ### Fixed
