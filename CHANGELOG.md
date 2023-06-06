@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0]
+
+### Added
+
+- Added app version change and install events.  These will fire when an environment first
+  encounters a different application identifier, app name, or version at session start.
+
 ### Changed
 
 - Changed process to retrieve iOS device model. 'sysctlbyname' is now used to retrieve the 
@@ -62,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
+[0.3.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.2.1...0.3.0
 [0.2.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.1.2...0.2.0
 [0.1.2]: https://github.com/heap/heap-swift-core-sdk/compare/0.1.1...0.1.2
