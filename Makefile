@@ -15,6 +15,7 @@ PUBLIC_REPO := git@github.com:heap/heap-swift-core-sdk.git
 INTERNAL_REPO := git@github.com:heap/heap-swift-core.git
 MAIN_BRANCH := main
 MAKE_DIR := $(shell pwd)
+CORE_VERSION := $(shell ./DevTools/LibraryVersions.py --print --library=core)
 INTERFACES_VERSION := $(shell ./DevTools/LibraryVersions.py --print --library=interfaces)
 
 # Runs the unit test suite
@@ -29,7 +30,7 @@ define run_unit_tests
 	-rm build/.success
 
 	-(cd Development && xcodebuild \
-		-scheme HeapSwiftCoreDevelopment \
+		-scheme HeapSwiftCoreDevelopment-Package \
 		$(2) \
 		-resultBundlePath ${MAKE_DIR}/build/reports/$(1).xcresult \
 		clean test \
@@ -325,3 +326,31 @@ deploy_core_podspec:
 deploy_interfaces_podspec:
 	@echo "--- Deploying HeapSwiftCoreInterfaces.podspec"
 	pod trunk push HeapSwiftCoreInterfaces.podspec
+
+dynamic_xcframework:
+# (CI) Builds and zips the dynamic XCFramework, used for Xamarin.
+# This can be run locally to determine why it is breaking on the CDN.
+
+	./DevTools/BuildDynamicFramework.sh "${CORE_VERSION}"
+	./DevTools/CreateDynamicXcframework.sh "${CORE_VERSION}"
+
+deploy_dynamic_to_s3:
+# (CI) Uploads the already built dynamic zip file to the CDN. This should be called after `dynamic_xcframework`.  E.g.
+# `make dynamic_xcframework deploy_dynamic_to_s3`.
+# This command requires the CDN, an AWS token, and permission to upload to heapcdn, so it is not trivial to run locally.
+
+ifndef BUILDKITE_TAG
+	$(error BUILDKITE_TAG is not set)
+endif
+
+ifneq (${BUILDKITE_TAG},${CORE_VERSION})
+	$(error Version mismatch between tag ${BUILDKITE_TAG} and ${CORE_VERSION} from HeapSwiftCore.podspec)
+endif
+
+	@echo "--- Deploying heap-swift-core-dynamic-${CORE_VERSION}.zip to S3"
+
+	./DevTools/upload-to-s3.sh \
+		'./build/xcframework/heap-swift-core-dynamic-${CORE_VERSION}.zip' \
+		'${CORE_VERSION}' \
+		"heapcdn" \
+		'ios/heap-swift-core-dynamic-${CORE_VERSION}.zip'

@@ -15,6 +15,10 @@ let package = Package(
         .library(
             name: "HeapSwiftCore",
             targets: ["HeapSwiftCore"]),
+        .library(
+            name: "HeapSwiftCore-Dynamic",
+            type: .dynamic,
+            targets: ["HeapSwiftCore"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),

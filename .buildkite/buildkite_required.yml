@@ -33,6 +33,14 @@ steps:
     agents:
       queue: "macos"
 
+  - label: "Build dynamic framework"
+    timeout_in_minutes: 10
+    command:  "make dynamic_xcframework"
+    agents:
+      queue: "macos"
+    artifact_paths:
+      - "build/xcframework/*.zip"
+
 # Unit Tests
 
   - label: "iOS 12.4 - iPhone - Unit Test Suite"

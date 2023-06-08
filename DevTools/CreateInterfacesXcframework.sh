@@ -28,6 +28,8 @@ DEST_DIR="${BUILD_DIR}/xcframework"
 FRAMEWORK_PATH="Products/Library/Frameworks/HeapSwiftCoreInterfaces.framework"
 SYMBOLS_PATH="dSYMs/HeapSwiftCoreInterfaces.framework.dSYM/Contents/Resources/DWARF/HeapSwiftCoreInterfaces"
 
+echo "--- Creating xcframework"
+
 rm -rf "${DEST_DIR}"
 
 xcodebuild -create-xcframework \
@@ -53,4 +55,4 @@ cp "${ROOT_DIR}/LICENSE.txt" "${DEST_DIR}/LICENSE.txt"
 cp "${ROOT_DIR}/HeapSwiftCoreInterfaces.podspec" "${DEST_DIR}/HeapSwiftCoreInterfaces.podspec"
 
 cd "${DEST_DIR}"
-zip -r "heap-swift-core-interfaces-${VERSION}.zip" .
+zip -ry "heap-swift-core-interfaces-${VERSION}.zip" .
