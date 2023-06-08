@@ -102,9 +102,7 @@ Use the following process to trigger a release.
 5.  Merge the PR.
 6.  Run `make release_core_from_origin_main` to trigger a release.  This will push a tag with the version at `origin/main` to `origin`.
 7.  [Wait for the tag to finish building.][buildkite]
-8.  Once the build finishes successfully, the tag will be visible on the public repo and you should [create a new GitHub release][new-release]
-    with the details from the changelog.
-9.  Release the new podspec.  Unfortunately, this step is still manual and requires you to be a member of the Heap organization on CocoaPods.
+8.  Release the new podspec.  Unfortunately, this step is still manual and requires you to be a member of the Heap organization on CocoaPods.
     Run the following in the internal repo:
    
     ```shell

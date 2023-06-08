@@ -82,6 +82,14 @@ define set_public_repo
 
 endef
 
+dependencies:
+# (LOCAL) Install the dependencies required to run build steps.
+
+	brew install gh
+	brew install cocoapods
+	brew install xcbeautify
+	pip3 install semver
+
 clear_results:
 # (CI) Removes all test results.
 
@@ -265,6 +273,19 @@ endif
 
 	git fetch origin --tags
 	git push public ${BUILDKITE_TAG}
+
+publish_github_release_from_public_tag:
+# (CI) Creates a GitHub release at https://github.com/heap/heap-swift-core-sdk/releases by checking out the tag a $BUILDKITE_TAG
+
+ifndef BUILDKITE_TAG
+	$(error BUILDKITE_TAG is not set)
+endif
+
+ifndef GITHUB_TOKEN
+	$(error GITHUB_TOKEN is not set)
+endif
+
+	@GH_TOKEN="$${GITHUB_TOKEN}" ./DevTools/PublishGithubRelease.sh "$${BUILDKITE_TAG}"
 
 release_core_from_origin_main:
 # (LOCAL) Creates a tag for the core version on orgin/main using the version on that commit rather than the local version.
