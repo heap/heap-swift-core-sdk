@@ -1,6 +1,13 @@
 import Foundation
 @testable import HeapSwiftCore
 
+struct SessionMessages {
+    let sessionMessage: Message?
+    let initialPageviewMessage: Message?
+    let versionChangeMessage: Message?
+    let postStartMessages: [Message]
+}
+
 extension DataStoreProtocol {
 
     func getPendingMessages(for user: UserToUpload, sessionId: String?, messageLimit: Int = .max, file: StaticString = #file, line: UInt = #line) throws -> [Message] {
@@ -38,6 +45,64 @@ extension DataStoreProtocol {
             throw TestFailure("Expected exactly \(count) messages, but got \(messages.count)", file: file, line: line)
         }
         return messages
+    }
+    
+    @discardableResult
+    func assertOnlySession(hasPostStartMessageCount count: Int, file: StaticString = #file, line: UInt = #line) throws -> SessionMessages {
+        
+        let users = usersToUpload().filter({ !$0.sessionIds.isEmpty })
+        
+        guard users.count == 1 else {
+            throw TestFailure("Expected a single user with sessions but found \(users.map(\.userId))", file: file, line: line)
+        }
+        
+        return try assertOnlySession(for: users[0], hasPostStartMessageCount: count, file: file, line: line)
+    }
+    
+    @discardableResult
+    func assertOnlySession(for user: UserToUpload, hasPostStartMessageCount count: Int, file: StaticString = #file, line: UInt = #line) throws -> SessionMessages {
+        guard user.sessionIds.count == 1 else {
+            throw TestFailure("Expected a single session but found \(user.sessionIds)", file: file, line: line)
+        }
+        return try assertSession(for: user, sessionId: user.sessionIds[0], hasPostStartMessageCount: count, file: file, line: line)
+    }
+    
+    @discardableResult
+    func assertSession(for user: UserToUpload, sessionId: String?, hasPostStartMessageCount count: Int, file: StaticString = #file, line: UInt = #line) throws -> SessionMessages {
+        
+        var messages = try getPendingMessages(for: user, sessionId: sessionId, file: file, line: line)
+        
+        var sessionMessage: Message?
+        let initialPageviewMessage: Message?
+        let versionChangeMessage: Message?
+        
+        if case .session(_) = messages.first?.kind {
+            sessionMessage = messages.removeFirst()
+        } else {
+            sessionMessage = nil
+        }
+        
+        if let message = messages.first,
+           case .pageview(_) = message.kind,
+           !message.pageviewInfo.hasComponentOrClassName,
+           !message.pageviewInfo.hasTitle,
+           !message.pageviewInfo.hasURL {
+            initialPageviewMessage = messages.removeFirst()
+        } else {
+            initialPageviewMessage = nil
+        }
+        
+        if case .versionChange(_) = messages.first?.event.kind {
+            versionChangeMessage = messages.removeFirst()
+        } else {
+            versionChangeMessage = nil
+        }
+        
+        guard messages.count == count else {
+            throw TestFailure("Expected exactly \(count) messages after session start messages, but got \(messages.count)", file: file, line: line)
+        }
+        
+        return .init(sessionMessage: sessionMessage, initialPageviewMessage: initialPageviewMessage, versionChangeMessage: versionChangeMessage, postStartMessages: messages)
     }
     
     @discardableResult

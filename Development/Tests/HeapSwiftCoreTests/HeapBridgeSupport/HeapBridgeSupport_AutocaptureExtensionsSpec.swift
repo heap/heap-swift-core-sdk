@@ -307,7 +307,8 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                     "javascriptEpochTimestamp": timestamp.timeIntervalSince1970 * 1000,
                 ])
                 let user = try dataStore.assertOnlyOneUserToUpload()
-                let message = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)[3]
+                let messages = try dataStore.assertOnlySession(for: user, hasPostStartMessageCount: 1)
+                let message = messages.postStartMessages[0]
                 
                 message.expectPageviewMessage(user: user, timestamp: timestamp, hasSourceLibrary: true, sourceLibrary: .with({
                     $0.name = "my source"
@@ -418,6 +419,406 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
             }
         }
         
+        describeMethod("trackInteraction") { method in
+            
+            it("does not throw when all options are provided") {
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": "change",
+                    "nodes": [
+                        [
+                            "nodeName": "a",
+                            "attributes": [
+                                "aria-role": "button",
+                            ],
+                            "referencingPropertyName": "addButton",
+                            "nodeText": "Add",
+                            "accessibilityLabel": "Add item to cart",
+                            "href": "/cart/add",
+                        ],
+                        [
+                            "nodeName": "div",
+                            "nodeId": "header",
+                            "nodeHtmlClass": "foo bar",
+                        ],
+                    ] as [[String : Any]],
+                    "callbackName": "addToCart",
+                    "sourceLibrary": [
+                        "name": "my source",
+                        "version": "1.0.0",
+                        "platform": "my platform",
+                    ],
+                    "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
+                    "pageviewKey": "1234",
+                ])
+            }
+            
+            it("does not throw when pageviewKey is omitted") {
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": "change",
+                    "nodes": [
+                        [
+                            "nodeName": "a",
+                        ],
+                        [
+                            "nodeName": "div",
+                        ],
+                    ] as [[String : Any]],
+                    "callbackName": "addToCart",
+                    "sourceLibrary": [
+                        "name": "my source",
+                        "version": "1.0.0",
+                        "platform": "my platform",
+                    ],
+                    "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
+                ])
+            }
+            
+            it("does not throw when javascriptEpochTimestamp is omitted") {
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": "change",
+                    "nodes": [
+                        [
+                            "nodeName": "a",
+                        ],
+                        [
+                            "nodeName": "div",
+                        ],
+                    ] as [[String : Any]],
+                    "callbackName": "addToCart",
+                    "sourceLibrary": [
+                        "name": "my source",
+                        "version": "1.0.0",
+                        "platform": "my platform",
+                    ],
+                ])
+            }
+            
+            it("does not throw when sourceLibrary is omitted") {
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": "change",
+                    "nodes": [
+                        [
+                            "nodeName": "a",
+                        ],
+                        [
+                            "nodeName": "div",
+                        ],
+                    ] as [[String : Any]],
+                    "callbackName": "addToCart",
+                ])
+            }
+            
+            it("does not throw when callbackName is omitted") {
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": "change",
+                    "nodes": [
+                        [
+                            "nodeName": "a",
+                        ],
+                        [
+                            "nodeName": "div",
+                        ],
+                    ] as [[String : Any]],
+                ])
+            }
+            
+            it("throws when nodes.nodeName is omitted") {
+                expect(try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": "change",
+                    "nodes": [
+                        [
+                            "nodeName": "a",
+                        ],
+                        [:],
+                    ] as [[String : Any]],
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("throws when nodes is empty") {
+                expect(try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": "change",
+                    "nodes": [Any](),
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("throws when nodes is missing") {
+                expect(try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": "change",
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("does not throw when interaction is a builtin name") {
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": "unspecified",
+                    "nodes": [
+                        [
+                            "nodeName": "a",
+                        ],
+                    ],
+                ])
+            }
+            
+            it("does not throw when interaction is a custom event") {
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": [
+                        "custom": "my-event",
+                    ],
+                    "nodes": [
+                        [
+                            "nodeName": "a",
+                        ],
+                    ],
+                ])
+            }
+            
+            it("does not throw when interaction is a builtin ID") {
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": [
+                        "builtin": 1024,
+                    ],
+                    "nodes": [
+                        [
+                            "nodeName": "a",
+                        ],
+                    ],
+                ])
+            }
+            
+            it("throws when interaction is an unknown string") {
+                expect(try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": "hello world",
+                    "nodes": [
+                        [
+                            "nodeName": "a",
+                        ],
+                    ],
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("throws when interaction is an unknown type") {
+                expect(try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": 9999,
+                    "nodes": [
+                        [
+                            "nodeName": "a",
+                        ],
+                    ],
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+
+            it("throws when interaction is missing") {
+                expect(try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "nodes": [
+                        [
+                            "nodeName": "a",
+                        ],
+                    ],
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("populates the event correctly") {
+                consumer.startRecording("11")
+                let timestamp = Date().addingTimeInterval(30)
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": "change",
+                    "nodes": [
+                        [
+                            "nodeName": "a",
+                            "attributes": [
+                                "aria-role": "button",
+                            ],
+                            "referencingPropertyName": "addButton",
+                            "nodeText": "Add",
+                            "accessibilityLabel": "Add item to cart",
+                            "href": "/cart/add",
+                        ],
+                        [
+                            "nodeName": "div",
+                            "nodeId": "header",
+                            "nodeHtmlClass": "foo bar",
+                        ],
+                    ] as [[String : Any]],
+                    "callbackName": "addToCart",
+                    "sourceLibrary": [
+                        "name": "my source",
+                        "version": "1.0.0",
+                        "platform": "my platform",
+                    ],
+                    "javascriptEpochTimestamp": timestamp.timeIntervalSince1970 * 1000,
+                    "pageviewKey": "1234",
+                ])
+                let user = try dataStore.assertOnlyOneUserToUpload()
+                let messages = try dataStore.assertOnlySession(for: user, hasPostStartMessageCount: 1)
+                let message = messages.postStartMessages[0]
+                
+                message.expectInteractionEventMessage(
+                    user: user,
+                    timestamp: timestamp,
+                    hasSourceLibrary: true,
+                    sourceLibrary: .with({
+                        $0.name = "my source"
+                        $0.version = "1.0.0"
+                        $0.platform = "my platform"
+                    }),
+                    interaction: .builtin(.change),
+                    nodes: [
+                        .with({
+                            $0.nodeName = "a"
+                            $0.attributes = [
+                                "aria-role": .init(value: "button"),
+                            ]
+                            $0.referencingPropertyName = "addButton"
+                            $0.nodeText = "Add"
+                            $0.accessibilityLabel = "Add item to cart"
+                            $0.href = "/cart/add"
+                        }),
+                        .with({
+                            $0.nodeName = "div"
+                            $0.nodeID = "header"
+                            $0.nodeHtmlClass = "foo bar"
+                        })
+                    ],
+                    callbackName: "addToCart"
+                )
+            }
+            
+            it("accepts custom interactions") {
+                consumer.startRecording("11")
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": [
+                        "custom": "hello world",
+                    ],
+                    "nodes": [
+                        [
+                            "nodeName": "a",
+                        ],
+                    ],
+                ])
+                let user = try dataStore.assertOnlyOneUserToUpload()
+                let messages = try dataStore.assertOnlySession(for: user, hasPostStartMessageCount: 1)
+                let message = messages.postStartMessages[0]
+                
+                message.expectInteractionEventMessage(
+                    user: user,
+                    interaction: .custom("hello world"),
+                    nodes: [
+                        .with({
+                            $0.nodeName = "a"
+                        })
+                    ],
+                    callbackName: nil
+                )
+            }
+            
+            it("accepts custom interactions") {
+                consumer.startRecording("11")
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "interaction": [
+                        "builtin": 1024,
+                    ],
+                    "nodes": [
+                        [
+                            "nodeName": "a",
+                        ],
+                    ],
+                ])
+                let user = try dataStore.assertOnlyOneUserToUpload()
+                let messages = try dataStore.assertOnlySession(for: user, hasPostStartMessageCount: 1)
+                let message = messages.postStartMessages[0]
+                
+                message.expectInteractionEventMessage(
+                    user: user,
+                    interaction: .builtin(.UNRECOGNIZED(1024)),
+                    nodes: [
+                        .with({
+                            $0.nodeName = "a"
+                        })
+                    ],
+                    callbackName: nil
+                )
+            }
+            
+            context("with trackPageview") {
+                
+                it("applies the provided pageview to the event") {
+                    
+                    consumer.startRecording("11")
+                    let result = try bridgeSupport.handleInvocation(method: "trackPageview", arguments: [
+                        "properties": [ "componentOrClassName": "Passed in pageview component", ],
+                    ]).assertTrackPageviewResponse(isPrecondition: true)
+                    
+                    _ = try bridgeSupport.handleInvocation(method: "trackPageview", arguments: [
+                        "properties": [ "componentOrClassName": "Last pageview component", ],
+                    ])
+                    
+                    _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                        "interaction": "unspecified",
+                        "nodes": [
+                            [
+                                "nodeName": "a",
+                            ],
+                        ],
+                        "pageviewKey": result.pageviewKey,
+                    ])
+                    
+                    let messages = try dataStore.assertOnlySession(hasPostStartMessageCount: 3)
+                    let message = messages.postStartMessages[2]
+                    expect(message.pageviewInfo.componentOrClassName).to(equal("Passed in pageview component"))
+                }
+                
+                it("uses the none pageview if specified") {
+                    
+                    consumer.startRecording("11")
+                    
+                    _ = try bridgeSupport.handleInvocation(method: "trackPageview", arguments: [
+                        "properties": [ "componentOrClassName": "Last pageview component", ],
+                    ])
+                    
+                    _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                        "interaction": "unspecified",
+                        "nodes": [
+                            [
+                                "nodeName": "a",
+                            ],
+                        ],
+                        "pageviewKey": "none",
+                    ])
+                    
+                    let messages = try dataStore.assertOnlySession(hasPostStartMessageCount: 2)
+                    let nonePageviewMessage = messages.initialPageviewMessage
+                    let message = messages.postStartMessages[1]
+                    expect(message.pageviewInfo).to(equal(nonePageviewMessage?.pageviewInfo))
+                }
+                
+                it("applies the last pageview if the passed in pageview is no longer available") {
+                    
+                    consumer.startRecording("11")
+                    let result = try bridgeSupport.handleInvocation(method: "trackPageview", arguments: [
+                        "properties": [ "componentOrClassName": "Passed in pageview component", ],
+                    ]).assertTrackPageviewResponse(isPrecondition: true)
+                    
+                    _ = try bridgeSupport.handleInvocation(method: "trackPageview", arguments: [
+                        "properties": [ "componentOrClassName": "Last pageview component", ],
+                        "deadKeys": [ result.pageviewKey, ], // Invalidate the key
+                    ])
+                    
+                    _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                        "interaction": "unspecified",
+                        "nodes": [
+                            [
+                                "nodeName": "a",
+                            ],
+                        ],
+                        "pageviewKey": result.pageviewKey,
+                    ])
+                    
+                    let messages = try dataStore.assertOnlySession(hasPostStartMessageCount: 3)
+                    let message = messages.postStartMessages[2]
+                    expect(message.pageviewInfo.componentOrClassName).to(equal("Last pageview component"))
+                }
+            }
+        }
+        
         describeMethod("track") { method in
             
             context("with trackPageview") {
@@ -438,9 +839,8 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                         "pageviewKey": result.pageviewKey,
                     ])
                     
-                    let user = try dataStore.assertOnlyOneUserToUpload()
-                    
-                    let message = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 6)[5]
+                    let messages = try dataStore.assertOnlySession(hasPostStartMessageCount: 3)
+                    let message = messages.postStartMessages[2]
                     expect(message.pageviewInfo.componentOrClassName).to(equal("Passed in pageview component"))
                 }
                 
@@ -457,12 +857,10 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                         "pageviewKey": "none",
                     ])
                     
-                    let user = try dataStore.assertOnlyOneUserToUpload()
-                    
-                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)
-                    let nonePageviewMessage = messages[1]
-                    let message = messages[4]
-                    expect(message.pageviewInfo).to(equal(nonePageviewMessage.pageviewInfo))
+                    let messages = try dataStore.assertOnlySession(hasPostStartMessageCount: 2)
+                    let nonePageviewMessage = messages.initialPageviewMessage
+                    let message = messages.postStartMessages[1]
+                    expect(message.pageviewInfo).to(equal(nonePageviewMessage?.pageviewInfo))
                 }
                 
                 it("applies the last pageview if the passed in pageview is no longer available") {
@@ -482,9 +880,8 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                         "pageviewKey": result.pageviewKey,
                     ])
                     
-                    let user = try dataStore.assertOnlyOneUserToUpload()
-                    
-                    let message = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 6)[5]
+                    let messages = try dataStore.assertOnlySession(hasPostStartMessageCount: 3)
+                    let message = messages.postStartMessages[2]
                     expect(message.pageviewInfo.componentOrClassName).to(equal("Last pageview component"))
                 }
             }

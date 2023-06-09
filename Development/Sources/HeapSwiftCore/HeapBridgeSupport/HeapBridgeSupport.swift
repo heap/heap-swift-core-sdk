@@ -32,6 +32,8 @@ public class HeapBridgeSupport
             return try track(arguments: arguments)
         case "trackPageview":
             return try trackPageview(arguments: arguments)
+        case "trackInteraction":
+            return try trackInteraction(arguments: arguments)
         case "identify":
             return try identify(arguments: arguments)
         case "resetIdentity":
@@ -116,6 +118,17 @@ public class HeapBridgeSupport
             "sessionId": AnyJSONEncodable(wrapped: pageview.sessionId),
             "removedKeys": AnyJSONEncodable(wrapped: removedKeys + additionalRemovedKeys),
         ]
+    }
+    
+    func trackInteraction(arguments: [String: Any]) throws -> JSONEncodable? {
+        let interaction = try getRequiredInteraction(from: arguments, methodName: "trackInteraction")
+        let nodes = try getRequiredInteractionNodes(from: arguments, methodName: "trackInteraction")
+        let callbackName = try getOptionalString(named: "callbackName", from: arguments, message: "HeapBridgeSupport.trackInteraction received an invalid callback name and will not complete the bridged method call.")
+        let timestamp = try getOptionalTimestamp(arguments, methodName: "trackInteraction")
+        let sourceInfo = try getOptionalSourceLibrary(arguments, methodName: "trackInteraction")
+        let pageview = try getOptionalPageview(from: arguments, methodName: "trackInteraction")
+        eventConsumer.trackInteraction(interaction: interaction, nodes: nodes, callbackName: callbackName, timestamp: timestamp, sourceInfo: sourceInfo, pageview: pageview)
+        return nil
     }
     
     func identify(arguments: [String: Any]) throws -> JSONEncodable? {
@@ -282,6 +295,71 @@ extension HeapBridgeSupport {
         }
         
         return pageview
+    }
+    
+    func getRequiredInteraction(from arguments: [String: Any], methodName: String) throws -> Interaction {
+        guard let rawValue = arguments["interaction"] else {
+            HeapLogger.shared.debug("HeapBridgeSupport.\(methodName) received an event without an interaction type and will not complete the bridged method call.")
+            throw InvocationError.invalidParameters
+        }
+        
+        if let builtinName = rawValue as? String {
+            switch builtinName {
+            case "unspecified": return .unspecified
+            case "click": return .click
+            case "touch": return .touch
+            case "change": return .change
+            case "submit": return .submit
+            default:
+                HeapLogger.shared.debug("HeapBridgeSupport.\(methodName) received an an unknown interaction type, \(builtinName), and will not complete the bridged method call.")
+                throw InvocationError.invalidParameters
+            }
+        }
+        
+        if let rawDictionary = rawValue as? [String: Any] {
+            if let name = rawDictionary["custom"] as? String {
+                return .custom(name)
+            }
+            
+            if let value = rawDictionary["builtin"] as? Int {
+                return .builtin(value)
+            }
+        }
+        
+        HeapLogger.shared.debug("HeapBridgeSupport.\(methodName) received an an invalid interaction type and will not complete the bridged method call.")
+        throw InvocationError.invalidParameters
+    }
+    
+    func getRequiredInteractionNodes(from arguments: [String: Any], methodName: String) throws -> [InteractionNode] {
+        
+        guard
+            let rawArray = arguments["nodes"] as? [Any],
+            !rawArray.isEmpty
+        else {
+            HeapLogger.shared.debug("HeapBridgeSupport.\(methodName) received an event without a list of nodes and will not complete the bridged method call.")
+            throw InvocationError.invalidParameters
+        }
+        
+        return try rawArray.map(getInteractionNode(_:))
+        
+        func message() -> String { "HeapBridgeSupport.\(methodName) received an invalid list of nodes and will not complete the bridged method call." }
+        
+        func getInteractionNode(_ rawNode: Any) throws -> InteractionNode {
+            guard let rawObject = rawNode as? [String: Any] else {
+                HeapLogger.shared.debug(message())
+                throw InvocationError.invalidParameters
+            }
+            
+            var node = InteractionNode(nodeName: try getRequiredString(named: "nodeName", from: rawObject, message: message()))
+            node.nodeText = try getOptionalString(named: "nodeText", from: rawObject, message: message())
+            node.nodeHtmlClass = try getOptionalString(named: "nodeHtmlClass", from: rawObject, message: message())
+            node.nodeId = try getOptionalString(named: "nodeId", from: rawObject, message: message())
+            node.href = try getOptionalString(named: "href", from: rawObject, message: message())
+            node.accessibilityLabel = try getOptionalString(named: "accessibilityLabel", from: rawObject, message: message())
+            node.referencingPropertyName = try getOptionalString(named: "referencingPropertyName", from: rawObject, message: message())
+            node.attributes = try getOptionalParameterDictionary(named: "attributes", from: rawObject, message: message())
+            return node
+        }
     }
     
     func getOptionalArrayOfStrings(named name: String, from arguments: [String: Any], message: @autoclosure () -> String) throws -> [String] {

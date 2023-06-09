@@ -117,12 +117,12 @@ extension Message {
         }
         validateBaseMessage(file: file, line: line, user: user, id: nil, timestamp: timestamp, hasSourceLibrary: hasSourceLibrary, sourceLibrary: sourceLibrary, eventProperties: eventProperties)
 
-        expect(event.interaction.kind).to(equal(interaction), description: "The event does not match expected Kind")
-        expect(event.interaction.nodes).to(equal(nodes), description: "The event does not match expected Nodes")
+        expect(file: file, line: line, event.interaction.kind).to(equal(interaction), description: "The event does not match expected Kind")
+        expect(file: file, line: line, event.interaction.nodes).to(equal(nodes), description: "The event does not match expected Nodes")
         if let callbackName = callbackName {
-            expect(event.interaction.callbackName).to(equal(callbackName), description: "The event does not match expected callbackName")
+            expect(file: file, line: line, event.interaction.callbackName).to(equal(callbackName), description: "The event does not match expected callbackName")
         } else {
-            expect(event.interaction.hasCallbackName).to(beFalse(), description: "The event flag hasCallbackName for callbackName is mismatched, expected false flag for nil value")
+            expect(file: file, line: line, event.interaction.hasCallbackName).to(beFalse(), description: "The event flag hasCallbackName for callbackName is mismatched, expected false flag for nil value")
         }
         
         expect(file: file, line: line, hasPageviewInfo).to(beTrue(), description: "The event must have pageview info")

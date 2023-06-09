@@ -240,7 +240,8 @@ final class HeapBridgeSupport_CoreSpec: HeapSpec {
                     "javascriptEpochTimestamp": timestamp.timeIntervalSince1970 * 1000,
                 ])
                 let user = try dataStore.assertOnlyOneUserToUpload()
-                let message = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)[3]
+                let messages = try dataStore.assertOnlySession(for: user, hasPostStartMessageCount: 1)
+                let message = messages.postStartMessages[0]
                 let event = try message.assertEventMessage(user: user, hasSourceLibrary: true, sourceLibrary: .with({
                     $0.name = "my source"
                     $0.version = "1.0.0"

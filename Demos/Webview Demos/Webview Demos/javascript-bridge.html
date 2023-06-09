@@ -76,6 +76,42 @@ Log Level:  ${await HeapLogger.getLogLevel()}
                     new Date(),
                     source
                 );
+                
+                document.addEventListener('click', (e) => {
+                    
+                    const eTarget = e.target;
+                    if (!eTarget) { return; }
+                    
+                    const nodes = [];
+                    const attributeNames = ['aria-role', 'type'];
+                    
+                    for (let target = eTarget; target && target.nodeName; target = target.parentElement) {
+                        
+                        const attributes = {};
+                        for (const name of attributeNames) {
+                            attributes[name] = target.getAttribute(name)
+                        }
+                        
+                        
+                        nodes.push({
+                            nodeName: target.nodeName,
+                            nodeId: target.id || undefined,
+                            nodeHtmlClass: target.className || undefined,
+                            accessibilityLabel: target.getAttribute('aria-label'),
+                            attributes,
+                        });
+                    }
+                    
+                    nodes[0].nodeText = eTarget.textContent;
+                    
+                    Heap.trackInteraction(
+                        'click',
+                        nodes,
+                        null,
+                        new Date(),
+                        source
+                    );
+                });
             }
             
             document.getElementById('startAutocapture').addEventListener('click', function (e) {
