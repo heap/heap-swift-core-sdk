@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Hybrid web view</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            html, body {
+                height: 100%;
+                font-family: sans-serif;
+            }
+            .centerer {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="centerer">
+            <button type="button" id="track">Track an event</button>
+            <button type="button" id="log">Log an info message</button>
+            <button type="button" id="startAutocapture">Start sample autocapture SDK</button>
+            <button type="button" id="getInfo">Show Heap properties</button>
+            <pre id="details">
+                
+                
+                
+            </pre>
+        </div>
+        
+        <script type="text/javascript">
+            
+            document.getElementById('track').addEventListener('click', function () {
+                Heap.track('HTML Button Clicked', {
+                    'propa': 'a',
+                    'propb': true,
+                    'propc': 6.02e23,
+                    'propd': 5,
+                    'propf': 5.5,
+                });
+            });
+            
+            document.getElementById('log').addEventListener('click', function () {
+                HeapLogger.info('This log message originated from a web view.', 'Just a source');
+            });
+            
+            document.getElementById('getInfo').addEventListener('click', async function () {
+                document.getElementById('details').textContent = `
+User Id:    ${await Heap.getUserId()}
+Identity:   ${await Heap.getIdentity()}
+Session Id: ${await Heap.getSessionId()}
+Log Level:  ${await HeapLogger.getLogLevel()}
+`.trim();
+            });
+            
+            // An example autocapture SDK for demonstrating webview bridge.
+            // DO NOT USE IN PRODUCTION.
+            let hasRegisteredAutocapture = false;
+            function registerAutocapture() {
+                if (hasRegisteredAutocapture) { return; }
+                hasRegisteredAutocapture = true;
+                
+                const source = {
+                    name: 'web_autocapture',
+                    version: '0.0.0',
+                    platform: 'iOS Webview',
+                };
+                
+                Heap.trackPageview(
+                    {
+                        title: document.title,
+                        url: location.href,
+                    },
+                    new Date(),
+                    source
+                );
+            }
+            
+            document.getElementById('startAutocapture').addEventListener('click', function (e) {
+                e.currentTarget.disabled = true;
+                registerAutocapture();
+            });
+        </script>
+    </body>
+</html>

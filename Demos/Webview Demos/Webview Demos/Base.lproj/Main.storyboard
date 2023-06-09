@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="21507" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="Ggm-dd-J34">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="21701" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="Ggm-dd-J34">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21505"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21678"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="Stack View standard spacing" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
@@ -92,7 +93,7 @@ To get started, provide your environment ID.</string>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacingType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="Iql-aB-LkP">
-                                <rect key="frame" x="16" y="103.00000000000001" width="361" height="177.33333333333337"/>
+                                <rect key="frame" x="16" y="103" width="361" height="292"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Want to see heap.js's interfaces in action but without heap.js?" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ZTO-fE-GVt">
                                         <rect key="frame" x="0.0" y="0.0" width="361" height="42.333333333333336"/>
@@ -120,6 +121,20 @@ To get started, provide your environment ID.</string>
                                         <buttonConfiguration key="configuration" style="plain" title="Test heap.js on a web page"/>
                                         <connections>
                                             <segue destination="Wr8-al-3Jm" kind="show" id="7gr-eu-6Y2"/>
+                                        </connections>
+                                    </button>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Are you working on HeapBridgeSupport or @heap/heap-javascript-bridge? Test the features using @heap/heap-webview-bridge." textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ZpQ-ku-AZt">
+                                        <rect key="frame" x="0.0" y="185.33333333333331" width="361" height="64.333333333333314"/>
+                                        <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="FS8-hm-xB4">
+                                        <rect key="frame" x="0.0" y="257.66666666666669" width="361" height="34.333333333333314"/>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="plain" title="Test HeapBridgeSupport"/>
+                                        <connections>
+                                            <segue destination="04c-me-DTb" kind="show" id="hWr-Y1-LWE"/>
                                         </connections>
                                     </button>
                                 </subviews>
@@ -258,7 +273,7 @@ To get started, provide your environment ID.</string>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="fLe-y3-jwE" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2066" y="434"/>
+            <point key="canvasLocation" x="2225" y="-4"/>
         </scene>
         <!--heap.js integrations-->
         <scene sceneID="pa7-LH-Yot">
@@ -317,7 +332,7 @@ To get started, provide your environment ID.</string>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="cfQ-sz-1bZ" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2083" y="-234"/>
+            <point key="canvasLocation" x="2242" y="-673"/>
         </scene>
         <!--heap.js test-->
         <scene sceneID="x4J-cN-4gA">
@@ -376,7 +391,42 @@ To get started, provide your environment ID.</string>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="pWK-qa-Rcc" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2892" y="434"/>
+            <point key="canvasLocation" x="3051" y="-4"/>
+        </scene>
+        <!--HeapBridgeSupport-->
+        <scene sceneID="W5K-DU-bqk">
+            <objects>
+                <viewController id="04c-me-DTb" customClass="JavaScriptBridgeController" customModule="Webview_Demos" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="aGT-Hk-Na6">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <wkWebView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Qvx-vU-IPE">
+                                <rect key="frame" x="0.0" y="103" width="393" height="749"/>
+                                <color key="backgroundColor" red="0.36078431370000003" green="0.38823529410000002" blue="0.4039215686" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <wkWebViewConfiguration key="configuration">
+                                    <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
+                                    <wkPreferences key="preferences"/>
+                                </wkWebViewConfiguration>
+                            </wkWebView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="Pde-3G-2Il"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="Qvx-vU-IPE" firstAttribute="trailing" secondItem="Pde-3G-2Il" secondAttribute="trailing" id="PGF-8O-TNo"/>
+                            <constraint firstItem="Qvx-vU-IPE" firstAttribute="leading" secondItem="Pde-3G-2Il" secondAttribute="leading" id="UCO-F2-CBj"/>
+                            <constraint firstItem="Qvx-vU-IPE" firstAttribute="top" secondItem="Pde-3G-2Il" secondAttribute="top" id="ZIH-Eo-ISF"/>
+                            <constraint firstAttribute="bottom" secondItem="Qvx-vU-IPE" secondAttribute="bottom" id="sEf-C4-Us4"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" title="HeapBridgeSupport" id="Xcn-Ln-LUM"/>
+                    <connections>
+                        <outlet property="webview" destination="Qvx-vU-IPE" id="4Ig-RI-mMC"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ViZ-Ub-Bym" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2241.9847328244273" y="729.57746478873241"/>
         </scene>
     </scenes>
     <resources>

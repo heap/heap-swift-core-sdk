@@ -344,7 +344,7 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                     "properties": [String : Any](),
                 ]).assertTrackPageviewResponse(isPrecondition: true)
 
-                expect(bridgeSupport.pageviews[result.pageviewKey]).notTo(beNil())
+                expect(bridgeSupport.pageviewStore.get(result.pageviewKey)).notTo(beNil())
             }
             
             it("returns a stored pageview key") {
@@ -388,7 +388,33 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                     "deadKeys": [ pageviewKey ]
                 ])
                 
-                expect(bridgeSupport.pageviews.keys).notTo(contain(pageviewKey))
+                expect(bridgeSupport.pageviewStore.keys).notTo(contain(pageviewKey))
+            }
+            
+            it("doesn't prune pageviews below the limit") {
+                consumer.startRecording("11")
+                for _ in 1...bridgeSupport.pageviewStore.maxSize {
+                    let result = try bridgeSupport.handleInvocation(method: method, arguments: [
+                        "properties": [String : Any](),
+                    ]).assertTrackPageviewResponse(isPrecondition: true)
+                    
+                    expect(result.removedKeys).to(beEmpty())
+                }
+            }
+            
+            it("prune pageviews when it reaches the limit") {
+                consumer.startRecording("11")
+                for _ in 1...bridgeSupport.pageviewStore.maxSize {
+                    _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                        "properties": [String : Any](),
+                    ]).assertTrackPageviewResponse(isPrecondition: true)
+                }
+                
+                let result = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "properties": [String : Any](),
+                ]).assertTrackPageviewResponse()
+                
+                expect(result.removedKeys).to(haveCount(bridgeSupport.pageviewStore.numberToPruneWhenPruning))
             }
         }
         
@@ -416,6 +442,27 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                     
                     let message = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 6)[5]
                     expect(message.pageviewInfo.componentOrClassName).to(equal("Passed in pageview component"))
+                }
+                
+                it("uses the none pageview if specified") {
+                    
+                    consumer.startRecording("11")
+                    
+                    _ = try bridgeSupport.handleInvocation(method: "trackPageview", arguments: [
+                        "properties": [ "componentOrClassName": "Last pageview component", ],
+                    ])
+                    
+                    _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                        "event": "my-event",
+                        "pageviewKey": "none",
+                    ])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 5)
+                    let nonePageviewMessage = messages[1]
+                    let message = messages[4]
+                    expect(message.pageviewInfo).to(equal(nonePageviewMessage.pageviewInfo))
                 }
                 
                 it("applies the last pageview if the passed in pageview is no longer available") {

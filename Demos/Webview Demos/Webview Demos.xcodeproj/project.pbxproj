@@ -18,6 +18,8 @@
 		EB4757B42A1D669E0033DCFF /* HeapJSIntegrationsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB4757B32A1D669E0033DCFF /* HeapJSIntegrationsController.swift */; };
 		EB4757B62A1D67C40033DCFF /* heapjs-integrations.html in Resources */ = {isa = PBXBuildFile; fileRef = EB4757B52A1D67C40033DCFF /* heapjs-integrations.html */; };
 		EBC8FA5B2A1D782F00C09086 /* HeapSwiftCore in Frameworks */ = {isa = PBXBuildFile; productRef = EBC8FA5A2A1D782F00C09086 /* HeapSwiftCore */; };
+		EBF245AF2A32AC4A00C8296D /* JavaScriptBridgeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBF245AE2A32AC4A00C8296D /* JavaScriptBridgeController.swift */; };
+		EBF245B12A32AC6C00C8296D /* javascript-bridge.html in Resources */ = {isa = PBXBuildFile; fileRef = EBF245B02A32AC6C00C8296D /* javascript-bridge.html */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +36,8 @@
 		EB4757B32A1D669E0033DCFF /* HeapJSIntegrationsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeapJSIntegrationsController.swift; sourceTree = "<group>"; };
 		EB4757B52A1D67C40033DCFF /* heapjs-integrations.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "heapjs-integrations.html"; sourceTree = "<group>"; };
 		EB4757B82A1D760C0033DCFF /* heap-swift-core */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "heap-swift-core"; path = ../..; sourceTree = "<group>"; };
+		EBF245AE2A32AC4A00C8296D /* JavaScriptBridgeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaScriptBridgeController.swift; sourceTree = "<group>"; };
+		EBF245B02A32AC6C00C8296D /* javascript-bridge.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "javascript-bridge.html"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,6 +80,8 @@
 				EB4757B52A1D67C40033DCFF /* heapjs-integrations.html */,
 				EB25F17F2A1D868B00F51F03 /* HeapJSConfigController.swift */,
 				EB25F1812A1D86A700F51F03 /* HeapJSTestController.swift */,
+				EBF245AE2A32AC4A00C8296D /* JavaScriptBridgeController.swift */,
+				EBF245B02A32AC6C00C8296D /* javascript-bridge.html */,
 				EB4757A52A1D5F810033DCFF /* Main.storyboard */,
 				EB4757A82A1D5F840033DCFF /* Assets.xcassets */,
 				EB4757AA2A1D5F840033DCFF /* LaunchScreen.storyboard */,
@@ -160,6 +166,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EBF245B12A32AC6C00C8296D /* javascript-bridge.html in Resources */,
 				EB4757AC2A1D5F840033DCFF /* LaunchScreen.storyboard in Resources */,
 				EB4757A92A1D5F840033DCFF /* Assets.xcassets in Resources */,
 				EB4757B62A1D67C40033DCFF /* heapjs-integrations.html in Resources */,
@@ -180,6 +187,7 @@
 				EB4757A22A1D5F810033DCFF /* SceneDelegate.swift in Sources */,
 				EB25F1822A1D86A700F51F03 /* HeapJSTestController.swift in Sources */,
 				EB4757B42A1D669E0033DCFF /* HeapJSIntegrationsController.swift in Sources */,
+				EBF245AF2A32AC4A00C8296D /* JavaScriptBridgeController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

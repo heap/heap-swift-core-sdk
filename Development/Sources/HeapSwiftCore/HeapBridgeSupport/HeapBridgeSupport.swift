@@ -8,7 +8,7 @@ public enum InvocationError: Error {
 
 public class HeapBridgeSupport
 {
-    var pageviews: [String: Pageview] = [:]
+    let pageviewStore = BridgedPageviewStore()
     
     let eventConsumer: any HeapProtocol
     let uploader: any UploaderProtocol
@@ -99,24 +99,22 @@ public class HeapBridgeSupport
         
         let deadKeys = try getOptionalArrayOfStrings(named: "deadKeys", from: arguments, message: "HeapBridgeSupport.trackPageview received an invalid list of dead keys and will not complete the bridged method call.")
         
-        for key in deadKeys {
-            pageviews[key] = nil
-        }
+        let removedKeys = pageviewStore.remove(deadKeys)
         
         let pageview = eventConsumer.trackPageview(properties, timestamp: timestamp, sourceInfo: sourceInfo, bridge: self, userInfo: pageviewKey)
         
         guard let pageview = pageview else {
             return [
-                "removedKeys": deadKeys,
+                "removedKeys": removedKeys,
             ]
         }
         
-        pageviews[pageviewKey] = pageview
+        let additionalRemovedKeys = pageviewStore.add(pageview, at: pageviewKey)
         
         return [
             "pageviewKey": AnyJSONEncodable(wrapped: pageviewKey),
             "sessionId": AnyJSONEncodable(wrapped: pageview.sessionId),
-            "removedKeys": AnyJSONEncodable(wrapped: deadKeys),
+            "removedKeys": AnyJSONEncodable(wrapped: removedKeys + additionalRemovedKeys),
         ]
     }
     
@@ -274,7 +272,11 @@ extension HeapBridgeSupport {
     func getOptionalPageview(from arguments: [String: Any], methodName: String) throws -> Pageview? {
         guard let pageviewKey = try getOptionalString(named: "pageviewKey", from: arguments, message: "HeapBridgeSupport.\(methodName) received an invalid pageview key and will not complete the bridged method call.") else { return nil }
         
-        guard let pageview = pageviews[pageviewKey] else {
+        if pageviewKey == "none" {
+            return Pageview.none
+        }
+        
+        guard let pageview = pageviewStore.get(pageviewKey) else {
             HeapLogger.shared.trace("The passed in pageview key \(pageviewKey) does not exist. It may have been culled.")
             return nil
         }

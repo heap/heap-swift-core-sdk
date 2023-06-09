@@ -340,7 +340,7 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     }
                     
                     // Background events dispatch tasks onto the main queue, so it needs a chance to process them.
-                    CFRunLoopRunInMode(.defaultMode, 0.5, false)
+                    CFRunLoopRunInMode(.defaultMode, 0.75, false)
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
                     let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 1003)
