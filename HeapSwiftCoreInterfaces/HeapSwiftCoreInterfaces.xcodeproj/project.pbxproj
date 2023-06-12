@@ -17,6 +17,7 @@
 		EB79BE652A144E0600F9EEBD /* HeapProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB79BE5C2A144E0600F9EEBD /* HeapProtocol.swift */; };
 		EB79BE662A144E0600F9EEBD /* RuntimeBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB79BE5D2A144E0600F9EEBD /* RuntimeBridge.swift */; };
 		EB79BE672A144E0600F9EEBD /* Interaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB79BE5E2A144E0600F9EEBD /* Interaction.swift */; };
+		EBF245AB2A327A9600C8296D /* HeapObjcPropertyValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBF245AA2A327A9600C8296D /* HeapObjcPropertyValue.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +33,7 @@
 		EB79BE5D2A144E0600F9EEBD /* RuntimeBridge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RuntimeBridge.swift; sourceTree = "<group>"; };
 		EB79BE5E2A144E0600F9EEBD /* Interaction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Interaction.swift; sourceTree = "<group>"; };
 		EB79BE682A14508300F9EEBD /* HeapSwiftCoreInterfaces.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = HeapSwiftCoreInterfaces.modulemap; sourceTree = "<group>"; };
+		EBF245AA2A327A9600C8296D /* HeapObjcPropertyValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeapObjcPropertyValue.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +70,7 @@
 				EB79BE4F2A144A4000F9EEBD /* HeapSwiftCoreInterfaces.h */,
 				EB79BE562A144E0600F9EEBD /* HeapLogger.swift */,
 				EB79BE5A2A144E0600F9EEBD /* HeapPropertyValue.swift */,
+				EBF245AA2A327A9600C8296D /* HeapObjcPropertyValue.swift */,
 				EB79BE5C2A144E0600F9EEBD /* HeapProtocol.swift */,
 				EB79BE5E2A144E0600F9EEBD /* Interaction.swift */,
 				EB79BE582A144E0600F9EEBD /* Option.swift */,
@@ -187,6 +190,7 @@
 				EB79BE642A144E0600F9EEBD /* Source.swift in Sources */,
 				EB79BE612A144E0600F9EEBD /* Option.swift in Sources */,
 				EB79BE602A144E0600F9EEBD /* Pageview.swift in Sources */,
+				EBF245AB2A327A9600C8296D /* HeapObjcPropertyValue.swift in Sources */,
 				EB79BE672A144E0600F9EEBD /* Interaction.swift in Sources */,
 				EB79BE632A144E0600F9EEBD /* HeapPropertyValue.swift in Sources */,
 				EB79BE662A144E0600F9EEBD /* RuntimeBridge.swift in Sources */,
