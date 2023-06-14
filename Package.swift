@@ -32,8 +32,8 @@ let package = Package(
             path: "Development/Sources/HeapSwiftCore"),
         .binaryTarget(
             name: "HeapSwiftCoreInterfaces",
-            url: "https://cdn.heapanalytics.com/ios/heap-swift-core-interfaces-0.1.2.zip", // END HeapSwiftCoreInterfaces URL
-            checksum: "6ed9d3af50cfe083f24fec6357fb26fc023d0caf5bbf9629a735c58da5ffe8b1" // END HeapSwiftCoreInterfaces checksum
+            url: "https://cdn.heapanalytics.com/ios/heap-swift-core-interfaces-0.3.0.zip", // END HeapSwiftCoreInterfaces URL
+            checksum: "df611a027a390100799a73c0bff26d6b6b70da72c1f58276120819b582924f36" // END HeapSwiftCoreInterfaces checksum
         )
     ]
 )
