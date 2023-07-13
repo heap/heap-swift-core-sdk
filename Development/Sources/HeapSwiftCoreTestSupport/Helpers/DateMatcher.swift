@@ -5,7 +5,7 @@ func beCloseTo(
     _ expectedValue: TimeInterval,
     after referenceDate: Date,
     within delta: TimeInterval = 1
-) -> Predicate<Date> {
+) -> Nimble.Predicate<Date> {
     return Predicate.define { actualExpression in
         return isCloseTo(try actualExpression.evaluate()?.timeIntervalSince(referenceDate), expectedValue: expectedValue, delta: delta)
     }

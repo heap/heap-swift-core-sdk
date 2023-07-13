@@ -54,6 +54,6 @@ func expectPerformScheduledUpload(file: StaticString = #file, line: UInt = #line
     return expect(file: file, line: line, result)
 }
 
-public func beFailure<Success, Failure: Equatable>(file: StaticString = #file, line: UInt = #line, with error: Failure) -> Predicate<Result<Success, Failure>> {
+public func beFailure<Success, Failure: Equatable>(file: StaticString = #file, line: UInt = #line, with error: Failure) -> Nimble.Predicate<Result<Success, Failure>> {
     beFailure(test: { expect(file: file, line: line, $0).to(equal(error)) })
 }
