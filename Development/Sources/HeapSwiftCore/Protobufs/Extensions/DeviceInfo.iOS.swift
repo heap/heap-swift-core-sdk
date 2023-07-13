@@ -1,7 +1,9 @@
 #if os(iOS)
 
 import UIKit
+#if canImport(CoreTelephony)
 import CoreTelephony
+#endif
 
 extension DeviceInfo {
     
@@ -37,7 +39,7 @@ extension DeviceInfo {
     private static func getCarrier() -> String? {
 #if targetEnvironment(macCatalyst)
         return nil
-#else
+#elseif canImport(CoreTelephony)
         let info = CTTelephonyNetworkInfo()
         guard let radioKeys = info.serviceCurrentRadioAccessTechnology?.keys,
               let carrier = info.serviceSubscriberCellularProviders?.first(where: {
@@ -46,6 +48,8 @@ extension DeviceInfo {
         else { return nil }
         
         return carrier.carrierName
+#else
+        return nil
 #endif
     }
     
