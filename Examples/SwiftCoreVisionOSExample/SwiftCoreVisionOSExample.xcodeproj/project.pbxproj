@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -13,6 +13,7 @@
 		EB1634842A6059ED00BDFA7F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EB1634832A6059ED00BDFA7F /* Assets.xcassets */; };
 		EB1634872A6059ED00BDFA7F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EB1634862A6059ED00BDFA7F /* Preview Assets.xcassets */; };
 		EB16348F2A605A2D00BDFA7F /* HeapSwiftCore in Frameworks */ = {isa = PBXBuildFile; productRef = EB16348E2A605A2D00BDFA7F /* HeapSwiftCore */; };
+		EB8967B92A605CB600B70734 /* HeapSwiftCore in Frameworks */ = {isa = PBXBuildFile; productRef = EB8967B82A605CB600B70734 /* HeapSwiftCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +30,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB8967B92A605CB600B70734 /* HeapSwiftCore in Frameworks */,
 				EB16347E2A6059EC00BDFA7F /* RealityKitContent in Frameworks */,
 				EB16348F2A605A2D00BDFA7F /* HeapSwiftCore in Frameworks */,
 			);
@@ -100,6 +102,7 @@
 			packageProductDependencies = (
 				EB16347D2A6059EC00BDFA7F /* RealityKitContent */,
 				EB16348E2A605A2D00BDFA7F /* HeapSwiftCore */,
+				EB8967B82A605CB600B70734 /* HeapSwiftCore */,
 			);
 			productName = SwiftCoreVisionOSExample;
 			productReference = EB1634782A6059EC00BDFA7F /* SwiftCoreVisionOSExample.app */;
@@ -130,6 +133,7 @@
 			);
 			mainGroup = EB16346F2A6059EC00BDFA7F;
 			packageReferences = (
+				EB8967B72A605CB600B70734 /* XCLocalSwiftPackageReference "../.." */,
 			);
 			productRefGroup = EB1634792A6059EC00BDFA7F /* Products */;
 			projectDirPath = "";
@@ -357,12 +361,23 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		EB8967B72A605CB600B70734 /* XCLocalSwiftPackageReference "../.." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		EB16347D2A6059EC00BDFA7F /* RealityKitContent */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RealityKitContent;
 		};
 		EB16348E2A605A2D00BDFA7F /* HeapSwiftCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HeapSwiftCore;
+		};
+		EB8967B82A605CB600B70734 /* HeapSwiftCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = HeapSwiftCore;
 		};
