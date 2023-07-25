@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1]
+
+### Fixed
+
+- Fixed code signing on macOS. The issue was caused by the HeapSwiftCoreInterfaces zip file not
+  preserving symlinks.
+
 ### Added
 
 - Exposed `+[HeapSourceInfo sourceInfoWithName:version:platform:properties:]` and
@@ -80,6 +87,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
+[Unreleased]: https://github.com/heap/heap-swift-core-sdk/compare/0.3.1...main
+[0.3.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.2.1...0.3.0
 [0.2.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.1.2...0.2.0
