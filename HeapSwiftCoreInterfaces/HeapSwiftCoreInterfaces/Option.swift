@@ -85,6 +85,7 @@ public extension Option {
     static let messageBatchByteLimit = register(name: "messageBatchByteLimit", type: .integer)
     static let messageBatchMessageLimit = register(name: "messageBatchMessageLimit", type: .integer)
     static let captureAdvertiserId = register(name: "captureAdvertiserId", type: .boolean)
+    static let captureVendorId = register(name: "captureVendorId", type: .boolean)
 }
 
 @objc
@@ -115,6 +116,7 @@ extension Option {
             Option.messageBatchByteLimit,
             Option.messageBatchMessageLimit,
             Option.captureAdvertiserId,
+            Option.captureVendorId,
             
             Option.disablePageviewAutocapture,
             Option.disablePageviewTitleCapture,
