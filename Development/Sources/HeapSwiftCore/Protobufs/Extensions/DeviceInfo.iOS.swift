@@ -28,10 +28,15 @@ extension DeviceInfo {
            let carrier = getCarrier() {
             deviceInfo.carrier = carrier
         }
-        deviceInfo.setIfNotNil(\.vendorID, device.identifierForVendor?.uuidString)
+        deviceInfo.setIfNotNil(\.vendorID, getVendorIdentifier(with: settings, device: device))
         deviceInfo.setIfNotNil(\.advertiserID, getAdvertisingIdentifier(with: settings))
         
         return deviceInfo
+    }
+    
+    static func getVendorIdentifier(with settings: FieldSettings, device: UIDevice) -> String? {
+        guard settings.captureVendorId else { return nil }
+        return device.identifierForVendor?.uuidString
     }
     
     private static func getCarrier() -> String? {

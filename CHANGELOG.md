@@ -13,6 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added `.captureVendorId` option to enable capture of **iOS Vendor ID**  and
+  **Initial iOS Vendor ID** from `UIDevice.current.identifierForVendor`.
+  This supports a behavior change discussed in the **Changed** section.
+
+### Changed
+
+- The SDK no longer captures **iOS Vendor ID** and **Initial iOS Vendor ID** by default.
+  This change allows developers to opt into Vendor ID tracking after they've validated
+  their use complies with Apple's [user privacy and data use](https://developer.apple.com/app-store/user-privacy-and-data-use/) guidelines.
+  To enable these properties, use the `.captureVendorId` option in `startRecording`.
+  
 ## [0.3.1]
 
 ### Fixed

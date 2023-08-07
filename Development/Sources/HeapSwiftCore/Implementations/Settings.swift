@@ -38,6 +38,7 @@ extension UploaderSettings {
 
 struct FieldSettings {
     var captureAdvertiserId: Bool
+    var captureVendorId: Bool
     var capturePageviewTitle: Bool
     var captureInteractionText: Bool
     var captureInteractionAccessibilityLabel: Bool
@@ -46,6 +47,7 @@ struct FieldSettings {
     
     static let `default` = FieldSettings(
         captureAdvertiserId: false,
+        captureVendorId: false,
         capturePageviewTitle: true,
         captureInteractionText: true,
         captureInteractionAccessibilityLabel: true,
@@ -66,6 +68,7 @@ extension FieldSettings {
         
         self.init(
             captureAdvertiserId: options.boolean(at: .captureAdvertiserId) ?? base.captureAdvertiserId,
+            captureVendorId: options.boolean(at: .captureVendorId) ?? base.captureVendorId,
             capturePageviewTitle: negated(.disablePageviewTitleCapture) ?? base.capturePageviewTitle,
             captureInteractionText: negated(.disableInteractionTextCapture) ?? base.captureInteractionText,
             captureInteractionAccessibilityLabel: negated(.disableInteractionAccessibilityLabelCapture) ?? base.captureInteractionAccessibilityLabel,
