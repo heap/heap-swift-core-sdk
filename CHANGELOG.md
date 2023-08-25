@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Properties from `addEventProperties` will no longer show up on sessions, matching Classic SDK behavior.  Pageviews and events are not affected by the change.
+
 - The SDK no longer captures **iOS Vendor ID** and **Initial iOS Vendor ID** by default.
   This change allows developers to opt into Vendor ID tracking after they've validated
   their use complies with Apple's [user privacy and data use](https://developer.apple.com/app-store/user-privacy-and-data-use/) guidelines.

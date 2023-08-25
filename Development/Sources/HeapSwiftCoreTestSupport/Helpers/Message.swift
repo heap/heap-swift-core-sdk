@@ -51,15 +51,16 @@ extension Message {
         expect(file: file, line: line, hasSessionInfo).to(beTrue(), description: "All messages must have session info")
     }
 
-    func expectSessionMessage(file: StaticString = #file, line: UInt = #line, user: UserToUpload, id: String? = nil, timestamp: Date? = nil, eventProperties: [String: Value]? = nil) {
+    func expectSessionMessage(file: StaticString = #file, line: UInt = #line, user: UserToUpload, id: String? = nil, timestamp: Date? = nil) {
 
         guard case .some(.session) = kind else {
             XCTFail("Expected a session message, got \(String(describing: kind))", file: file, line: line)
             return
         }
 
-        validateBaseMessage(file: file, line: line, user: user, id: id, timestamp: timestamp, hasSourceLibrary: false, sourceLibrary: nil, eventProperties: eventProperties)
+        validateBaseMessage(file: file, line: line, user: user, id: id, timestamp: timestamp, hasSourceLibrary: false, sourceLibrary: nil, eventProperties: nil)
 
+        expect(file: file, line: line, properties).to(beEmpty(), description: "Session messages should never have event properties.")
         expect(file: file, line: line, hasSourceLibrary).to(beFalse(), description: "Session messages should never have a source library")
         expect(file: file, line: line, hasPageviewInfo).to(beFalse(), description: "Session messages should never have pageview info")
 
@@ -167,7 +168,7 @@ extension Sequence where Element == Message {
             return
         }
 
-        firstMessages[0].expectSessionMessage(file: file, line: line, user: user, id: sessionId, timestamp: sessionTimestamp, eventProperties: eventProperties)
+        firstMessages[0].expectSessionMessage(file: file, line: line, user: user, id: sessionId, timestamp: sessionTimestamp)
         firstMessages[1].expectPageviewMessage(file: file, line: line, user: user, timestamp: sessionTimestamp, hasSourceLibrary: false, eventProperties: eventProperties, sessionMessage: firstMessages[0])
     }
 }

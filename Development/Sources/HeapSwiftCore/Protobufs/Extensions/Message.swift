@@ -13,8 +13,6 @@ extension Message {
         device = state.sdkInfo.deviceInfo
         
         sessionInfo = state.sessionInfo
-
-        properties = state.environment.properties
     }
     
     init(forSessionIn state: State) {
@@ -31,6 +29,7 @@ extension Message {
         self.pageviewInfo = pageviewInfo
         self.setIfNotNil(\.sourceLibrary, sourceLibrary)
         self.kind = .pageview(.init())
+        self.properties = state.environment.properties
     }
     
     init(forPartialEventAt timestamp: Date, sourceLibrary: LibraryInfo?, in state: State) {
@@ -42,6 +41,7 @@ extension Message {
             self.sourceLibrary = sourceLibrary
         }
         self.kind = .event(.init())
+        self.properties = state.environment.properties
     }
     
     init(forVersionChangeEventAt timestamp: Date, sourceLibrary: LibraryInfo?, in state: State, previousVersion: ApplicationInfo?) {
