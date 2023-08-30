@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Target Text** and **Target accessibilityLabel** are now trimmed of whitespace.
+
 - Properties from `addEventProperties` will no longer show up on sessions, matching Classic SDK behavior.  Pageviews and events are not affected by the change.
 
 - The SDK no longer captures **iOS Vendor ID** and **Initial iOS Vendor ID** by default.

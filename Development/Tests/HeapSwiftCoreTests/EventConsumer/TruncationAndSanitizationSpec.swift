@@ -240,5 +240,25 @@ final class TruncationAndSanitizationSpec: HeapSpec {
                 expect(result.wasTruncated).to(beTrue())
             }
         }
+        
+        describe("String.trimmed") {
+            
+            it("trims leading and trailing whitespace and new lines") {
+                
+                let expectedValue = "inputValue"
+                let inputValue = "  \t\n \(expectedValue)     \t\t\n"
+                
+                let result = inputValue.trimmed
+                expect(result).to(equal(expectedValue))
+            }
+            
+            it("returns nil if string was only whitespace") {
+                
+                let inputValue = "    \t\n    "
+                
+                let result = inputValue.trimmed
+                expect(result).to(beNil())
+            }
+        }
     }
 }

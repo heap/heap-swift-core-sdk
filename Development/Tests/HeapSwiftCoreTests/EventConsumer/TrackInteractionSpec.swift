@@ -170,6 +170,22 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                     expect(node.attributes["fooAttributeKey"]).to(equal(.init(value: "fooAttributeValue")))
                 }
                 
+                it("trims nodeText") {
+                    let expectedValue = "value"
+                    let value = "  \n\t\(expectedValue)\t  \n    "
+                    
+                    testNode.nodeText = value
+                    
+                    consumer.trackInteraction(interaction: .click, nodes: [testNode])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
+                    guard
+                        let node = try dataStore.getPendingMessages(for: user, sessionId: originalSessionId).last?.event.interaction.nodes.first
+                    else { throw TestFailure("PRECONDITION: Could not get node") }
+                    
+                    expect(node.nodeText).to(equal(expectedValue))
+                }
+                
                 it("truncates nodeText") {
                     let value = String(repeating: "あ", count: 65)
                     let expectedValue = String(repeating: "あ", count: 64)
@@ -185,9 +201,54 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                     expect(node.nodeText).to(equal(expectedValue))
                 }
                 
+                it("trims and truncates nodeText") {
+                    let value = "\(String(repeating: " ", count: 32))test\(String(repeating: " ", count: 64))test"
+                    let expectedValue = "test"
+                    testNode.nodeText = value
+                    
+                    consumer.trackInteraction(interaction: .click, nodes: [testNode])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
+                    guard
+                        let node = try dataStore.getPendingMessages(for: user, sessionId: originalSessionId).last?.event.interaction.nodes.first
+                    else { throw TestFailure("PRECONDITION: Could not get node") }
+                    
+                    expect(node.nodeText).to(equal(expectedValue))
+                }
+                
+                it("trims accessibilityLabel") {
+                    let expectedValue = "value"
+                    let value = "  \n\t\(expectedValue)\t  \n    "
+                    testNode.accessibilityLabel = value
+                    
+                    consumer.trackInteraction(interaction: .click, nodes: [testNode])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
+                    guard
+                        let node = try dataStore.getPendingMessages(for: user, sessionId: originalSessionId).last?.event.interaction.nodes.first
+                    else { throw TestFailure("PRECONDITION: Could not get node") }
+                    
+                    expect(node.accessibilityLabel).to(equal(expectedValue))
+                }
+                
                 it("truncates accessibilityLabel") {
                     let value = String(repeating: "あ", count: 65)
                     let expectedValue = String(repeating: "あ", count: 64)
+                    testNode.accessibilityLabel = value
+                    
+                    consumer.trackInteraction(interaction: .click, nodes: [testNode])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
+                    guard
+                        let node = try dataStore.getPendingMessages(for: user, sessionId: originalSessionId).last?.event.interaction.nodes.first
+                    else { throw TestFailure("PRECONDITION: Could not get node") }
+                    
+                    expect(node.accessibilityLabel).to(equal(expectedValue))
+                }
+                
+                it("trims and truncates accessibilityLabel") {
+                    let value = "\(String(repeating: " ", count: 32))test\(String(repeating: " ", count: 64))test"
+                    let expectedValue = "test"
                     testNode.accessibilityLabel = value
                     
                     consumer.trackInteraction(interaction: .click, nodes: [testNode])

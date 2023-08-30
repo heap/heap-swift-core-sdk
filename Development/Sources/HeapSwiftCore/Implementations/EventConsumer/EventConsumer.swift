@@ -636,6 +636,13 @@ extension Dictionary where Key == String, Value == HeapPropertyValue {
 
 extension String {
     
+    /// Trims a string of leading and trailing whitespace.
+    /// - Returns: The trimmed string or `nil` if the string was entirely whitespace.
+    var trimmed: String? {
+        let trimmedString = self.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedString.isEmpty ? nil : trimmedString
+    }
+    
     /// Truncates a string so it fits in a utf-16 count, without splitting characters.
     /// - Parameter count: The number of code units to truncate to.
     /// - Returns: The truncated string.

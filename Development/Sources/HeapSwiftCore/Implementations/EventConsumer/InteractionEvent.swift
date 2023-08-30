@@ -133,11 +133,11 @@ extension InteractionNode {
     func node(with fieldSettings: FieldSettings) -> ElementNode {
         .with {
             $0.nodeName = nodeName
-            $0.setIfNotNil(\.nodeText, nodeText?.truncated(toUtf16Count: 64).result, andTrue: fieldSettings.captureInteractionText)
+            $0.setIfNotNil(\.nodeText, nodeText?.trimmed?.truncated(toUtf16Count: 64).result.trimmed, andTrue: fieldSettings.captureInteractionText)
             $0.setIfNotNil(\.nodeID, nodeId)
             $0.setIfNotNil(\.nodeHtmlClass, nodeHtmlClass)
             $0.setIfNotNil(\.href, href)
-            $0.setIfNotNil(\.accessibilityLabel, accessibilityLabel?.truncated(toUtf16Count: 64).result, andTrue: fieldSettings.captureInteractionAccessibilityLabel)
+            $0.setIfNotNil(\.accessibilityLabel, accessibilityLabel?.trimmed?.truncated(toUtf16Count: 64).result.trimmed, andTrue: fieldSettings.captureInteractionAccessibilityLabel)
             $0.setIfNotNil(\.referencingPropertyName, referencingPropertyName, andTrue: fieldSettings.captureInteractionReferencingProperty)
             $0.attributes = attributes.mapValues(\.protoValue)
         }
