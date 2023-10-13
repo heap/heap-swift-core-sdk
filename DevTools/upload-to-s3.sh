@@ -33,8 +33,7 @@ function s3_put_object {
   aws s3 cp "${local_file_path}" "s3://${bucket}/${key}" \
     --cache-control 'public, max-age=1800' \
     --content-type 'application/zip' \
-    --metadata "version=${version}" \
-    --acl public-read
+    --metadata "version=${version}"
 }
 
 LOCAL_FILE_PATH=$1
