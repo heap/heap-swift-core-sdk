@@ -18,6 +18,8 @@ public protocol HeapProtocol {
     
     func resetIdentity()
     
+    func resetIdentity(clearEventProperties: Bool)
+    
     func addUserProperties(_ properties: [String: HeapPropertyValue])
     
     func addEventProperties(_ properties: [String: HeapPropertyValue])
@@ -41,4 +43,11 @@ public protocol HeapProtocol {
     func addRuntimeBridge(_ bridge: RuntimeBridge)
     
     func removeRuntimeBridge(_ bridge: RuntimeBridge)
+}
+
+public extension HeapProtocol {
+    
+    func resetIdentity() {
+        resetIdentity(clearEventProperties: false)
+    }
 }
