@@ -225,9 +225,7 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
             
             it("throws when properties.url is not a valid url") {
                 expect(try bridgeSupport.handleInvocation(method: method, arguments: [
-                    "properties": [
-                        "url": "http:\\\\example.com",
-                    ] as [String : Any],
+                    "properties": [ "url": "" ] as [String : Any],
                 ])).to(throwError(InvocationError.invalidParameters))
             }
             

@@ -1,7 +1,7 @@
 import Nimble
 import Foundation
 
-public func match(regex pattern: String) -> Predicate<String> {
+public func match(regex pattern: String) -> Nimble.Predicate<String> {
 
     return Predicate { actualExpression in
 

@@ -3,7 +3,7 @@
 import WebKit
 import HeapSwiftCoreInterfaces
 
-class WebviewBridge: NSObject, WKScriptMessageHandler {
+class WebviewBridge: NSObject, WKScriptMessageHandler, HeapBridgeSupportDelegate {
     
     static let embeddedScript = WKUserScript(source: heapWebviewBridgeJavascript, injectionTime: .atDocumentStart, forMainFrameOnly: true)
     
@@ -11,6 +11,16 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
     let origins: [Origin]
     let injectHeapJavaScript: Bool
     let heapJsSettings: HeapJsSettings?
+    
+    let bridgeSupport: HeapBridgeSupport
+    
+    var _bridgeTarget: Any?
+    
+    @available(iOS 14.0, macOS 11.0, *)
+    var bridgeTarget: (WKFrameInfo, WKContentWorld)? {
+        get { _bridgeTarget as? (WKFrameInfo, WKContentWorld) }
+        set { _bridgeTarget = newValue }
+    }
     
     // Keep a list of rejected origins so we don't log incessantly about it.
     var rejectedOriginDescriptions: Set<String> = []
@@ -20,11 +30,14 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
         self.origins = origins.compactMap(Origin.init(rawValue:))
         self.injectHeapJavaScript = injectHeapJavaScript
         self.heapJsSettings = settings
+        self.bridgeSupport = .init()
     }
     
     func register() {
         
         guard let webView = webView else { return }
+        
+        self.bridgeSupport.delegate = self
         
         webView.configuration.userContentController.add(self, name: "HeapSwiftBridge")
         
@@ -82,7 +95,7 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
                 let callbackId = body["callbackId"] as? String
                 
                 do {
-                    let data = try HeapBridgeSupport.shared.handleInvocation(method: method, arguments: arguments)
+                    let data = try bridgeSupport.handleInvocation(method: method, arguments: arguments)
                     replyWithData(data?._toHeapJSON() ?? JSON.null, to: message, callbackId: callbackId)
                 } catch InvocationError.unknownMethod {
                     replyWithError("Unknown method: \(method)", to: message, callbackId: callbackId)
@@ -98,6 +111,17 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
                       let expirationDate = body["expirationDate"] as? Double {
                 Heap.shared.consumer.extendSession(sessionId: sessionId, preferredExpirationDate: Date(timeIntervalSince1970: expirationDate / 1000))
             }
+            
+            if type == "result",
+               let callbackId = body["callbackId"] as? String {
+                
+                let data = body["data"] as? String
+                let error = body["error"] as? String
+
+                bridgeSupport.handleResult(callbackId: callbackId, data: data, error: error)
+               
+                return
+            }
         }
         
         HeapLogger.shared.trace("Web view received an unknown message over the JavaScript bridge.")
@@ -105,54 +129,99 @@ class WebviewBridge: NSObject, WKScriptMessageHandler {
     
     func replyWithData(_ data: JSON, to message: WKScriptMessage, callbackId: String?) {
         guard let callbackId = callbackId else { return }
+        
+        let caller: ScriptCaller
+        
         if #available(iOS 14.0, macOS 11.0, *) {
-            send(HeapSDKInvocationResult(callbackId: callbackId, data: data), to: message.frameInfo, in: message.world)
+            caller = scriptCaller(to: message.frameInfo, in: message.world)
         } else {
-            send(HeapSDKInvocationResult(callbackId: callbackId, data: data))
+            caller = scriptCaller()
         }
+        
+        send(HeapBridgeSupport.InvocationResult(callbackId: callbackId, data: data), with: caller)
     }
     
     func replyWithError(_ error: String, to message: WKScriptMessage, callbackId: String?) {
         guard let callbackId = callbackId else { return }
+        
+        let caller: ScriptCaller
+        
         if #available(iOS 14.0, macOS 11.0, *) {
-            send(HeapSDKInvocationResult(callbackId: callbackId, error: error), to: message.frameInfo, in: message.world)
+            caller = scriptCaller(to: message.frameInfo, in: message.world)
         } else {
-            send(HeapSDKInvocationResult(callbackId: callbackId, error: error))
+            caller = scriptCaller()
+        }
+        
+        send(HeapBridgeSupport.InvocationResult(callbackId: callbackId, error: error), with: caller)
+    }
+    
+    func sendInvocation(_ invocation: HeapBridgeSupport.Invocation) {
+        
+        let caller: ScriptCaller
+        
+        if #available(iOS 14.0, macOS 11.0, *) {
+            if let (frameInfo, world) = bridgeTarget {
+                caller = scriptCaller(to: frameInfo, in: world)
+            } else {
+                caller = scriptCaller()
+            }
+        } else {
+            caller = scriptCaller()
+        }
+        
+        send(invocation, with: caller) { result in
+            if case let .failure(error) = result, let callbackId = invocation.callbackId {
+                self.bridgeSupport.handleResult(callbackId: callbackId, data: nil, error: error.message)
+            }
         }
     }
+    
+    typealias ScriptCaller = (_ webview: WKWebView, _ javascript: String, _ completionHandler: @escaping ((Result<Any, Error>) -> Void)) -> Void
     
     @available(iOS 14.0, macOS 11.0, *)
-    func send(_ payload: Encodable, to frame: WKFrameInfo, in world: WKContentWorld) {
-        guard let webView = webView else { return }
-        HeapLogger.shared.trace("Sending message to web view: \(payload)")
-        
-        do {
-            let data = try JSONEncoder().encode(payload)
-            guard let jsonString = String(data: data, encoding: .utf8) else { return }
-            
-            webView.evaluateJavaScript("window.__heapNativeMessage(\(jsonString))", in: frame, in: world, completionHandler: { result in
-                if case .failure(let error) = result {
-                    HeapLogger.shared.warn("An error occured while invoking a JavaScript callback: \(error)")
-                }
-            })
-        } catch {
+    func scriptCaller(to frame: WKFrameInfo, in world: WKContentWorld) -> ScriptCaller {
+        return { webView, javascript, completionHandler in
+            webView.evaluateJavaScript(javascript, in: frame, in: world, completionHandler: completionHandler)
         }
     }
     
-    func send(_ payload: Encodable) {
-        guard let webView = webView else { return }
+    func scriptCaller() -> ScriptCaller {
+        return { webView, javascript, completionHandler in
+            webView.evaluateJavaScript(javascript, completionHandler: { result, error in
+                if let error = error {
+                    completionHandler(.failure(error))
+                } else {
+                    completionHandler(.success(result as Any))
+                }
+            })
+        }
+    }
+
+    func send(_ payload: Encodable, with caller: ScriptCaller, delivered: ((Result<Void, CallbackError>) -> Void)? = nil) {
+        guard let webView = webView else {
+            delivered?(.failure(.init(message: "Webview deallocated")))
+            return
+        }
+        
         HeapLogger.shared.trace("Sending message to web view: \(payload)")
         
         do {
             let data = try JSONEncoder().encode(payload)
-            guard let jsonString = String(data: data, encoding: .utf8) else { return }
-
-            webView.evaluateJavaScript("window.Heap.nativeMessage(\(jsonString))", completionHandler: { _, error in
-                if let error = error {
-                    HeapLogger.shared.warn("An error occured while invoking a JavaScript callback: \(error)")
+            guard let jsonString = String(data: data, encoding: .utf8) else {
+                delivered?(.failure(.init(message: "Empty payload")))
+                return
+            }
+            
+            caller(webView, "window.__heapNativeMessage(\(jsonString))") { result in
+                if case .failure(let error) = result {
+                    HeapLogger.shared.warn("An error occured while sending message to server: \(error)")
+                    delivered?(.failure(.init(message: "Script error")))
+                } else {
+                    delivered?(.success(()))
                 }
-            })
+            }
         } catch {
+            delivered?(.failure(.init(message: "Failed ot encode payload")))
         }
     }
 }

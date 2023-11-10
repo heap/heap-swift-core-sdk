@@ -2,7 +2,7 @@ import Nimble
 import Foundation
 @testable import HeapSwiftCore
 
-public func returnNoRows(in dataStore: SqliteDataStore) -> Predicate<String> {
+public func returnNoRows(in dataStore: SqliteDataStore) -> Nimble.Predicate<String> {
 
     return Predicate { actualExpression in
 

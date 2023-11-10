@@ -7,20 +7,22 @@ protocol ActiveSessionProvider {
 
 extension DispatchQueue {
     @nonobjc static let upload = DispatchQueue(label: "io.heap.Uploader")
+    @nonobjc static let callback = DispatchQueue(label: "io.heap.Callback")
 }
 
 extension OperationQueue {
     
-    private static func createUploaderQueue() -> OperationQueue {
+    private static func createSerialQueue(underlyingQueue: DispatchQueue) -> OperationQueue {
         let queue = OperationQueue()
-        queue.name = "io.heap.Uploader"
+        queue.name = underlyingQueue.label
         queue.maxConcurrentOperationCount = 1
-        queue.underlyingQueue = .upload
+        queue.underlyingQueue = underlyingQueue
         return queue
     }
     
     /// An operation queue for performing upload operations.
-    @nonobjc static let upload = createUploaderQueue()
+    @nonobjc static let upload = createSerialQueue(underlyingQueue: .upload)
+    @nonobjc static let callback = createSerialQueue(underlyingQueue: .callback)
 }
 
 fileprivate typealias TaskCompletionHandler = (Data?, URLResponse?, Error?) -> Void

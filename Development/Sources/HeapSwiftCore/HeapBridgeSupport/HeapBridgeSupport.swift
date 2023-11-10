@@ -6,12 +6,20 @@ public enum InvocationError: Error {
     case invalidParameters
 }
 
+public protocol HeapBridgeSupportDelegate: AnyObject {
+    func sendInvocation(_ invocation: HeapBridgeSupport.Invocation)
+}
+
 public class HeapBridgeSupport
 {
     let pageviewStore = BridgedPageviewStore()
+    let callbackStore = CallbackStore()
     
     let eventConsumer: any HeapProtocol
     let uploader: any UploaderProtocol
+    
+    public weak var delegate: (any HeapBridgeSupportDelegate)?
+    var delegateTimeout: TimeInterval = 5
     
     init(eventConsumer: any HeapProtocol, uploader: any UploaderProtocol)
     {
@@ -19,7 +27,11 @@ public class HeapBridgeSupport
         self.uploader = uploader
     }
     
-    public static var shared: HeapBridgeSupport = HeapBridgeSupport(eventConsumer: Heap.shared.consumer, uploader: Heap.shared.uploader)
+    public convenience init() {
+        self.init(eventConsumer: Heap.shared.consumer, uploader: Heap.shared.uploader)
+    }
+    
+    public static var shared: HeapBridgeSupport = .init()
     
     public func handleInvocation(method: String, arguments: [String: Any]) throws -> JSONEncodable? {
         
@@ -62,10 +74,19 @@ public class HeapBridgeSupport
         case "heapLogger_setLogLevel":
             return try heapLogger_setLogLevel(arguments: arguments)
             
+        case "attachRuntimeBridge":
+            guard delegate != nil else { return false }
+            eventConsumer.addRuntimeBridge(self)
+            return true
+            
         default:
             HeapLogger.shared.debug("HeapBridgeSupport received an unknown method invocation: \(method).")
             throw InvocationError.unknownMethod
         }
+    }
+    
+    public func handleResult(callbackId: String, data: Any?, error: String?) {
+        callbackStore.dispatch(callbackId: callbackId, data: data, error: error)
     }
     
     func startRecording(arguments: [String: Any]) throws -> JSONEncodable? {
@@ -460,29 +481,106 @@ extension HeapBridgeSupport {
 
 extension HeapBridgeSupport: RuntimeBridge {
     
+    func invokeOnBridge(method: String, arguments: [String: AnyJSONEncodable], complete: @escaping Callback) {
+        
+        guard let delegate = delegate else {
+            complete(.failure(.init(message: "No delegate")))
+            return
+        }
+        
+        let callbackId = callbackStore.add(timeout: delegateTimeout, callback: complete)
+        
+        delegate.sendInvocation(.init(method: method, arguments: arguments.mapValues({ $0._toHeapJSON() }), callbackId: callbackId))
+    }
+    
     // TODO: Package all of these as invocations, send to the delegate, and wait for a response.
     
-    public func didStartRecording(options: [HeapSwiftCoreInterfaces.Option : Any], complete: @escaping () -> Void) {
-        complete()
+    public func didStartRecording(options: [Option : Any], complete: @escaping () -> Void) {
+        invokeOnBridge(method: "didStartRecording", arguments: ["options": options.toJsonEncodable()]) { _ in
+            complete()
+        }
     }
     
     public func didStopRecording(complete: @escaping () -> Void) {
-        complete()
+        invokeOnBridge(method: "didStopRecording", arguments: [:]) { _ in
+            complete()
+        }
     }
     
     public func sessionDidStart(sessionId: String, timestamp: Date, foregrounded: Bool, complete: @escaping () -> Void) {
-        complete()
+        invokeOnBridge(method: "sessionDidStart", arguments: [
+            "sessionId": AnyJSONEncodable(wrapped: sessionId),
+            "javascriptEpochTimestamp": AnyJSONEncodable(wrapped: timestamp.timeIntervalSince1970 * 1000),
+            "foregrounded": AnyJSONEncodable(wrapped: foregrounded),
+        ]) { _ in
+            complete()
+        }
     }
     
     public func applicationDidEnterForeground(timestamp: Date, complete: @escaping () -> Void) {
-        complete()
+        invokeOnBridge(method: "applicationDidEnterForeground", arguments: [
+            "javascriptEpochTimestamp": AnyJSONEncodable(wrapped: timestamp.timeIntervalSince1970 * 1000),
+        ]) { _ in
+            complete()
+        }
     }
     
     public func applicationDidEnterBackground(timestamp: Date, complete: @escaping () -> Void) {
-        complete()
+        invokeOnBridge(method: "applicationDidEnterBackground", arguments: [
+            "javascriptEpochTimestamp": AnyJSONEncodable(wrapped: timestamp.timeIntervalSince1970 * 1000),
+        ]) { _ in
+            complete()
+        }
     }
     
     public func reissuePageview(_ pageview: HeapSwiftCoreInterfaces.Pageview, sessionId: String, timestamp: Date, complete: @escaping (HeapSwiftCoreInterfaces.Pageview?) -> Void) {
-        complete(nil)
+        
+        guard let pageviewKey = pageviewStore.key(for: pageview) else {
+            complete(nil)
+            return
+        }
+        
+        invokeOnBridge(method: "reissuePageview", arguments: [
+            "pageviewKey": AnyJSONEncodable(wrapped: pageviewKey),
+            "sessionId": AnyJSONEncodable(wrapped: sessionId),
+            "javascriptEpochTimestamp": AnyJSONEncodable(wrapped: timestamp.timeIntervalSince1970 * 1000),
+        ]) { result in
+            let pageview: Pageview?
+            switch result {
+            case .success(let value):
+                if let pageviewKey = value as? String,
+                   let foundPageview = self.pageviewStore.get(pageviewKey) {
+                    pageview = foundPageview
+                } else {
+                    HeapLogger.shared.trace("HeapBridgeSupport.reissuePageview returned an unknown pageview key.")
+                    pageview = nil
+                }
+            case .failure(let error):
+                HeapLogger.shared.trace("HeapBridgeSupport.reissuePageview failed: \(error.message)")
+                pageview = nil
+            }
+            complete(pageview)
+        }
+    }
+}
+
+extension Dictionary where Key == Option, Value == Any {
+    
+    func jsonEncodable(at key: Option) -> AnyJSONEncodable? {
+        switch key.type {
+        case .string: return string(at: key).map(AnyJSONEncodable.init(wrapped:))
+        case .boolean: return boolean(at: key).map(AnyJSONEncodable.init(wrapped:))
+        case .timeInterval: return timeInterval(at: key).map(AnyJSONEncodable.init(wrapped:))
+        case .integer: return integer(at: key).map(AnyJSONEncodable.init(wrapped:))
+        case .url: return url(at: key).map(\.absoluteString).map(AnyJSONEncodable.init(wrapped:))
+        default: return nil
+        }
+    }
+    
+    func toJsonEncodable() -> AnyJSONEncodable {
+        AnyJSONEncodable(wrapped: [String: AnyJSONEncodable](compactMap({ (key, value) -> (String, AnyJSONEncodable)? in
+            guard let value = jsonEncodable(at: key) else { return nil }
+            return (key.name, value)
+        }), uniquingKeysWith: { (l, r) in l }))
     }
 }

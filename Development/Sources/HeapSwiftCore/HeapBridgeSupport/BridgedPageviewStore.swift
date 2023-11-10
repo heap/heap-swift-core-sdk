@@ -66,4 +66,13 @@ class BridgedPageviewStore {
         
         return Set(_pageviews.keys)
     }
+    
+    func key(for pageview: Pageview) -> String? {
+        _lock.wait()
+        defer { _lock.signal() }
+        
+        return _pageviews.first(where: { (key, value) in
+            value.pageview === pageview
+        })?.key
+    }
 }

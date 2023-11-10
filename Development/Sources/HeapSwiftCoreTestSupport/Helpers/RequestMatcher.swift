@@ -1,7 +1,7 @@
 import Foundation
 import Nimble
 
-func haveMetadata(environmentId: String, userId: String, identity: String?, library: String) -> Predicate<URLRequest> {
+func haveMetadata(environmentId: String, userId: String, identity: String?, library: String) -> Nimble.Predicate<URLRequest> {
     
     .init { actualExpression in
         

@@ -1,7 +1,7 @@
 import Foundation
 import Nimble
 
-func beAValidId() -> Predicate<String> {
+func beAValidId() -> Nimble.Predicate<String> {
     .init { actualExpression in
         
         let msg = ExpectationMessage.expectedActualValueTo("be a 53-bit number")
@@ -33,7 +33,7 @@ func beAValidId() -> Predicate<String> {
     }
 }
 
-func allBeUnique<T: Sequence>() -> Predicate<T> where T.Element: Hashable {
+func allBeUnique<T: Sequence>() -> Nimble.Predicate<T> where T.Element: Hashable {
     .init { actualExpression in
         
         let msg = ExpectationMessage.expectedActualValueTo("all be unique")
@@ -62,6 +62,6 @@ func allBeUnique<T: Sequence>() -> Predicate<T> where T.Element: Hashable {
     }
 }
 
-func allBeUniqueAndValidIds<T: Sequence>() -> Predicate<T> where T.Element == String {
+func allBeUniqueAndValidIds<T: Sequence>() -> Nimble.Predicate<T> where T.Element == String {
     satisfyAllOf(allBeUnique(), allPass(beAValidId()))
 }
