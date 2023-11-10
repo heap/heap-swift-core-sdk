@@ -23,4 +23,8 @@ class HeapJSIntegrationsController: UIViewController {
     @IBAction func resetIdentity(_ sender: Any) {
         Heap.shared.resetIdentity()
     }
+    
+    deinit {
+        Heap.shared.detachWebView(webview)
+    }
 }

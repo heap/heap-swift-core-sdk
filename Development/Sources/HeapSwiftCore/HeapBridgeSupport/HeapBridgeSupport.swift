@@ -26,6 +26,10 @@ public class HeapBridgeSupport
         self.eventConsumer = eventConsumer
         self.uploader = uploader
     }
+
+    public func detachListeners() {
+        eventConsumer.removeRuntimeBridge(self)
+    }
     
     public convenience init() {
         self.init(eventConsumer: Heap.shared.consumer, uploader: Heap.shared.uploader)

@@ -17,4 +17,8 @@ class JavaScriptBridgeController: UIViewController {
         let html = try! String(contentsOf: htmlFile!)
         webview.loadHTMLString(html, baseURL: URL(string: "https://example.com"))
     }
+    
+    deinit {
+        Heap.shared.detachWebView(webview)
+    }
 }

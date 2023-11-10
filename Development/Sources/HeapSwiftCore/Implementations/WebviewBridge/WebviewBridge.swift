@@ -8,6 +8,7 @@ class WebviewBridge: NSObject, WKScriptMessageHandler, HeapBridgeSupportDelegate
     static let embeddedScript = WKUserScript(source: heapWebviewBridgeJavascript, injectionTime: .atDocumentStart, forMainFrameOnly: true)
     
     weak var webView: WKWebView?
+    weak var userContentController: WKUserContentController?
     let origins: [Origin]
     let injectHeapJavaScript: Bool
     let heapJsSettings: HeapJsSettings?
@@ -32,17 +33,22 @@ class WebviewBridge: NSObject, WKScriptMessageHandler, HeapBridgeSupportDelegate
         self.heapJsSettings = settings
         self.bridgeSupport = .init()
     }
+
+    deinit {
+        remove()
+    }
     
     func register() {
         
         guard let webView = webView else { return }
         
         self.bridgeSupport.delegate = self
+        self.userContentController = webView.configuration.userContentController
         
-        webView.configuration.userContentController.add(self, name: "HeapSwiftBridge")
+        userContentController?.add(self, name: "HeapSwiftBridge")
         
         if injectHeapJavaScript {
-            webView.configuration.userContentController.addUserScript(WebviewBridge.embeddedScript)
+            userContentController?.addUserScript(WebviewBridge.embeddedScript)
         }
         
         if heapJsSettings != nil {
@@ -51,22 +57,31 @@ class WebviewBridge: NSObject, WKScriptMessageHandler, HeapBridgeSupportDelegate
         }
         
         HeapLogger.shared.debug("Heap attached to web view with allowed origins: \(origins.map(\.description).joined(separator: ", "))")
+        
+        self.removeOnWebviewDeinit()
+    }
+
+    static func detachWebView(_ webView: WKWebView) {
+        webView.heapWebviewBridge?.remove()
     }
     
-    /// Removes the webview integration from the webview.
-    ///
-    /// This method is not currently called anywhere and is included just for completeness.
-    /// Each behavior that is automatic is called out in the method.
+    /// Removes the webview integration from the webview in preparation for deallocation.
+    /// 
+    /// This does not remove the user script since there's no simple method to do that and
+    /// it would require a reload.
     func remove() {
         
-        // The webview bridge has a weak reference to webView, so the message handler is
-        // automatically deallocated when `webView` is deallocated. It does not need to be manually
-        // called.
-        webView?.configuration.userContentController.removeScriptMessageHandler(forName: "HeapSwiftBridge")
+        // The webview bridge has a weak reference to webView, so the message handler SHOULD be
+        // automatically deallocated when `webView` is deallocated. That said
+        userContentController?.removeScriptMessageHandler(forName: "HeapSwiftBridge")
+        userContentController = nil
         
-        // The notification center automatically removes observers when deallocated, which will
-        // occur when the webview is deallocated. It does not need to be manually called.
         NotificationCenter.default.removeObserver(self, name: HeapStateForHeapJSChangedNotification, object: nil)
+
+        bridgeSupport.detachListeners()
+
+        webView?.heapWebviewBridge = nil
+        webView = nil
     }
     
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -254,6 +269,43 @@ extension WebviewBridge {
                 httpCookieStore.delete(cookie)
             }
         })
+    }
+}
+
+private var bridgeCleanerKey: UInt8 = 0
+private var bridgeKey: UInt8 = 0
+
+extension WebviewBridge {
+    
+    /// Adds a listener that calls `remove` when the webview deinitializes.
+    ///
+    /// This method guarantees that the `WebView` bridge will get deallocated
+    /// in cases where the system is retaining the `WKUserContentController`
+    /// but may produce error messages in the console.
+    func removeOnWebviewDeinit() {
+
+        class WebviewBridgeCleaner {
+            let bridge: WebviewBridge
+        
+            init(bridge: WebviewBridge) {
+                self.bridge = bridge
+            }
+        
+            deinit {
+                self.bridge.remove()
+            }
+        }
+
+
+        guard let webView = webView, objc_getAssociatedObject(webView, &bridgeCleanerKey) == nil else { return }
+        objc_setAssociatedObject(webView, &bridgeCleanerKey, WebviewBridgeCleaner(bridge: self), .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    }
+}
+
+extension WKWebView {
+    fileprivate var heapWebviewBridge: WebviewBridge? {
+        get { objc_getAssociatedObject(self, &bridgeKey) as? WebviewBridge }
+        set { objc_setAssociatedObject(self, &bridgeKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
 }
 
