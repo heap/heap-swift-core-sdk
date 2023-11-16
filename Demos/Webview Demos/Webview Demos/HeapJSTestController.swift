@@ -9,6 +9,10 @@ class HeapJSTestController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        if #available(iOS 16.4, *) {
+            webview.isInspectable = true
+        }
+        
         guard
             let urlString = UserDefaults.standard.string(forKey: "url"),
             let url = URL(string: urlString),

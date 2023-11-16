@@ -21,14 +21,26 @@ public class HeapBridgeSupport
     public weak var delegate: (any HeapBridgeSupportDelegate)?
     var delegateTimeout: TimeInterval = 5
     
-    init(eventConsumer: any HeapProtocol, uploader: any UploaderProtocol)
+    var hasAttachedLogger: Bool = false
+    var originalLogChannel: LogChannel? = nil
+    
+    let logger: HeapLogger
+    var pipelineLogger: HeapLogger? {
+        hasAttachedLogger ? nil : logger
+    }
+    
+    init(eventConsumer: any HeapProtocol, uploader: any UploaderProtocol, logger: HeapLogger = HeapLogger.shared)
     {
         self.eventConsumer = eventConsumer
         self.uploader = uploader
+        self.logger = logger
     }
 
     public func detachListeners() {
         eventConsumer.removeRuntimeBridge(self)
+        if hasAttachedLogger && logger.logChannel as? HeapBridgeSupport === self {
+            logger.logChannel = originalLogChannel!
+        }
     }
     
     public convenience init() {
@@ -83,8 +95,18 @@ public class HeapBridgeSupport
             eventConsumer.addRuntimeBridge(self)
             return true
             
+        case "attachLogChannel":
+            guard delegate != nil && logger.logChannel as? HeapBridgeSupport !== self else { return false }
+            logger.info("Attaching HeapLogger to HeapBridgeSupport. Messages will appear in the target framework.")
+            logger.debug("Disabling log messages about HeapBridgeSupport to prevent recursive logging.")
+            hasAttachedLogger = true
+            originalLogChannel = logger.logChannel
+            logger.logChannel = self
+            logger.info("Heap logger has been attached to the console.")
+            return true
+
         default:
-            HeapLogger.shared.debug("HeapBridgeSupport received an unknown method invocation: \(method).")
+            pipelineLogger?.debug("HeapBridgeSupport received an unknown method invocation: \(method).")
             throw InvocationError.unknownMethod
         }
     }
@@ -212,11 +234,11 @@ public class HeapBridgeSupport
         let source = try getOptionalString(named: "source", from: arguments, message: "HeapBridgeSupport.heapLogger_log received an invalid message and wil not complete the bridged method call.")
         switch logLevel
         {
-        case .error: HeapLogger.shared.error(message, source: source)
-        case .warn: HeapLogger.shared.warn(message, source: source)
-        case .info: HeapLogger.shared.info(message, source: source)
-        case .debug: HeapLogger.shared.debug(message, source: source)
-        case .trace: HeapLogger.shared.trace(message, source: source)
+        case .error: logger.error(message, source: source)
+        case .warn: logger.warn(message, source: source)
+        case .info: logger.info(message, source: source)
+        case .debug: logger.debug(message, source: source)
+        case .trace: logger.trace(message, source: source)
         case .none: break // Let's not bother throwing here.
             
         @unknown default:
@@ -227,21 +249,11 @@ public class HeapBridgeSupport
     }
     
     func heapLogger_logLevel() -> JSONEncodable? {
-        switch HeapLogger.shared.logLevel {
-        case .error: return "error"
-        case .warn: return "warn"
-        case .info: return "info"
-        case .debug: return "debug"
-        case .trace: return "trace"
-        case .none: return "none"
-        @unknown default:
-            // This is not technically possible since we always link to the same or older versions, but we'll apply a safe default.
-            return "none"
-        }
+        jsonLogLevel(logger.logLevel)
     }
     
     func heapLogger_setLogLevel(arguments: [String: Any]) throws -> JSONEncodable? {
-        HeapLogger.shared.logLevel = try getRequiredLogLevel(arguments, methodName: "heapLogger_log")
+        logger.logLevel = try getRequiredLogLevel(arguments, methodName: "heapLogger_log")
         return nil
     }
 }
@@ -254,7 +266,7 @@ extension HeapBridgeSupport {
         }
         
         guard let value = rawString as? String else {
-            HeapLogger.shared.debug(message())
+            pipelineLogger?.debug(message())
             throw InvocationError.invalidParameters
         }
         return value
@@ -262,7 +274,7 @@ extension HeapBridgeSupport {
     
     func getRequiredString(named name: String, from arguments: [String: Any], message: @autoclosure () -> String) throws -> String {
         guard let value = try getOptionalString(named: name, from: arguments, message: message()), !value.isEmpty else {
-            HeapLogger.shared.debug(message())
+            pipelineLogger?.debug(message())
             throw InvocationError.invalidParameters
         }
         return value
@@ -278,7 +290,7 @@ extension HeapBridgeSupport {
         case "trace": return .trace
         case "none": return .none
         default:
-            HeapLogger.shared.debug("HeapBridgeSupport.\(methodName) received an invalid log level and will not complete the bridged method call.")
+            pipelineLogger?.debug("HeapBridgeSupport.\(methodName) received an invalid log level and will not complete the bridged method call.")
             throw InvocationError.invalidParameters
         }
     }
@@ -289,7 +301,7 @@ extension HeapBridgeSupport {
         }
         
         guard let timestamp = rawTimestamp as? Double else {
-            HeapLogger.shared.debug("HeapBridgeSupport.\(methodName) received an invalid timestamp and will not complete the bridged method call.")
+            pipelineLogger?.debug("HeapBridgeSupport.\(methodName) received an invalid timestamp and will not complete the bridged method call.")
             throw InvocationError.invalidParameters
         }
         
@@ -300,7 +312,7 @@ extension HeapBridgeSupport {
         guard let string = try getOptionalString(named: name, from: arguments, message: message()) else { return nil }
         
         guard let url = URL(string: string) else {
-            HeapLogger.shared.debug(message())
+            pipelineLogger?.debug(message())
             throw InvocationError.invalidParameters
         }
         
@@ -315,7 +327,7 @@ extension HeapBridgeSupport {
         }
         
         guard let pageview = pageviewStore.get(pageviewKey) else {
-            HeapLogger.shared.trace("The passed in pageview key \(pageviewKey) does not exist. It may have been culled.")
+            pipelineLogger?.trace("HeapBridgeSupport.\(methodName) received a pageview key \(pageviewKey) does not exist. It may have been culled.")
             return nil
         }
         
@@ -324,7 +336,7 @@ extension HeapBridgeSupport {
     
     func getRequiredInteraction(from arguments: [String: Any], methodName: String) throws -> Interaction {
         guard let rawValue = arguments["interaction"] else {
-            HeapLogger.shared.debug("HeapBridgeSupport.\(methodName) received an event without an interaction type and will not complete the bridged method call.")
+            pipelineLogger?.debug("HeapBridgeSupport.\(methodName) received an event without an interaction type and will not complete the bridged method call.")
             throw InvocationError.invalidParameters
         }
         
@@ -336,7 +348,7 @@ extension HeapBridgeSupport {
             case "change": return .change
             case "submit": return .submit
             default:
-                HeapLogger.shared.debug("HeapBridgeSupport.\(methodName) received an an unknown interaction type, \(builtinName), and will not complete the bridged method call.")
+                pipelineLogger?.debug("HeapBridgeSupport.\(methodName) received an an unknown interaction type, \(builtinName), and will not complete the bridged method call.")
                 throw InvocationError.invalidParameters
             }
         }
@@ -351,7 +363,7 @@ extension HeapBridgeSupport {
             }
         }
         
-        HeapLogger.shared.debug("HeapBridgeSupport.\(methodName) received an an invalid interaction type and will not complete the bridged method call.")
+        pipelineLogger?.debug("HeapBridgeSupport.\(methodName) received an an invalid interaction type and will not complete the bridged method call.")
         throw InvocationError.invalidParameters
     }
     
@@ -361,7 +373,7 @@ extension HeapBridgeSupport {
             let rawArray = arguments["nodes"] as? [Any],
             !rawArray.isEmpty
         else {
-            HeapLogger.shared.debug("HeapBridgeSupport.\(methodName) received an event without a list of nodes and will not complete the bridged method call.")
+            pipelineLogger?.debug("HeapBridgeSupport.\(methodName) received an event without a list of nodes and will not complete the bridged method call.")
             throw InvocationError.invalidParameters
         }
         
@@ -371,7 +383,7 @@ extension HeapBridgeSupport {
         
         func getInteractionNode(_ rawNode: Any) throws -> InteractionNode {
             guard let rawObject = rawNode as? [String: Any] else {
-                HeapLogger.shared.debug(message())
+                pipelineLogger?.debug(message())
                 throw InvocationError.invalidParameters
             }
             
@@ -393,7 +405,7 @@ extension HeapBridgeSupport {
         }
         
         guard let value = rawArray as? [String] else {
-            HeapLogger.shared.debug(message())
+            pipelineLogger?.debug(message())
             throw InvocationError.invalidParameters
         }
         return value
@@ -406,7 +418,7 @@ extension HeapBridgeSupport {
         
         guard let rawDictionary = arguments["sourceLibrary"] else { return nil }
         guard let sourceLibrary = rawDictionary as? [String: Any] else {
-            HeapLogger.shared.debug(errorMessage())
+            pipelineLogger?.debug(errorMessage())
             throw InvocationError.invalidParameters
         }
         
@@ -421,7 +433,7 @@ extension HeapBridgeSupport {
     func getOptionalParameterDictionary(named name: String, from arguments: [String: Any], message: @autoclosure () -> String) throws -> [String: HeapPropertyValue] {
         guard let rawDictionary = arguments[name] else { return [:] }
         guard let dictionary = rawDictionary as? [String: Any] else {
-            HeapLogger.shared.debug(message())
+            pipelineLogger?.debug(message())
             throw InvocationError.invalidParameters
         }
         
@@ -435,7 +447,7 @@ extension HeapBridgeSupport {
             } else if let value = value as? Double {
                 return value
             } else {
-                HeapLogger.shared.debug("Omitting unsupported property type: \(type(of: value))")
+                pipelineLogger?.debug("Omitting unsupported property type: \(type(of: value))")
                 return nil
             }
         }
@@ -445,14 +457,14 @@ extension HeapBridgeSupport {
         
         guard let rawDictionary = arguments["options"] else { return [:] }
         guard let dictionary = rawDictionary as? [String: Any] else {
-            HeapLogger.shared.debug("HeapBridgeSupport.startRecording received an invalid options parameter.")
+            pipelineLogger?.debug("HeapBridgeSupport.startRecording received an invalid options parameter.")
             throw InvocationError.invalidParameters
         }
         
         let keysAndValues: [(Option, Any)] = dictionary.compactMap { (key, value) in
             
             guard let option = Option.named(key) else {
-                HeapLogger.shared.debug("HeapBridgeSupport.startRecording received an unknown option, \(key). It will be ignored.")
+                pipelineLogger?.debug("HeapBridgeSupport.startRecording received an unknown option, \(key). It will be ignored.")
                 return nil
             }
             
@@ -470,7 +482,7 @@ extension HeapBridgeSupport {
         
         guard let rawDictionary = arguments["properties"],
               let dictionary = rawDictionary as? [String: Any] else {
-            HeapLogger.shared.debug(errorMessage())
+            pipelineLogger?.debug(errorMessage())
             throw InvocationError.invalidParameters
         }
         
@@ -479,6 +491,20 @@ extension HeapBridgeSupport {
             $0.title = try getOptionalString(named: "title", from: dictionary, message: errorMessage())
             $0.url = try getOptionalUrl(named: "url", from: dictionary, message: errorMessage())
             $0.sourceProperties = try getOptionalParameterDictionary(named: "sourceProperties", from: dictionary, message: errorMessage())
+        }
+    }
+    
+    func jsonLogLevel(_ logLevel: LogLevel) -> JSONEncodable {
+        switch logLevel {
+        case .error: return "error"
+        case .warn: return "warn"
+        case .info: return "info"
+        case .debug: return "debug"
+        case .trace: return "trace"
+        case .none: return "none"
+        @unknown default:
+            // This is not technically possible since we always link to the same or older versions, but we'll apply a safe default.
+            return "none"
         }
     }
 }
@@ -556,15 +582,25 @@ extension HeapBridgeSupport: RuntimeBridge {
                    let foundPageview = self.pageviewStore.get(pageviewKey) {
                     pageview = foundPageview
                 } else {
-                    HeapLogger.shared.trace("HeapBridgeSupport.reissuePageview returned an unknown pageview key.")
+                    self.pipelineLogger?.trace("HeapBridgeSupport.reissuePageview returned an unknown pageview key.")
                     pageview = nil
                 }
             case .failure(let error):
-                HeapLogger.shared.trace("HeapBridgeSupport.reissuePageview failed: \(error.message)")
+                self.pipelineLogger?.trace("HeapBridgeSupport.reissuePageview failed: \(error.message)")
                 pageview = nil
             }
             complete(pageview)
         }
+    }
+}
+
+extension HeapBridgeSupport: LogChannel {
+    public func printLog(logLevel: HeapSwiftCoreInterfaces.LogLevel, message: () -> String, source: String?, file: String, line: UInt) {
+        invokeOnBridge(method: "heapLogger_log", arguments: [
+            "logLevel": AnyJSONEncodable(wrapped: jsonLogLevel(logLevel)),
+            "message": AnyJSONEncodable(wrapped: message()),
+            "source": AnyJSONEncodable(wrapped: source),
+        ], complete: { _ in })
     }
 }
 

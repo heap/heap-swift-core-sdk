@@ -9,6 +9,10 @@ class HeapJSIntegrationsController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        if #available(iOS 16.4, *) {
+            webview.isInspectable = true
+        }
+        
         Heap.shared.attachWebView(webview, origins: ["https://example.com"], bindHeapJsWith: .init(domain: ".example.com"))
         
         let htmlFile = Bundle.main.url(forResource: "heapjs-integrations", withExtension: "html")

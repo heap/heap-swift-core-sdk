@@ -25,12 +25,12 @@ final class HeapBridgeSupport_RuntimeBridgeSpec: HeapSpec {
         
         afterEach {
             HeapLogger.shared.logLevel = .info
-            consumer.removeRuntimeBridge(bridgeSupport)
+            bridgeSupport.detachListeners()
             bridgeSupport.callbackStore.cancelAllSync()
         }
         
         func describeMethod(_ method: String, closure: (_ method: String) -> Void) {
-            describe("WebviewEventConsumer.\(method)", closure: { closure(method) })
+            describe("HeapBridgeSupport.\(method)", closure: { closure(method) })
         }
         
         describe("HeapBridgeSupport.attachRuntimeBridge") {
@@ -537,6 +537,18 @@ final class HeapBridgeSupport_RuntimeBridgeSpec: HeapSpec {
 
                 expect(completed).toEventually(beTrue())
                 expect(returnedPageview).to(beNil())
+            }
+        }
+        
+        describe("HeapBridgeSupport.detachListeners") {
+            beforeEach {
+                bridgeSupport.delegate = delegate
+                _ = try! bridgeSupport.handleInvocation(method: "attachRuntimeBridge", arguments: [:])
+            }
+            
+            it("remove the runtime bridge") {
+                bridgeSupport.detachListeners()
+                expect(consumer.delegateManager.current.runtimeBridges).to(beEmpty())
             }
         }
     }

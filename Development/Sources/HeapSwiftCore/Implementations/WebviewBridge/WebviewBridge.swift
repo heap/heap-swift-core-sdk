@@ -17,6 +17,10 @@ class WebviewBridge: NSObject, WKScriptMessageHandler, HeapBridgeSupportDelegate
     
     var _bridgeTarget: Any?
     
+    var logger: HeapLogger? {
+        bridgeSupport.hasAttachedLogger ? nil: HeapLogger.shared
+    }
+    
     @available(iOS 14.0, macOS 11.0, *)
     var bridgeTarget: (WKFrameInfo, WKContentWorld)? {
         get { _bridgeTarget as? (WKFrameInfo, WKContentWorld) }
@@ -56,7 +60,7 @@ class WebviewBridge: NSObject, WKScriptMessageHandler, HeapBridgeSupportDelegate
             NotificationCenter.default.addObserver(self, selector: #selector(setHeapJsCookie), name: HeapStateForHeapJSChangedNotification, object: nil)
         }
         
-        HeapLogger.shared.debug("Heap attached to web view with allowed origins: \(origins.map(\.description).joined(separator: ", "))")
+        logger?.debug("Heap attached to web view with allowed origins: \(origins.map(\.description).joined(separator: ", "))")
         
         self.removeOnWebviewDeinit()
     }
@@ -92,13 +96,13 @@ class WebviewBridge: NSObject, WKScriptMessageHandler, HeapBridgeSupportDelegate
             
             // Log the invalid origin, once.
             if rejectedOriginDescriptions.insert(description).inserted {
-                HeapLogger.shared.warn("Web view received a message from an unauthorized security origin \(description).  Allowed origins are \(origins.map(\.rawValue).joined(separator: ", "))")
+                logger?.warn("Web view received a message from an unauthorized security origin \(description).  Allowed origins are \(origins.map(\.rawValue).joined(separator: ", "))")
             }
             
             return
         }
         
-        HeapLogger.shared.trace("Web view received the following message:\n\(message.body)")
+        logger?.trace("Web view received the following message:\n\(message.body)")
         
         if let body = message.body as? [String: Any],
            let type = body["type"] as? String {
@@ -139,7 +143,7 @@ class WebviewBridge: NSObject, WKScriptMessageHandler, HeapBridgeSupportDelegate
             }
         }
         
-        HeapLogger.shared.trace("Web view received an unknown message over the JavaScript bridge.")
+        logger?.trace("Web view received an unknown message over the JavaScript bridge.")
     }
     
     func replyWithData(_ data: JSON, to message: WKScriptMessage, callbackId: String?) {
@@ -212,31 +216,33 @@ class WebviewBridge: NSObject, WKScriptMessageHandler, HeapBridgeSupportDelegate
         }
     }
 
-    func send(_ payload: Encodable, with caller: ScriptCaller, delivered: ((Result<Void, CallbackError>) -> Void)? = nil) {
-        guard let webView = webView else {
-            delivered?(.failure(.init(message: "Webview deallocated")))
-            return
-        }
-        
-        HeapLogger.shared.trace("Sending message to web view: \(payload)")
-        
-        do {
-            let data = try JSONEncoder().encode(payload)
-            guard let jsonString = String(data: data, encoding: .utf8) else {
-                delivered?(.failure(.init(message: "Empty payload")))
+    func send(_ payload: Encodable, with caller: @escaping ScriptCaller, delivered: ((Result<Void, CallbackError>) -> Void)? = nil) {
+        DispatchQueue.main.async { [self] in
+            guard let webView = webView else {
+                delivered?(.failure(.init(message: "Webview deallocated")))
                 return
             }
             
-            caller(webView, "window.__heapNativeMessage(\(jsonString))") { result in
-                if case .failure(let error) = result {
-                    HeapLogger.shared.warn("An error occured while sending message to server: \(error)")
-                    delivered?(.failure(.init(message: "Script error")))
-                } else {
-                    delivered?(.success(()))
+            logger?.trace("Sending message to web view: \(payload)")
+            
+            do {
+                let data = try JSONEncoder().encode(payload)
+                guard let jsonString = String(data: data, encoding: .utf8) else {
+                    delivered?(.failure(.init(message: "Empty payload")))
+                    return
                 }
+                
+                caller(webView, "window.__heapNativeMessage(\(jsonString))") { [weak self] result in
+                    if case .failure(let error) = result {
+                        self?.logger?.warn("An error occured while sending message to server: \(error)")
+                        delivered?(.failure(.init(message: "Script error")))
+                    } else {
+                        delivered?(.success(()))
+                    }
+                }
+            } catch {
+                delivered?(.failure(.init(message: "Failed ot encode payload")))
             }
-        } catch {
-            delivered?(.failure(.init(message: "Failed ot encode payload")))
         }
     }
 }
@@ -254,7 +260,7 @@ extension WebviewBridge {
             let state = Heap.shared.consumer.fetchSession(),
             let cookie = state.toHeapJsCookie(settings: heapJsSettings)
         else {
-            HeapLogger.shared.warn("Failed to generate heap.js session cookie.")
+            logger?.warn("Failed to generate heap.js session cookie.")
             return
         }
         

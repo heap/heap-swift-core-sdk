@@ -25,7 +25,10 @@
             <button type="button" id="track" heap-ignore="true">Track an event with no pageview</button>
             <button type="button" id="track-none" heap-ignore="true">Track an event with <tt>none</tt> pageview</button>
             <button type="button" id="track-autocaptured" heap-ignore="true">Track an event with autocaptured pageview</button>
-            <button type="button" id="log">Log an info message</button>
+            <div>
+                <button type="button" id="log">Log a message</button>
+                <button type="button" id="log-to-console">Use console log</button>
+            </div>
             <button type="button" id="startAutocapture">Start sample autocapture SDK</button>
             <button type="button" id="getInfo">Show Heap properties</button>
             <pre id="details">
@@ -62,6 +65,10 @@
             
             document.getElementById('log').addEventListener('click', function () {
                 HeapLogger.info('This log message originated from a web view.', 'Just a source');
+            });
+            
+            document.getElementById('log-to-console').addEventListener('click', function () {
+                Heap.logToConsole();
             });
             
             document.getElementById('getInfo').addEventListener('click', async function () {

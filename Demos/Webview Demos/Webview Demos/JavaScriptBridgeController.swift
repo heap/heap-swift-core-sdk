@@ -11,6 +11,10 @@ class JavaScriptBridgeController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        if #available(iOS 16.4, *) {
+            webview.isInspectable = true
+        }
+
         Heap.shared.attachWebView(webview, origins: ["https://example.com"], injectHeapJavaScript: true)
         
         let htmlFile = Bundle.main.url(forResource: "javascript-bridge", withExtension: "html")
