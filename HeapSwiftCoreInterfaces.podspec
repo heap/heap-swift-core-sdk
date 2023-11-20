@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name = 'HeapSwiftCoreInterfaces'
-  s.version = '0.5.0'
+  s.version = '0.5.1'
   s.license = { :type => 'MIT' }
   s.summary = 'ABI stable interface package for HeapSwiftCore.'
   s.homepage = 'https://heap.io'

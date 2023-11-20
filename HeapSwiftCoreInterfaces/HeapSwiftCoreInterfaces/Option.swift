@@ -98,6 +98,7 @@ public extension Option {
     static let disableInteractionAccessibilityLabelCapture = register(name: "disableInteractionAccessibilityLabelCapture", type: .boolean)
     static let disableInteractionReferencingPropertyCapture = register(name: "disableInteractionReferencingPropertyCapture", type: .boolean)
     static let interactionHierarchyCaptureLimit = register(name: "interactionHierarchyCaptureLimit", type: .integer)
+    static let clearEventPropertiesOnNewUser = register(name: "clearEventPropertiesOnNewUser", type: .boolean)
 }
 
 extension Option {
@@ -126,6 +127,7 @@ extension Option {
             Option.disableInteractionAccessibilityLabelCapture,
             Option.disableInteractionReferencingPropertyCapture,
             Option.interactionHierarchyCaptureLimit,
+            Option.clearEventPropertiesOnNewUser,
         ]
     }()
 }
