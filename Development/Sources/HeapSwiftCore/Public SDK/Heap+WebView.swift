@@ -109,7 +109,7 @@ extension Heap {
     ///   - environmentId: An environment ID that was previously used in a heap.js integration.
     ///   - webView: The heap.js settings that were used with `Heap.shared.attachWebView`.
     @objc(removeHeapJsCookieForEnvironmentId:fromWebView:)
-    func removeHeapJsCookie(for environmentId: String, from webView: WKWebView) {
+    public func removeHeapJsCookie(for environmentId: String, from webView: WKWebView) {
         WebviewBridge.removeHeapJsCookie(for: environmentId, from: webView)
     }
 }
