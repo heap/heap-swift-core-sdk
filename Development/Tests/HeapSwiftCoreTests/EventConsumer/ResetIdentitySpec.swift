@@ -143,15 +143,15 @@ final class EventConsumer_ResetIdentitySpec: HeapSpec {
                         expect(user.identity).to(beNil())
                     }
                     
-                    it("resets event properties") {
+                    it("does not reset event properties") {
                         let state = dataStore.loadState(for: "11")
-                        expect(state.properties).to(equal([:]))
+                        expect(state.properties).to(equal(originalState.properties))
                     }
                     
                     it("persists the new state") {
                         expect(dataStore.loadState(for: "11").hasIdentity).to(beFalse())
                         expect(dataStore.loadState(for: "11").userID).to(equal(consumer.userId))
-                        expect(dataStore.loadState(for: "11").properties).to(beEmpty())
+                        expect(dataStore.loadState(for: "11").properties).to(equal(originalState.properties))
                     }
                     
                     it("creates a new session and pageview for the new user") {
@@ -171,6 +171,54 @@ final class EventConsumer_ResetIdentitySpec: HeapSpec {
                     it("extends the session") {
                         try consumer.assertSessionWasExtended(from: resetTimestamp)
                     }                    
+                }
+                
+                context("Heap is recording with clearEventPropertiesOnNewUser set as true") {
+                    
+                    var sessionTimestamp: Date!
+                    var resetTimestamp: Date!
+
+                    beforeEach {
+                        sessionTimestamp = Date()
+                        resetTimestamp = sessionTimestamp.addingTimeInterval(60)
+                        consumer.startRecording("11", with: [.startSessionImmediately: true, .clearEventPropertiesOnNewUser: true], timestamp: sessionTimestamp)
+                        consumer.resetIdentity(timestamp: resetTimestamp)
+                    }
+                    
+                    it("resets event properties") {
+                        let state = dataStore.loadState(for: "11")
+                        expect(state.properties).to(equal([:]))
+                    }
+                    
+                    it("persists the new state") {
+                        expect(dataStore.loadState(for: "11").hasIdentity).to(beFalse())
+                        expect(dataStore.loadState(for: "11").userID).to(equal(consumer.userId))
+                        expect(dataStore.loadState(for: "11").properties).to(equal([:]))
+                    }
+                }
+                
+                context("Heap is recording with clearEventPropertiesOnNewUser set as false") {
+                    
+                    var sessionTimestamp: Date!
+                    var resetTimestamp: Date!
+
+                    beforeEach {
+                        sessionTimestamp = Date()
+                        resetTimestamp = sessionTimestamp.addingTimeInterval(60)
+                        consumer.startRecording("11", with: [.startSessionImmediately: true, .clearEventPropertiesOnNewUser: false], timestamp: sessionTimestamp)
+                        consumer.resetIdentity(timestamp: resetTimestamp)
+                    }
+                    
+                    it("does not reset event properties") {
+                        let state = dataStore.loadState(for: "11")
+                        expect(state.properties).to(equal(originalState.properties))
+                    }
+                    
+                    it("persists the new state") {
+                        expect(dataStore.loadState(for: "11").hasIdentity).to(beFalse())
+                        expect(dataStore.loadState(for: "11").userID).to(equal(consumer.userId))
+                        expect(dataStore.loadState(for: "11").properties).to(equal(originalState.properties))
+                    }
                 }
             }
         }

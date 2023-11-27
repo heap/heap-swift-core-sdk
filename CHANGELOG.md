@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `Heap.shared.resetIdentity()` and `Heap.shared.identify()` no longer clear event properties by default when a new user is identified.
+  The previous behavior is available using the option `.clearEventPropertiesOnNewUser`.
+
+### Added
+
+- Added option `.clearEventPropertiesOnNewUser` to continue using existing SDK behavior where event properties are cleared when a new user is identified.
+
 ## [0.4.0]
 
 ### Added

@@ -256,9 +256,9 @@ final class EventConsumer_IdentifySpec: HeapSpec {
                             expect(dataStore.usersToUpload().count).to(equal(2))
                         }
                         
-                        it("resets event properties") {
+                        it("does not reset event properties") {
                             let state = dataStore.loadState(for: "11")
-                            expect(state.properties).to(equal([:]))
+                            expect(state.properties).to(equal(originalState.properties))
                         }
                     }
                     
@@ -359,6 +359,46 @@ final class EventConsumer_IdentifySpec: HeapSpec {
                             try consumer.assertSessionWasExtended(from: identifyTimestamp)
                         }
                     }
+                }
+                
+                context("Heap is recording with clearEventPropertiesOnNewUser set as false") {
+
+                    beforeEach {
+                        consumer.startRecording("11", with: [.clearEventPropertiesOnNewUser: false])
+                    }
+
+                    context("called with a valid identity") {
+
+                        beforeEach {
+                            consumer.identify("user1")
+                        }
+                        
+                        it("does not reset event properties") {
+                            let state = dataStore.loadState(for: "11")
+                            expect(state.properties).to(equal(originalState.properties))
+                        }
+                    }
+                }
+                
+                
+                context("Heap is recording with clearEventPropertiesOnNewUser set as true") {
+
+                    beforeEach {
+                        consumer.startRecording("11", with: [.clearEventPropertiesOnNewUser: true])
+                    }
+
+                    context("called with a valid identity") {
+
+                        beforeEach {
+                            consumer.identify("user1")
+                        }
+                        
+                        it("resets event properties") {
+                            let state = dataStore.loadState(for: "11")
+                            expect(state.properties).to(equal([:]))
+                        }
+                    }
+                    
                 }
             }
         }

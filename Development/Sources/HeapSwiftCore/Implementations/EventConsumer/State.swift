@@ -128,7 +128,11 @@ extension State {
         } else {
             environment.clearIdentity()
         }
-        environment.properties.removeAll()
+        
+        if behaviorSettings.clearEventPropertiesOnNewUser
+        {
+            environment.properties.removeAll()
+        }
         outcomes.userCreated = true
     }
     

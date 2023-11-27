@@ -86,9 +86,11 @@ extension FieldSettings {
 
 struct BehaviorSettings {
     var startSessionImmediately: Bool
+    var clearEventPropertiesOnNewUser: Bool
     
     static let `default` = BehaviorSettings(
-        startSessionImmediately: false
+        startSessionImmediately: false,
+        clearEventPropertiesOnNewUser: false
     )
 }
 
@@ -99,7 +101,8 @@ extension BehaviorSettings {
         let base = Self.default
         
         self.init(
-            startSessionImmediately: options.boolean(at: .startSessionImmediately) ?? base.startSessionImmediately
+            startSessionImmediately: options.boolean(at: .startSessionImmediately) ?? base.startSessionImmediately,
+            clearEventPropertiesOnNewUser: options.boolean(at: .clearEventPropertiesOnNewUser) ?? base.clearEventPropertiesOnNewUser
         )
     }
     
