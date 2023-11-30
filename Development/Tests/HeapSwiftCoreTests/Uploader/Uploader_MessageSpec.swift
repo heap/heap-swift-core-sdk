@@ -287,8 +287,16 @@ final class Uploader_MessageSpec: UploaderSpec {
                 
                 itFinishesUploadingSuccessfully(whenTrackReceives: .success)
                 itConsumesAllTheMessages(whenTrackReceives: .success)
-                itSendsASingleTrackRequest(whenTrackReceives: .success) // Technically, it can, but this payload fits in one batch.
-                itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheSessionIsActive: true, andTrackReceives: .success)
+                itSendsASingleTrackRequest(whenTrackReceives: .success) // Technically, it can send multiple, but this payload fits in one batch.
+                
+                context("the session is the active session") {
+                    itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheSessionIsActive: true, andTrackReceives: .success)
+                }
+                
+                context("the session is not active") {
+                    itDeletesTheSessionAfterTheInitialUpload(whenTheSessionIsActive: false, andTrackReceives: .success)
+                    itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheSessionIsActive: false, andTrackReceives: .success)
+                }
                 
                 it("does not prevent future messages from being sent in the same session") {
                     createSession(userId: "123", sessionId: "456", includePageview: true, includeEvent: true)
@@ -308,9 +316,10 @@ final class Uploader_MessageSpec: UploaderSpec {
             context("a \"bad request\" failure occurs when uploading the messages") {
                 
                 itCausesTheUploadToFail(with: .badRequest, whenTrackReceives: .badRequest)
+                itConsumesAllTheMessages(whenTrackReceives: .badRequest)
+                itSendsASingleTrackRequest(whenTrackReceives: .badRequest) // Technically, it can send multiple, but this payload fits in one batch.
                 
                 context("the session is the active session") {
-                    itDoesNotMarkAnythingAsUploaded(whenTrackReceives: .badRequest)
                     itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheSessionIsActive: true, andTrackReceives: .badRequest)
                 }
                 
@@ -319,16 +328,17 @@ final class Uploader_MessageSpec: UploaderSpec {
                     itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheSessionIsActive: false, andTrackReceives: .badRequest)
                 }
                 
-                it("prevents future messages from being sent in the same session") {
+                it("does not prevent future messages from being sent in the same session") {
                     APIProtocol.trackResponse = .badRequest
                     createSession(userId: "123", sessionId: "456", includePageview: true, includeEvent: true)
                     expectUploadAll(in: uploader).toEventually(beFailure())
                     
                     // The session won't be inserted again, but the other events will be.
                     createSession(userId: "123", sessionId: "456", includePageview: true, includeEvent: true)
-                    expectUploadAll(in: uploader).toEventually(beSuccess())
+                    expectUploadAll(in: uploader).toEventually(beFailure())
                     
                     expect(APIProtocol.requests.map(\.simplified)).to(equal([
+                        .track(true),
                         .track(true),
                     ]))
                 }

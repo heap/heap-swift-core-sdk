@@ -66,18 +66,6 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
     let activeSessionProvider: SessionProvider
     let urlSession: URLSession
     
-    /// An set of users who received a 400 response during their initial upload.
-    ///
-    /// Although these users may continue to exist in the data store, they should not be uploaded
-    /// again because they are active.
-    fileprivate var rejectedUsers: Set<RejectedUser> = []
-    
-    /// A set of sessions which have recieved a 400 response.
-    ///
-    /// Although these sessions may continue to exist in the data store, they should not be
-    /// uploaded again because they are active.
-    fileprivate var rejectedSessions: Set<RejectedSession> = []
-    
     var nextScheduledUploadDate: Date = Date()
     fileprivate var scheduledUploadSettings: UploaderSettings = .default
     fileprivate var nextUploadTimer: HeapTimer? = nil
@@ -202,11 +190,10 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
                     HeapLogger.shared.warn("A network error occurred while uploading data and Heap will try again later.")
                 case .failure(.unexpectedServerResponse):
                     HeapLogger.shared.warn("A server issue was encountered while uploading and Heap will try again later.")
-                case .failure(.badRequest):
-                    HeapLogger.shared.warn("All pending data has been uploaded but some invalid data was discarded.")
-                case .success(()) where operationCount > 0:
+                case .failure(.badRequest) where operationCount > 0,
+                     .success(()) where operationCount > 0:
                     HeapLogger.shared.info("All pending data has been uploaded.")
-                case .success(()):
+                case .failure(.badRequest), .success(()):
                     break // Don't log if nothing happened.
                 }
                 
@@ -230,7 +217,6 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         
         OperationQueue.upload.addOperation {
             users = self.dataStore.usersToUpload()
-            users.remove(rejectedUsers: self.rejectedUsers, rejectedSessions: self.rejectedSessions)
             users.moveActiveSessionToTheFront(using: activeSession)
             doNextOperation()
         }
@@ -326,13 +312,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
             user.needsInitialUpload = false
             
             switch result {
-            case .failure(.badRequest) where configuration.isUserActive:
-                self.rejectedUsers.insert(.init(user))
-                user.markAsDone()
-            case .failure(.badRequest):
-                self.dataStore.deleteUser(environmentId: user.environmentId, userId: user.userId)
-                user.markAsDone()
-            case .success(()):
+            case .failure(.badRequest), .success(()):
                 self.dataStore.setHasSentInitialUser(environmentId: user.environmentId, userId: user.userId)
             default:
                 break
@@ -362,7 +342,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         else { return nil }
         
         return UploadOperation(userIdentification: userIdentification, configuration: configuration) { result in
-            
+
             user.needsIdentityUpload = false
             
             switch result {
@@ -417,7 +397,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         let messageLimit = configuration.messageLimit
         let byteLimit = configuration.byteLimit
         
-        let (messageBatch, sessionId) = nextMessageBatch(user, activeSession: activeSession, messageLimit: messageLimit, byteLimit: byteLimit)
+        let messageBatch = nextMessageBatch(user, activeSession: activeSession, messageLimit: messageLimit, byteLimit: byteLimit)
         
         guard !messageBatch.isEmpty
         else { return nil }
@@ -425,13 +405,7 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         return UploadOperation(encodedMessages: messageBatch.map(\.1), configuration: configuration) { result in
             
             switch result {
-            case .failure(.badRequest) where configuration.isUserActive && sessionId == activeSession.sessionId:
-                self.rejectedSessions.insert(.init(user, sessionId: sessionId))
-                user.removeSession(withId: sessionId)
-            case .failure(.badRequest):
-                self.dataStore.deleteSession(environmentId: user.environmentId, userId: user.userId, sessionId: sessionId)
-                user.removeSession(withId: sessionId)
-            case .success(()):
+            case .failure(.badRequest), .success(()):
                 self.dataStore.deleteSentMessages(Set(messageBatch.map(\.0)))
             default:
                 break
@@ -439,13 +413,13 @@ class Uploader<DataStore: DataStoreProtocol, SessionProvider: ActiveSessionProvi
         }
     }
     
-    func nextMessageBatch(_ user: UserToUpload, activeSession: ActiveSession, messageLimit: Int, byteLimit: Int) -> ([(identifier: MessageIdentifier, payload: Data)], String) {
-        guard let sessionId = user.sessionIds.first else { return ([], "") }
+    func nextMessageBatch(_ user: UserToUpload, activeSession: ActiveSession, messageLimit: Int, byteLimit: Int) -> [(identifier: MessageIdentifier, payload: Data)] {
+        guard let sessionId = user.sessionIds.first else { return [] }
         
         let messages = dataStore.getPendingEncodedMessages(environmentId: user.environmentId, userId: user.userId, sessionId: sessionId, messageLimit: messageLimit, byteLimit: byteLimit)
         
         if !messages.isEmpty {
-            return (messages, sessionId)
+            return messages
         }
         
         user.sessionIds.removeFirst()
@@ -464,18 +438,6 @@ extension UserToUpload {
     func isActive(in activeSession: ActiveSession) -> Bool {
         userId == activeSession.userId && environmentId == activeSession.environmentId
     }
-    
-    /// Marks all properties on the user as uploaded so `nextOperation(for:, activeSession:, settings:)` will return `nil`.
-    func markAsDone() {
-        self.needsInitialUpload = false
-        self.needsIdentityUpload = false
-        self.pendingUserProperties = [:]
-        self.sessionIds = []
-    }
-    
-    func removeSession(withId sessionId: String) {
-        sessionIds.removeAll(where: { $0 == sessionId })
-    }
 }
 
 fileprivate extension Array where Element == UserToUpload {
@@ -490,19 +452,6 @@ fileprivate extension Array where Element == UserToUpload {
         // Move the active session to the front of the list.
         if !isEmpty && self[0].isActive(in: activeSession) {
             _ = self[0].sessionIds.partition(by: { $0 != activeSession.sessionId })
-        }
-    }
-    
-    mutating func remove(rejectedUsers: Set<RejectedUser>, rejectedSessions: Set<RejectedSession>) {
-        if !rejectedUsers.isEmpty {
-            self = self.filter({ !rejectedUsers.contains(.init($0)) })
-        }
-        
-        for user in self {
-            let sessionsIdsToReject = rejectedSessions.sessionIds(for: user)
-            if !sessionsIdsToReject.isEmpty {
-                user.sessionIds = user.sessionIds.filter({ !sessionsIdsToReject.contains($0) })
-            }
         }
     }
 }
@@ -522,6 +471,7 @@ extension UploadResult {
     /// request prevents part of the upload from continuing, the source operation must mark the
     /// appropriate data as unuploadable rather than stopping the whole process.
     var canContinueUploading: Bool {
+   
         switch self {
         case .success(()), .failure(.badRequest):
             return true

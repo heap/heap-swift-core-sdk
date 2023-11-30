@@ -110,25 +110,25 @@ final class Uploader_InitialUserSpec: UploaderSpec {
                 dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: timestamp)
             }
             
-            func itFinishesUploadingSuccessfully(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+            func itFinishesUploadingSuccessfully(whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItFinishesUploadingSuccessfully.self, file: file, line: line) {
                     .init(uploader: uploader, request: .addUserProperties(true), response: response, beforeEach: queueJustANewUserUpload)
                 }
             }
             
-            func itMarksTheUserAsUploaded(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+            func itMarksTheUserAsUploaded(whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItMarksTheUserAsUploaded.self, file: file, line: line) {
                     .init(uploader: uploader, request: .addUserProperties(true), response: response, newUser: true)
                 }
             }
             
-            func itSendsASingleUserPropertiesRequest(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+            func itSendsASingleUserPropertiesRequest(whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItSendsASingleRequestOfKind.self, file: file, line: line) {
                     .init(uploader: uploader, request: .addUserProperties(true), response: response, beforeEach: queueJustANewUserUpload)
                 }
             }
             
-            func itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheUserIsActive isActive: Bool, andAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+            func itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheUserIsActive isActive: Bool, andAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData.self, file: file, line: line) {
                     .init(uploader: uploader, request: .addUserProperties(true), response: response) {
                         let timestamp = Date()
@@ -137,105 +137,105 @@ final class Uploader_InitialUserSpec: UploaderSpec {
                 }
             }
 
-            func itRetriesUntilTheErrorClears(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+            func itRetriesUntilTheErrorClears(whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItRetriesUntilTheErrorClears.self, file: file, line: line) {
                     .init(uploader: uploader, request: .addUserProperties(true), response: response, beforeEach: queueJustANewUserUpload)
                 }
             }
             
-            func itCausesTheUploadToFail(with error: UploadError, whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+            func itCausesTheUploadToFail(with error: UploadError, whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItCausesTheUploadToFail.self, file: file, line: line) {
                     .init(uploader: uploader, request: .addUserProperties(true), response: response, error: error, beforeEach: queueJustANewUserUpload)
                 }
             }
             
-            func itDoesNotMarkAnythingAsUploaded(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+            func itDoesNotMarkAnythingAsUploaded(whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItDoesNotMarkAnythingAsUploaded.self, file: file, line: line) {
                     .init(uploader: uploader, request: .addUserProperties(true), response: response, beforeEach: queueJustANewUserUpload)
                 }
             }
             
-            func itCausesTheCurrentUploadPassToStopSendingData(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+            func itCausesTheCurrentUploadPassToStopSendingData(whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItCausesTheCurrentUploadPassToStopSendingData.self, file: file, line: line) {
                     .init(uploader: uploader, request: .addUserProperties(true), response: response, newUser: true)
                 }
             }
             
-            func itSendsQueuedMessages(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+            func itSendsQueuedMessages(whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItConsumesAllTheMessages.self, file: file, line: line) {
                     .init(uploader: uploader, request: .addUserProperties(true), response: response, newUser: true)
                 }
             }
             
-            func itSendsQueuedIdentity(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+            func itSendsQueuedIdentity(whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItMarksTheIdentityAsUploaded.self, file: file, line: line) {
                     .init(uploader: uploader, request: .addUserProperties(true), response: response, newUser: true)
                 }
             }
             
-            func itSendsQueuedUserProperties(whenAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
+            func itSendsQueuedUserProperties(whenAddUserPropertiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
                 itBehavesLike(ItMarksUserPropertiesAsUploaded.self, file: file, line: line) {
                     .init(uploader: uploader, request: .addUserProperties(true), response: response, newUser: true)
                 }
             }
             
-            func itDeletesTheUserAfterTheInitialUpload(whenTheUserIsActive isActive: Bool, andAddUserProperitiesReceives response: APIResponse, file: FileString = #file, line: UInt = #line) {
-                itBehavesLike(ItDeletesTheUserAfterUploading.self, file: file, line: line) {
-                    .init(uploader: uploader, request: .addUserProperties(true), response: response) {
-                        let timestamp = Date()
-                        dataStore.createNewUserIfNeeded(environmentId: "11", userId: isActive ? "123" : "234", identity: nil, creationDate: timestamp)
-                    }
-                }
-            }
-            
             context("uploading the user succeeds") {
-                itFinishesUploadingSuccessfully(whenAddUserProperitiesReceives: .success)
-                itMarksTheUserAsUploaded(whenAddUserProperitiesReceives: .success)
-                itSendsASingleUserPropertiesRequest(whenAddUserProperitiesReceives: .success)
-                itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheUserIsActive: true, andAddUserProperitiesReceives: .success)
+                itFinishesUploadingSuccessfully(whenAddUserPropertiesReceives: .success)
+                itMarksTheUserAsUploaded(whenAddUserPropertiesReceives: .success)
+                itSendsASingleUserPropertiesRequest(whenAddUserPropertiesReceives: .success)
                 
                 context("there is other data to send") {
-                    itSendsQueuedIdentity(whenAddUserProperitiesReceives: .success)
-                    itSendsQueuedMessages(whenAddUserProperitiesReceives: .success)
-                    itSendsQueuedUserProperties(whenAddUserProperitiesReceives: .success)
+                    itSendsQueuedIdentity(whenAddUserPropertiesReceives: .success)
+                    itSendsQueuedMessages(whenAddUserPropertiesReceives: .success)
+                    itSendsQueuedUserProperties(whenAddUserPropertiesReceives: .success)
                 }
-            }
-            
-            context("a network failure occurs when uploading the initial user") {
-                itCausesTheUploadToFail(with: .networkFailure, whenAddUserProperitiesReceives: .networkFailure)
-                itDoesNotMarkAnythingAsUploaded(whenAddUserProperitiesReceives: .networkFailure)
-                itRetriesUntilTheErrorClears(whenAddUserProperitiesReceives: .networkFailure)
                 
-                context("there is other data to send") {
-                    itCausesTheCurrentUploadPassToStopSendingData(whenAddUserProperitiesReceives: .networkFailure)
+                context("the user is the active user") {
+                    itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheUserIsActive: true, andAddUserPropertiesReceives: .success)
                 }
-            }
-            
-            context("an unexpected failure occurs when uploading the initial user") {
-                itCausesTheUploadToFail(with: .unexpectedServerResponse, whenAddUserProperitiesReceives: .serviceUnavailable)
-                itDoesNotMarkAnythingAsUploaded(whenAddUserProperitiesReceives: .serviceUnavailable)
-                itRetriesUntilTheErrorClears(whenAddUserProperitiesReceives: .serviceUnavailable)
                 
-                context("there is other data to send") {
-                    itCausesTheCurrentUploadPassToStopSendingData(whenAddUserProperitiesReceives: .serviceUnavailable)
+                context("The user is some other user") {
+                    itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheUserIsActive: false, andAddUserPropertiesReceives: .success)
                 }
             }
             
             context("a \"bad request\" failure occurs when uploading the initial user") {
-                itCausesTheUploadToFail(with: .badRequest, whenAddUserProperitiesReceives: .badRequest)
+                itCausesTheUploadToFail(with: .badRequest, whenAddUserPropertiesReceives: .badRequest)
+                itMarksTheUserAsUploaded(whenAddUserPropertiesReceives: .badRequest)
+                itSendsASingleUserPropertiesRequest(whenAddUserPropertiesReceives: .badRequest)
                 
                 context("there is other data to send") {
-                    itCausesTheCurrentUploadPassToStopSendingData(whenAddUserProperitiesReceives: .badRequest)
+                    itSendsQueuedIdentity(whenAddUserPropertiesReceives: .badRequest)
+                    itSendsQueuedMessages(whenAddUserPropertiesReceives: .badRequest)
+                    itSendsQueuedUserProperties(whenAddUserPropertiesReceives: .badRequest)
                 }
                 
                 context("the user is the active user") {
-                    itDoesNotMarkAnythingAsUploaded(whenAddUserProperitiesReceives: .badRequest)
-                    itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheUserIsActive: true, andAddUserProperitiesReceives: .badRequest)
+                    itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheUserIsActive: true, andAddUserPropertiesReceives: .badRequest)
                 }
                 
                 context("The user is some other user") {
-                    itDeletesTheUserAfterTheInitialUpload(whenTheUserIsActive: false, andAddUserProperitiesReceives: .badRequest)
-                    itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheUserIsActive: false, andAddUserProperitiesReceives: .badRequest)
+                    itDoesNotSendAnyRequestsOnSubsequentUploadPassesWithoutNewData(whenTheUserIsActive: false, andAddUserPropertiesReceives: .badRequest)
+                }
+            }
+            
+            context("a network failure occurs when uploading the initial user") {
+                itCausesTheUploadToFail(with: .networkFailure, whenAddUserPropertiesReceives: .networkFailure)
+                itDoesNotMarkAnythingAsUploaded(whenAddUserPropertiesReceives: .networkFailure)
+                itRetriesUntilTheErrorClears(whenAddUserPropertiesReceives: .networkFailure)
+                
+                context("there is other data to send") {
+                    itCausesTheCurrentUploadPassToStopSendingData(whenAddUserPropertiesReceives: .networkFailure)
+                }
+            }
+            
+            context("an unexpected failure occurs when uploading the initial user") {
+                itCausesTheUploadToFail(with: .unexpectedServerResponse, whenAddUserPropertiesReceives: .serviceUnavailable)
+                itDoesNotMarkAnythingAsUploaded(whenAddUserPropertiesReceives: .serviceUnavailable)
+                itRetriesUntilTheErrorClears(whenAddUserPropertiesReceives: .serviceUnavailable)
+                
+                context("there is other data to send") {
+                    itCausesTheCurrentUploadPassToStopSendingData(whenAddUserPropertiesReceives: .serviceUnavailable)
                 }
             }
         }

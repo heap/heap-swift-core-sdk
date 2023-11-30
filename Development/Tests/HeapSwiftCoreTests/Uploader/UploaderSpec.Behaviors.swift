@@ -301,31 +301,6 @@ extension UploaderSpec {
         }
     }
     
-    class ItDeletesTheUserAfterUploading: Behavior<ItDeletesTheUserAfterUploading.Context> {
-        override class func spec(_ contextProvider: @escaping () -> Context) {
-            
-            var context: Context!
-            
-            beforeEach {
-                context = contextProvider()
-                APIProtocol.setResponse(context.response, for: context.request)
-                context.beforeEach()
-            }
-            
-            it("returns that there was a failure") {
-                expectUploadAll(in: context.uploader).toEventuallyNot(beNil())
-                expect(context.uploader.dataStore.usersToUpload()).to(haveCount(0), description: "The user should have been deleted")
-            }
-        }
-        
-        struct Context {
-            let uploader: TestableUploader!
-            let request: APIRequest.Simplified
-            let response: APIResponse
-            let beforeEach: () -> Void
-        }
-    }
-    
     class ItDeletesTheSessionAfterUploading: Behavior<ItDeletesTheSessionAfterUploading.Context> {
         override class func spec(_ contextProvider: @escaping () -> Context) {
             
