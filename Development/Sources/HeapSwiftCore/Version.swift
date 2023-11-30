@@ -5,7 +5,7 @@ struct Version {
     static let major = 0
     
     /// Minor version.
-    static let minor = 4
+    static let minor = 5
 
     /// Revision number.
     static let revision = 0

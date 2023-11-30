@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0]
+
 ### Fixed
 
 - Fixed crash on `Heap.attachWebView` when called twice on the same web view prior to iOS 15.
@@ -137,7 +139,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
-[Unreleased]: https://github.com/heap/heap-swift-core-sdk/compare/0.4.0...main
+[Unreleased]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.0...main
+[0.5.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.3.1...0.4.0
 [0.3.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.2.1...0.3.0
