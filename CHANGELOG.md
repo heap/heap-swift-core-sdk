@@ -13,34 +13,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed crash on `Heap.attachWebView` when called twice on the same web view prior to iOS 15.
+  Now, subsequent calls are ignored.
+
+- Fixed small memory leak when an attached `WKWebView` is deallocated.  This was caused by the 
+  `WKUserContentController` maintaining a strong self reference when it has message handlers
+  attached.  This change may trigger a warning message from WebKit on `WKWebView` deallocation,
+  which can be resolved by calling `Heap.detachWebView` when removing the web view.
+
+- `Heap.removeHeapJsCookie` is now public.
+
 ### Changed
 
-- `Heap.shared.resetIdentity()` and `Heap.shared.identify()` no longer clear event properties by default when a new user is identified.
+- `Heap.shared.resetIdentity()` and `Heap.shared.identify()` no longer clear event properties by
+  default when a new user is identified.
+  
   The previous behavior is available using the option `.clearEventPropertiesOnNewUser`.
 
 - Changed uploader behavior around server errors.
 
 ### Added
 
-- Added option `.clearEventPropertiesOnNewUser` to continue using existing SDK behavior where event properties are cleared when a new user is identified.
+- Added option `.clearEventPropertiesOnNewUser` to continue using existing SDK behavior where event
+  properties are cleared when a new user is identified.
+
+- Added `Heap.detachWebView`.  This method removes most integrations added with
+  `Heap.attachWebView` with the exception of the heap.js cookie.  This method is optional and
+  intended to be used before deallocating a `WKWebView`.
 
 ## [0.4.0]
 
 ### Added
 
-- Added `.captureVendorId` option to enable capture of **iOS Vendor ID**  and
-  **Initial iOS Vendor ID** from `UIDevice.current.identifierForVendor`.
-  This supports a behavior change discussed in the **Changed** section.
+- Added `.captureVendorId` option to enable capture of **iOS Vendor ID**  and **Initial iOS Vendor
+  ID** from `UIDevice.current.identifierForVendor`. This supports a behavior change discussed in the
+  **Changed** section.
 
 ### Changed
 
 - **Target Text** and **Target accessibilityLabel** are now trimmed of whitespace.
 
-- Properties from `addEventProperties` will no longer show up on sessions, matching Classic SDK behavior.  Pageviews and events are not affected by the change.
+- Properties from `addEventProperties` will no longer show up on sessions, matching Classic SDK
+  behavior.  Pageviews and events are not affected by the change.
 
-- The SDK no longer captures **iOS Vendor ID** and **Initial iOS Vendor ID** by default.
-  This change allows developers to opt into Vendor ID tracking after they've validated
-  their use complies with Apple's [user privacy and data use](https://developer.apple.com/app-store/user-privacy-and-data-use/) guidelines.
+- The SDK no longer captures **iOS Vendor ID** and **Initial iOS Vendor ID** by default. This change
+  allows developers to opt into Vendor ID tracking after they've validated their use complies with
+  Apple's [user privacy and data use] guidelines.
   To enable these properties, use the `.captureVendorId` option in `startRecording`.
   
 ## [0.3.1]
@@ -126,3 +146,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.2]: https://github.com/heap/heap-swift-core-sdk/compare/0.1.1...0.1.2
 [0.1.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.1.0
+[user privacy and data use]: https://developer.apple.com/app-store/user-privacy-and-data-use/
