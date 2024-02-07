@@ -29,7 +29,7 @@ final class EventConsumer_FetchSessionIdSpec: HeapSpec {
 
             it("does not extend the session before `startRecording` is called") {
                 _ = consumer.fetchSessionId()
-                expect(consumer.sessionExpirationTime).to(beNil())
+                expect(consumer.sessionExpirationDate).to(beNil())
             }
             
             it("returns nil after `stopRecording` is called") {
@@ -42,7 +42,7 @@ final class EventConsumer_FetchSessionIdSpec: HeapSpec {
                 consumer.startRecording("11")
                 consumer.stopRecording()
                 _ = consumer.fetchSessionId()
-                expect(consumer.sessionExpirationTime).to(beNil())
+                expect(consumer.sessionExpirationDate).to(beNil())
             }
 
             context("Heap is recording") {

@@ -97,7 +97,7 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                     throw TestFailure("Starting recording should have created an expired session.")
                 }
                 expect(sessionId).to(beEmpty())
-                expect(consumer.sessionExpirationTime).to(equal(Date(timeIntervalSince1970: 0)))
+                expect(consumer.sessionExpirationDate).to(equal(Date(timeIntervalSince1970: 0)))
             }
 
             it("creates a new session with a synthesized pageview and version change event when called with startSessionImmediately") {

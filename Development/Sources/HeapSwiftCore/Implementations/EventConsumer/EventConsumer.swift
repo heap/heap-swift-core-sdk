@@ -13,16 +13,6 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
         self.stateManager = StateManager(stateStore: stateStore)
         notificationManager = NotificationManager(delegateManager)
     }
-
-    /// For testing, returns the last set session ID without attempting to extend the session.
-    var activeOrExpiredSessionId: String? {
-        return stateManager.current?.sessionInfo.id
-    }
-
-    /// For testing, returns the last set session expiration time without attempting to extend the session.
-    var sessionExpirationTime: Date? {
-        return stateManager.current?.sessionExpirationDate
-    }
     
     /// Performs actions as a result of state changes.
     func handleChanges(_ updateResults: State.UpdateResults, timestamp: Date) {

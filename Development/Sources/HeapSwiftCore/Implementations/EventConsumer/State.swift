@@ -90,7 +90,7 @@ extension State {
         sessionInfo = .init(newSessionAt: timestamp)
         unattributedPageviewInfo = initialPageviewInfo
         lastPageviewInfo = initialPageviewInfo
-        sessionExpirationDate = timestamp.advancedBySessionExpirationTimeout()
+        extendCurrentSessionUnconditionally(timestamp: timestamp)
         outcomes.sessionCreated = true
         
         checkForVersionChange(outcomes: &outcomes)
@@ -116,7 +116,7 @@ extension State {
         if sessionExpirationDate < timestamp {
             createSession(at: timestamp, outcomes: &outcomes)
         } else if extendIfNotExpired {
-            sessionExpirationDate = timestamp.advancedBySessionExpirationTimeout()
+            extendCurrentSessionUnconditionally(timestamp: timestamp)
         }
     }
     
@@ -158,18 +158,32 @@ extension State {
     }
     
     mutating func extendSession(sessionId: String, preferredExpirationDate: Date, timestamp: Date) {
-        
         guard sessionInfo.id == sessionId else { return }
+        extendCurrentSessionUnconditionally(preferredExpirationDate: preferredExpirationDate, timestamp: timestamp)
+    }
+    
+    private mutating func extendCurrentSessionUnconditionally(preferredExpirationDate: Date? = nil, timestamp: Date) {
         
-        let candidates = [
-            timestamp.advancedBySessionExpirationTimeout(),
-            preferredExpirationDate,
-            timestamp.advancedByHeapJsSessionExpirationTimeout(),
-        ]
+        let targetExpirationDate: Date
         
-        // This is a funny little idea because maybe we'll fiddle with expiration dates in the future.
-        // If the value is out of range, the minimum or maximum will get shifted in.
-        sessionExpirationDate = candidates.sorted()[1]
+        if let preferredExpirationDate = preferredExpirationDate {
+            let candidates = [
+                timestamp.advancedBySessionExpirationTimeout(),
+                preferredExpirationDate,
+                timestamp.advancedByHeapJsSessionExpirationTimeout(),
+            ]
+            
+            // This is a funny little idea because maybe we'll fiddle with expiration dates in the future.
+            // If the value is out of range, the minimum or maximum will get shifted in.
+            targetExpirationDate = candidates.sorted()[1]
+        } else {
+            targetExpirationDate = timestamp.advancedBySessionExpirationTimeout()
+        }
+        
+        // Only set the date if it is greater than the existing date.
+        if sessionExpirationDate < targetExpirationDate {
+            sessionExpirationDate = targetExpirationDate
+        }
     }
     
     mutating func resetIdentity(at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
