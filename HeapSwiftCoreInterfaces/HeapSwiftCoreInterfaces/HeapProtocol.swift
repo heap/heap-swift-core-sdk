@@ -12,7 +12,10 @@ public protocol HeapProtocol {
     
     func uncommittedInteractionEvent(timestamp: Date, sourceInfo: SourceInfo?, pageview: Pageview?) -> InteractionEventProtocol?
     
+    @available(*, deprecated, renamed: "trackInteraction(interaction:nodes:callbackName:timestamp:sourceInfo:sourceProperties:pageview:)")
     func trackInteraction(interaction: Interaction, nodes: [InteractionNode], callbackName: String?, timestamp: Date, sourceInfo: SourceInfo?, pageview: Pageview?)
+    
+    func trackInteraction(interaction: Interaction, nodes: [InteractionNode], callbackName: String?, timestamp: Date, sourceInfo: SourceInfo?, sourceProperties: [String: HeapPropertyValue], pageview: Pageview?)
     
     func identify(_ identity: String)
     

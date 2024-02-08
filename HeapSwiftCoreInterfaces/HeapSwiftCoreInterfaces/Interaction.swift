@@ -55,6 +55,11 @@ public protocol InteractionEventProtocol: AnyObject {
     ///
     /// This must be set for the event to be committed.
     var nodes: [InteractionNode] { get set }
+    
+    /// Additional source properties for the event.
+    ///
+    /// Property values are sanitized to strings on write to prevent unexpected mutation.
+    var sourceProperties: [String: HeapPropertyValue] { get set }
 
     /// Commits the event so it can be uploaded.
     ///
