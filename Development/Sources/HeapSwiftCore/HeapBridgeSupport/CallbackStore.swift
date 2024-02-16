@@ -13,7 +13,7 @@ class CallbackStore {
     
     private var callbacks: [String: Entry] = [:]
     
-    var callbackIds: [String] { Array(callbacks.keys) }
+    var callbackIdsForCallbackQueueOnly: [String] { Array(callbacks.keys) }
     
     func add(timeout: TimeInterval, callback: @escaping Callback) -> String {
         
@@ -33,11 +33,11 @@ class CallbackStore {
     
     func cancelAllSync() {
         
-        OperationQueue.callback.addOperations([BlockOperation(block: { [self] in
-            for callbackId in callbackIds {
+        OperationQueue.callback.addOperationAndWait { [self] in
+            for callbackId in callbackIdsForCallbackQueueOnly {
                 resolve(callbackId: callbackId, result: .failure(.init(message: "All callbacks cancelled.")))
             }
-        })], waitUntilFinished: true)
+        }
         
     }
     

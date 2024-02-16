@@ -8,6 +8,7 @@ protocol ActiveSessionProvider {
 extension DispatchQueue {
     @nonobjc static let upload = DispatchQueue(label: "io.heap.Uploader")
     @nonobjc static let callback = DispatchQueue(label: "io.heap.Callback")
+    @nonobjc static let inMemoryDataStore = DispatchQueue(label: "io.heap.InMemoryDataStore")
 }
 
 extension OperationQueue {
@@ -23,6 +24,17 @@ extension OperationQueue {
     /// An operation queue for performing upload operations.
     @nonobjc static let upload = createSerialQueue(underlyingQueue: .upload)
     @nonobjc static let callback = createSerialQueue(underlyingQueue: .callback)
+    @nonobjc static let inMemoryDataStore = createSerialQueue(underlyingQueue: .inMemoryDataStore)
+    
+    func addOperationAndWait<T>(_ block: @escaping () -> T) -> T {
+        var result: T! = nil
+        
+        addOperations([BlockOperation {
+            result = block()
+        }], waitUntilFinished: true)
+        
+        return result
+    }
 }
 
 fileprivate typealias TaskCompletionHandler = (Data?, URLResponse?, Error?) -> Void

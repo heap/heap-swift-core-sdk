@@ -123,3 +123,13 @@ final class CallbackStoreSpec: HeapSpec {
         }
     }
 }
+
+fileprivate extension CallbackStore {
+    
+    // Helper to get the callback ids without violating thread safety.
+    var callbackIds: [String] {
+        OperationQueue.callback.addOperationAndWait {
+            self.callbackIdsForCallbackQueueOnly
+        }
+    }
+}

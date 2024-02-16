@@ -396,6 +396,10 @@ extension EventConsumer {
         stateManager.clearEventProperties()
         HeapLogger.shared.debug("Cleared all event properties.")
     }
+    
+    var environmentId: String? {
+        return stateManager.current?.environment.envID
+    }
 
     var userId: String? {
         

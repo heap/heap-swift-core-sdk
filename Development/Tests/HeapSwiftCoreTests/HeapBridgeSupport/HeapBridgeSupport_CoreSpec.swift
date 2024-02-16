@@ -428,6 +428,18 @@ final class HeapBridgeSupport_CoreSpec: HeapSpec {
             }
         }
         
+        describeMethod("environmentId") { method in
+            
+            it("returns the user id when Heap is recording") {
+                consumer.startRecording("11")
+                expect(try bridgeSupport.handleInvocation(method: method, arguments: [:]) as! String?).to(equal(consumer.environmentId))
+            }
+            
+            it("returns null when Heap is not recording") {
+                expect(try bridgeSupport.handleInvocation(method: method, arguments: [:]) as! String?).to(beNil())
+            }
+        }
+        
         describeMethod("userId") { method in
             
             it("returns the user id when Heap is recording") {

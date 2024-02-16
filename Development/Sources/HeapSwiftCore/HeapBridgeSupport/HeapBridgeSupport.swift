@@ -15,7 +15,7 @@ public class HeapBridgeSupport
     let pageviewStore = BridgedPageviewStore()
     let callbackStore = CallbackStore()
     
-    let eventConsumer: any HeapProtocol
+    let eventConsumer: any InternalHeapProtocol
     let uploader: any UploaderProtocol
     
     public weak var delegate: (any HeapBridgeSupportDelegate)?
@@ -29,7 +29,7 @@ public class HeapBridgeSupport
         hasAttachedLogger ? nil : logger
     }
     
-    init(eventConsumer: any HeapProtocol, uploader: any UploaderProtocol, logger: HeapLogger = HeapLogger.shared)
+    init(eventConsumer: any InternalHeapProtocol, uploader: any UploaderProtocol, logger: HeapLogger = HeapLogger.shared)
     {
         self.eventConsumer = eventConsumer
         self.uploader = uploader
@@ -74,6 +74,8 @@ public class HeapBridgeSupport
             return try removeEventProperty(arguments: arguments)
         case "clearEventProperties":
             return clearEventProperties()
+        case "environmentId":
+            return environmentId()
         case "userId":
             return userId()
         case "identity":
@@ -210,6 +212,10 @@ public class HeapBridgeSupport
     func clearEventProperties() -> JSONEncodable? {
         eventConsumer.clearEventProperties()
         return nil
+    }
+    
+    func environmentId() -> JSONEncodable? {
+        eventConsumer.environmentId
     }
     
     func userId() -> JSONEncodable? {

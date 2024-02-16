@@ -37,6 +37,14 @@ extension DataStoreProtocol {
         return messages
     }
     
+    func getAllMessages() throws -> [Message] {
+        try usersToUpload().flatMap { user in
+            try user.sessionIds.flatMap { sessionId in
+                try getPendingMessages(for: user, sessionId: sessionId)
+            }
+        }
+    }
+    
     @discardableResult
     func assertExactPendingMessagesCount(for user: UserToUpload, sessionId: String?, count: Int, file: StaticString = #file, line: UInt = #line) throws -> [Message] {
 

@@ -87,6 +87,11 @@ public class Heap: NSObject, HeapProtocol {
     public func clearEventProperties() {
         consumer.clearEventProperties()
     }
+    
+    @objc
+    public var environmentId: String? {
+        consumer.environmentId
+    }
 
     @objc
     public var userId: String? {

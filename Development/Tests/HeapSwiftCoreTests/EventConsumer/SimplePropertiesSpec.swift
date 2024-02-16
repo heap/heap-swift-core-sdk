@@ -20,6 +20,24 @@ final class EventConsumer_SimplePropertiesSpec: HeapSpec {
         afterEach {
             HeapLogger.shared.logLevel = .info
         }
+        
+        describe("EventConsumer.environmentId") {
+            
+            it("returns nil before `startRecording` is called") {
+                expect(consumer.environmentId).to(beNil())
+            }
+
+            it("returns nil after `stopRecording` is called") {
+                consumer.startRecording("11")
+                consumer.stopRecording()
+                expect(consumer.environmentId).to(beNil())
+            }
+
+            it("returns a value when Heap is recording") {
+                consumer.startRecording("11")
+                expect(consumer.environmentId).to(equal("11"))
+            }
+        }
 
         describe("EventConsumer.userId") {
             
