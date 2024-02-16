@@ -445,6 +445,10 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                         "version": "1.0.0",
                         "platform": "my platform",
                     ],
+                    "sourceProperties": [
+                        "a": 1,
+                        "b": "2",
+                    ],
                     "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
                     "pageviewKey": "1234",
                 ])
@@ -642,6 +646,10 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                         "version": "1.0.0",
                         "platform": "my platform",
                     ],
+                    "sourceProperties": [
+                        "a": 1,
+                        "b": "2",
+                    ],
                     "javascriptEpochTimestamp": timestamp.timeIntervalSince1970 * 1000,
                     "pageviewKey": "1234",
                 ])
@@ -658,6 +666,10 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                         $0.version = "1.0.0"
                         $0.platform = "my platform"
                     }),
+                    sourceProperties: [
+                        "a": .init(value: "1"),
+                        "b": .init(value: "2"),
+                    ],
                     interaction: .builtin(.change),
                     nodes: [
                         .with({

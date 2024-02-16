@@ -175,8 +175,9 @@ public class HeapBridgeSupport
         let callbackName = try getOptionalString(named: "callbackName", from: arguments, message: "HeapBridgeSupport.trackInteraction received an invalid callback name and will not complete the bridged method call.")
         let timestamp = try getOptionalTimestamp(arguments, methodName: "trackInteraction")
         let sourceInfo = try getOptionalSourceLibrary(arguments, methodName: "trackInteraction")
+        let sourceProperties = try getOptionalParameterDictionary(named: "sourceProperties", from: arguments, message: "trackInteraction")
         let pageview = try getOptionalPageview(from: arguments, methodName: "trackInteraction")
-        eventConsumer.trackInteraction(interaction: interaction, nodes: nodes, callbackName: callbackName, timestamp: timestamp, sourceInfo: sourceInfo, pageview: pageview)
+        eventConsumer.trackInteraction(interaction: interaction, nodes: nodes, callbackName: callbackName, timestamp: timestamp, sourceInfo: sourceInfo, sourceProperties: sourceProperties, pageview: pageview)
         return nil
     }
     

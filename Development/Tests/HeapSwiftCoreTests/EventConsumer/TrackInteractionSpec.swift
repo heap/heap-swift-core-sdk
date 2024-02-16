@@ -260,6 +260,29 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                     
                     expect(node.accessibilityLabel).to(equal(expectedValue))
                 }
+                
+                it("sends source properties") {
+                    consumer.trackInteraction(interaction: .click, nodes: [testNode], sourceProperties: [
+                        "a": 1,
+                        "b": "2",
+                    ])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload(message: "PRECONDITION: startRecording should have created a user.")
+                    guard
+                        let message = try dataStore.getPendingMessages(for: user, sessionId: originalSessionId).last
+                    else { throw TestFailure("PRECONDITION: Could not get interaction") }
+                    
+                    message.expectInteractionEventMessage(
+                        user: user,
+                        sourceProperties: [
+                            "a": .init(value: "1"),
+                            "b": .init(value: "2"),
+                        ],
+                        interaction: .builtin(.click),
+                        nodes: [node(testNode)],
+                        callbackName: nil
+                    )
+                }
             }
             
             context("field options are set") {

@@ -56,8 +56,12 @@ public class Heap: NSObject, HeapProtocol {
         return consumer.uncommittedInteractionEvent(timestamp: timestamp, sourceInfo: sourceInfo, pageview: pageview)
     }
     
+    public func trackInteraction(interaction: Interaction, nodes: [InteractionNode], callbackName: String? = nil, timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, sourceProperties: [String: HeapPropertyValue] = [:], pageview: Pageview? = nil) {
+        consumer.trackInteraction(interaction: interaction, nodes: nodes, callbackName: callbackName, timestamp: timestamp, sourceInfo: sourceInfo, sourceProperties: sourceProperties, pageview: pageview)
+    }
+    
     public func trackInteraction(interaction: Interaction, nodes: [InteractionNode], callbackName: String? = nil, timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, pageview: Pageview? = nil) {
-        consumer.trackInteraction(interaction: interaction, nodes: nodes, callbackName: callbackName, timestamp: timestamp, sourceInfo: sourceInfo, pageview: pageview)
+        trackInteraction(interaction: interaction, nodes: nodes, callbackName: callbackName, timestamp: timestamp, sourceInfo: sourceInfo, sourceProperties: [:], pageview: pageview)
     }
 
     @objc

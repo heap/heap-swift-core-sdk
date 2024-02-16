@@ -280,12 +280,16 @@ extension EventConsumer {
     }
     
     func trackInteraction(interaction: Interaction, nodes: [InteractionNode], callbackName: String? = nil, timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, pageview: Pageview? = nil) {
-
+        trackInteraction(interaction: interaction, nodes: nodes, callbackName: callbackName, timestamp: timestamp, sourceInfo: sourceInfo, sourceProperties: [:], pageview: pageview)
+    }
+    
+    func trackInteraction(interaction: Interaction, nodes: [InteractionNode], callbackName: String? = nil, timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, sourceProperties: [String: HeapPropertyValue] = [:], pageview: Pageview? = nil) {
         guard let event = uncommittedInteractionEvent(timestamp: timestamp, sourceInfo: sourceInfo, pageview: pageview) else { return }
 
         event.kind = interaction
         event.nodes = nodes
         event.callbackName = callbackName
+        event.sourceProperties = sourceProperties
         
         event.commit()
     }

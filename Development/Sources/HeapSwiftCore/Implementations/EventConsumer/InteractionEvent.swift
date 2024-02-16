@@ -13,6 +13,7 @@ class InteractionEvent: InteractionEventProtocol {
     private var _kind: Interaction?
     private var _callbackName: String? = nil
     private var _nodes: [InteractionNode] = []
+    private var _sourceProperties: [String: String] = [:]
     
     init(pendingEvent: PendingEvent, fieldSettings: FieldSettings) {
         self.pendingEvent = pendingEvent
@@ -62,6 +63,20 @@ class InteractionEvent: InteractionEventProtocol {
         }
     }
     
+    public var sourceProperties: [String: HeapPropertyValue] {
+        get {
+            _lock.wait()
+            defer { _lock.signal() }
+            return _sourceProperties
+        }
+
+        set {
+            _lock.wait()
+            defer { _lock.signal() }
+            _sourceProperties = newValue.sanitized(methodName: "InteractionEvent.sourceProperties")
+        }
+    }
+    
     func commit() {
 
         let kind: Interaction
@@ -81,6 +96,7 @@ class InteractionEvent: InteractionEventProtocol {
                 .prefix(fieldSettings.maxInteractionNodeCount)
                 .map({ $0.node(with: fieldSettings) })
             $0.setIfNotNil(\.callbackName, callbackName)
+            $0.sourceProperties = sourceProperties.mapValues(\.protoValue)
         })))
         
         if let firstNode = nodes.first {

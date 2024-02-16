@@ -110,13 +110,17 @@ extension Message {
         return event
     }
     
-    func expectInteractionEventMessage(file: StaticString = #file, line: UInt = #line, user: UserToUpload, timestamp: Date? = nil, hasSourceLibrary: Bool = false, sourceLibrary: LibraryInfo? = nil, eventProperties: [String: Value]? = nil, interaction: EventInteraction.OneOf_Kind, nodes: [ElementNode], callbackName: String?, pageviewMessage: Message? = nil) {
+    func expectInteractionEventMessage(file: StaticString = #file, line: UInt = #line, user: UserToUpload, timestamp: Date? = nil, hasSourceLibrary: Bool = false, sourceLibrary: LibraryInfo? = nil, sourceProperties: [String: Value]? = nil, eventProperties: [String: Value]? = nil, interaction: EventInteraction.OneOf_Kind, nodes: [ElementNode], callbackName: String?, pageviewMessage: Message? = nil) {
         
         guard case let .event(event) = kind else {
             XCTFail("Expected a event message, got \(String(describing: kind))", file: file, line: line)
             return
         }
         validateBaseMessage(file: file, line: line, user: user, id: nil, timestamp: timestamp, hasSourceLibrary: hasSourceLibrary, sourceLibrary: sourceLibrary, eventProperties: eventProperties)
+        
+        if let sourceProperties = sourceProperties {
+            expect(file: file, line: line, sourceProperties).to(equal(sourceProperties), description: "Source properties do not match")
+        }
 
         expect(file: file, line: line, event.interaction.kind).to(equal(interaction), description: "The event does not match expected Kind")
         expect(file: file, line: line, event.interaction.nodes).to(equal(nodes), description: "The event does not match expected Nodes")
