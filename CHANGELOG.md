@@ -13,6 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1]
+
+### Fixed
+
+- Native track calls now preserve session expiration dates set by heap.js when using
+  `Heap.attachWebView`.
+
+### Added
+
+- Added `Heap.shared.environmentId`, which returns the current environment ID or `nil` if not
+  recording.
+- Added `sourceProperties` to `trackInteraction` (for use by autocapture frameworks).
+
 ## [0.5.0]
 
 ### Fixed
@@ -139,7 +152,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
-[Unreleased]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.0...main
+[Unreleased]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.1...main
+[0.5.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.3.1...0.4.0
 [0.3.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.3.0...0.3.1
