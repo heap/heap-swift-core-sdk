@@ -342,7 +342,7 @@ test_interfaces_podspec: interfaces_xcframework
 
 deploy_core_podspec:
 	@echo "--- Deploying HeapSwiftCore.podspec"
-	pod trunk push HeapSwiftCore.podspec
+	pod trunk push --allow-warnings HeapSwiftCore.podspec
 
 deploy_interfaces_podspec:
 	@echo "--- Deploying HeapSwiftCoreInterfaces.podspec"

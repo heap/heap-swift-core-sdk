@@ -13,6 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2]
+
+### Added
+
+- Added `enableInteractionReferencingPropertyCapture`, which will be used in heap-ios-autocapture
+  0.5.0 and later to enable "Target Ivar" capture.  The feature is off-by-default to avoid edge
+  conditions that can cause Swift's `Mirror` functionality to crash.
+
+### Deprecated
+
+- Deprecated `disableInteractionReferencingPropertyCapture` in favor of off-by-default behavior.
+
 ## [0.5.1]
 
 ### Fixed
@@ -152,7 +164,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
-[Unreleased]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.1...main
+[Unreleased]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.2...main
+[0.5.2]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.1...0.5.2
 [0.5.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.3.1...0.4.0

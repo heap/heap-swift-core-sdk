@@ -21,7 +21,7 @@ pod repo update trunk
 
 echo "--- Linting ${POD_NAME}.podspec"
 
-pod lib lint "${POD_NAME}.podspec"
+pod lib lint --allow-warnings "${POD_NAME}.podspec"
 # WARNING: The above line fails on more recent versions of Xcode because they
 # broke macOS 10.9 support, which is what SwiftProtobuf specifies.
 
