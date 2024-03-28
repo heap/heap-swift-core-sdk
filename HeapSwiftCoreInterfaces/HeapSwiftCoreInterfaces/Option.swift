@@ -86,19 +86,24 @@ public extension Option {
     static let messageBatchMessageLimit = register(name: "messageBatchMessageLimit", type: .integer)
     static let captureAdvertiserId = register(name: "captureAdvertiserId", type: .boolean)
     static let captureVendorId = register(name: "captureVendorId", type: .boolean)
+    static let startSessionImmediately = register(name: "startSessionImmediately", type: .boolean)
+    static let clearEventPropertiesOnNewUser = register(name: "clearEventPropertiesOnNewUser", type: .boolean)
 }
 
 @objc
 public extension Option {
     static let disablePageviewAutocapture = register(name: "disablePageviewAutocapture", type: .boolean)
     static let disablePageviewTitleCapture = register(name: "disablePageviewTitleCapture", type: .boolean)
+    
     static let disableInteractionAutocapture = register(name: "disableInteractionAutocapture", type: .boolean)
     static let disableInteractionTextCapture = register(name: "disableInteractionTextCapture", type: .boolean)
-    static let startSessionImmediately = register(name: "startSessionImmediately", type: .boolean)
     static let disableInteractionAccessibilityLabelCapture = register(name: "disableInteractionAccessibilityLabelCapture", type: .boolean)
+    
+    @available(*, deprecated, message: "This feature is off by default in heap-ios-autocapture 0.5.0 and later. Use enableInteractionReferencingPropertyCapture to enable it.")
     static let disableInteractionReferencingPropertyCapture = register(name: "disableInteractionReferencingPropertyCapture", type: .boolean)
+    static let enableInteractionReferencingPropertyCapture = register(name: "enableInteractionReferencingPropertyCapture", type: .boolean)
+    
     static let interactionHierarchyCaptureLimit = register(name: "interactionHierarchyCaptureLimit", type: .integer)
-    static let clearEventPropertiesOnNewUser = register(name: "clearEventPropertiesOnNewUser", type: .boolean)
 }
 
 extension Option {
@@ -126,6 +131,7 @@ extension Option {
             Option.startSessionImmediately,
             Option.disableInteractionAccessibilityLabelCapture,
             Option.disableInteractionReferencingPropertyCapture,
+            Option.enableInteractionReferencingPropertyCapture,
             Option.interactionHierarchyCaptureLimit,
             Option.clearEventPropertiesOnNewUser,
         ]
