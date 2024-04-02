@@ -68,6 +68,15 @@ struct CoreSdk_V1_UserProperties {
   /// Clears the value of `library`. Subsequent reads from it will return its default value.
   mutating func clearLibrary() {_uniqueStorage()._library = nil}
 
+  var initialSessionInfo: CoreSdk_V1_SessionInfo {
+    get {return _storage._initialSessionInfo ?? CoreSdk_V1_SessionInfo()}
+    set {_uniqueStorage()._initialSessionInfo = newValue}
+  }
+  /// Returns true if `initialSessionInfo` has been explicitly set.
+  var hasInitialSessionInfo: Bool {return _storage._initialSessionInfo != nil}
+  /// Clears the value of `initialSessionInfo`. Subsequent reads from it will return its default value.
+  mutating func clearInitialSessionInfo() {_uniqueStorage()._initialSessionInfo = nil}
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -92,6 +101,7 @@ extension CoreSdk_V1_UserProperties: SwiftProtobuf.Message, SwiftProtobuf._Messa
     4: .standard(proto: "initial_device"),
     5: .standard(proto: "initial_application"),
     6: .same(proto: "library"),
+    7: .standard(proto: "initial_session_info"),
   ]
 
   fileprivate class _StorageClass {
@@ -101,6 +111,7 @@ extension CoreSdk_V1_UserProperties: SwiftProtobuf.Message, SwiftProtobuf._Messa
     var _initialDevice: CoreSdk_V1_DeviceInfo? = nil
     var _initialApplication: CoreSdk_V1_ApplicationInfo? = nil
     var _library: CoreSdk_V1_LibraryInfo? = nil
+    var _initialSessionInfo: CoreSdk_V1_SessionInfo? = nil
 
     static let defaultInstance = _StorageClass()
 
@@ -113,6 +124,7 @@ extension CoreSdk_V1_UserProperties: SwiftProtobuf.Message, SwiftProtobuf._Messa
       _initialDevice = source._initialDevice
       _initialApplication = source._initialApplication
       _library = source._library
+      _initialSessionInfo = source._initialSessionInfo
     }
   }
 
@@ -137,6 +149,7 @@ extension CoreSdk_V1_UserProperties: SwiftProtobuf.Message, SwiftProtobuf._Messa
         case 4: try { try decoder.decodeSingularMessageField(value: &_storage._initialDevice) }()
         case 5: try { try decoder.decodeSingularMessageField(value: &_storage._initialApplication) }()
         case 6: try { try decoder.decodeSingularMessageField(value: &_storage._library) }()
+        case 7: try { try decoder.decodeSingularMessageField(value: &_storage._initialSessionInfo) }()
         default: break
         }
       }
@@ -167,6 +180,9 @@ extension CoreSdk_V1_UserProperties: SwiftProtobuf.Message, SwiftProtobuf._Messa
       try { if let v = _storage._library {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
       } }()
+      try { if let v = _storage._initialSessionInfo {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
+      } }()
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -182,6 +198,7 @@ extension CoreSdk_V1_UserProperties: SwiftProtobuf.Message, SwiftProtobuf._Messa
         if _storage._initialDevice != rhs_storage._initialDevice {return false}
         if _storage._initialApplication != rhs_storage._initialApplication {return false}
         if _storage._library != rhs_storage._library {return false}
+        if _storage._initialSessionInfo != rhs_storage._initialSessionInfo {return false}
         return true
       }
       if !storagesAreEqual {return false}

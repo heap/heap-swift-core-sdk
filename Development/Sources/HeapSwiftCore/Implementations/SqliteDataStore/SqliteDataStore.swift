@@ -1,18 +1,6 @@
 import Foundation
 import HeapSwiftCoreInterfaces
 
-extension OperationQueue {
-    
-    private static func createSqliteDataStoreQueue() -> OperationQueue {
-        let queue = OperationQueue()
-        queue.name = "io.heap.SqliteDataStore"
-        queue.maxConcurrentOperationCount = 1
-        return queue
-    }
-    
-    static let sqliteDataStoreQueue = createSqliteDataStoreQueue()
-}
-
 extension Operation {
     static func forSqlite(connection: SqliteConnection, block: @escaping (_ connection: SqliteConnection) throws -> Void) -> Operation {
         BlockOperation {
@@ -31,7 +19,7 @@ class SqliteDataStore: DataStoreProtocol {
     internal let dataStoreSettings: DataStoreSettings
     
     func performOnSqliteQueue(waitUntilFinished: Bool = false, block: @escaping (_ connection: SqliteConnection) throws -> Void) {
-        OperationQueue.sqliteDataStoreQueue.addOperations([
+        OperationQueue.dataStore.addOperations([
             .forSqlite(connection: connection, block: block),
         ], waitUntilFinished: waitUntilFinished)
     }

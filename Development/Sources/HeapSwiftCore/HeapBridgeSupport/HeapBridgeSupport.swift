@@ -13,7 +13,7 @@ public protocol HeapBridgeSupportDelegate: AnyObject {
 public class HeapBridgeSupport
 {
     let pageviewStore = BridgedPageviewStore()
-    let callbackStore = CallbackStore()
+    let callbackStore = CallbackStore<Any?>()
     
     let eventConsumer: any InternalHeapProtocol
     let uploader: any UploaderProtocol
@@ -114,7 +114,11 @@ public class HeapBridgeSupport
     }
     
     public func handleResult(callbackId: String, data: Any?, error: String?) {
-        callbackStore.dispatch(callbackId: callbackId, data: data, error: error)
+        if let error = error {
+            callbackStore.failure(callbackId: callbackId, error: error)
+        } else {
+            callbackStore.success(callbackId: callbackId, data: data)
+        }
     }
     
     func startRecording(arguments: [String: Any]) throws -> JSONEncodable? {
@@ -518,7 +522,7 @@ extension HeapBridgeSupport {
 
 extension HeapBridgeSupport: RuntimeBridge {
     
-    func invokeOnBridge(method: String, arguments: [String: AnyJSONEncodable], complete: @escaping Callback) {
+    func invokeOnBridge(method: String, arguments: [String: AnyJSONEncodable], complete: @escaping Callback<Any?>) {
         
         guard let delegate = delegate else {
             complete(.failure(.init(message: "No delegate")))

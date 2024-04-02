@@ -7,11 +7,13 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
     let stateManager: StateManager<StateStore>
     let delegateManager = DelegateManager()
     let notificationManager: NotificationManager
+    let transformPipeline: TransformPipeline
     
     init(stateStore: StateStore, dataStore: DataStore) {
         self.dataStore = dataStore
         self.stateManager = StateManager(stateStore: stateStore)
-        notificationManager = NotificationManager(delegateManager)
+        self.notificationManager = NotificationManager(delegateManager)
+        self.transformPipeline = TransformPipeline(dataStore: dataStore)
     }
     
     /// Performs actions as a result of state changes.
@@ -57,8 +59,8 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
             
             HeapLogger.shared.trace("Starting new session with session event:\n\(sessionMessage)\nPageview:\n\(pageviewMessage)")
 
-            dataStore.createSessionIfNeeded(with: sessionMessage)
-            dataStore.insertPendingMessage(pageviewMessage)
+            transformPipeline.createSessionIfNeeded(with: sessionMessage)
+            transformPipeline.insertPendingMessage(pageviewMessage)
         }
         
         if updateResults.outcomes.sessionRestored {
@@ -68,7 +70,7 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
         if updateResults.outcomes.versionChanged {
 
             let message = Message(forVersionChangeEventAt: timestamp, sourceLibrary: nil, in: state, previousVersion: updateResults.outcomes.lastObservedVersion)
-            dataStore.insertPendingMessage(message)
+            transformPipeline.insertPendingMessage(message)
         }
 
         if updateResults.outcomes.currentStarted {
@@ -204,7 +206,7 @@ extension EventConsumer {
         
         let message = Message(forPartialEventAt: timestamp, sourceLibrary: sourceLibrary, in: state)
         
-        let pendingEvent = PendingEvent(partialEventMessage: message, toBeCommittedTo: dataStore)
+        let pendingEvent = PendingEvent(partialEventMessage: message, toBeCommittedTo: transformPipeline)
         pendingEvent.setKind(.custom(name: event, properties: sanitizedProperties.mapValues(\.protoValue)))
         PageviewResolver.resolvePageviewInfo(requestedPageview: pageview, eventSourceName: sourceInfo?.name, timestamp: timestamp, delegates: delegateManager.current, state: state) {
             pendingEvent.setPageviewInfo($0)
@@ -242,7 +244,7 @@ extension EventConsumer {
         
         let message = Message(forPageviewWith: pageviewInfo, sourceLibrary: sourceLibrary, in: state)
         
-        dataStore.insertPendingMessage(message)
+        transformPipeline.insertPendingMessage(message)
         if let sourceName = sourceInfo?.name {
             HeapLogger.shared.debug("Tracked pageview from \(sourceName) on \(properties.componentOrClassName ?? "an unknown component") titled \"\(properties.title ?? "")\".")
         } else {
@@ -272,7 +274,7 @@ extension EventConsumer {
         let sourceLibrary = sourceInfo?.libraryInfo
 
         let message = Message(forPartialEventAt: timestamp, sourceLibrary: sourceLibrary, in: state)
-        let pendingEvent = PendingEvent(partialEventMessage: message, toBeCommittedTo: dataStore)
+        let pendingEvent = PendingEvent(partialEventMessage: message, toBeCommittedTo: transformPipeline)
         
         let interactionEvent = InteractionEvent(pendingEvent: pendingEvent, fieldSettings: state.fieldSettings)
 
@@ -488,6 +490,10 @@ extension EventConsumer {
     
     func removeRuntimeBridge(_ bridge: RuntimeBridge) {
         delegateManager.removeRuntimeBridge(bridge, currentState: stateManager.current)
+    }
+    
+    func addTransformer(_ transformer: any Transformer) {
+        transformPipeline.add(transformer)
     }
     
     /// This extends the current session if it matches the provided value.

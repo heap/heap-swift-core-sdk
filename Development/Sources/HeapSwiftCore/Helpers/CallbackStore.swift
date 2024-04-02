@@ -4,18 +4,23 @@ struct CallbackError: Error {
     let message: String
 }
 
-typealias CallbackResult = Result<Any?, CallbackError>
-typealias Callback = (CallbackResult) -> Void
+typealias CallbackResult<T> = Result<T, CallbackError>
+typealias Callback<T> = (CallbackResult<T>) -> Void
 
-class CallbackStore {
+/// This class is a token-based callback store with a watchdog timeout.
+///
+/// This class guarantees that the callback will be called exactly once and no later the provided
+/// timeout.  No attempt is made to signal to the original source that the timeout has expired, so
+/// it is up to the caller to determine the correct behavior.
+class CallbackStore<T> {
     
-    typealias Entry = (callback: Callback, timer: HeapTimer)
+    typealias Entry = (callback: Callback<T>, timer: HeapTimer)
     
     private var callbacks: [String: Entry] = [:]
     
     var callbackIdsForCallbackQueueOnly: [String] { Array(callbacks.keys) }
     
-    func add(timeout: TimeInterval, callback: @escaping Callback) -> String {
+    func add(timeout: TimeInterval, callback: @escaping Callback<T>) -> String {
         
         let callbackId = UUID().uuidString
         
@@ -41,7 +46,7 @@ class CallbackStore {
         
     }
     
-    private func resolve(callbackId: String, result: CallbackResult) {
+    private func resolve(callbackId: String, result: CallbackResult<T>) {
         guard let (callback, timer) = callbacks[callbackId] else { return }
         callbacks[callbackId] = nil
         
@@ -49,17 +54,15 @@ class CallbackStore {
         callback(result)
     }
     
-    func dispatch(callbackId: String, data: Any?, error: String?) {
-        
-        let result: CallbackResult
-        if let error = error {
-            result = .failure(.init(message: error))
-        } else {
-            result = .success(data)
-        }
-        
+    func success(callbackId: String, data: T) {
         OperationQueue.callback.addOperation {
-            self.resolve(callbackId: callbackId, result: result)
+            self.resolve(callbackId: callbackId, result: .success(data))
+        }
+    }
+    
+    func failure(callbackId: String, error: String) {
+        OperationQueue.callback.addOperation {
+            self.resolve(callbackId: callbackId, result: .failure(.init(message: error)))
         }
     }
 }

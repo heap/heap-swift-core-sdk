@@ -133,6 +133,10 @@ public class Heap: NSObject, HeapProtocol {
         consumer.removeRuntimeBridge(bridge)
     }
     
+    public func addTransformer(_ transformer: any Transformer) {
+        consumer.addTransformer(transformer)
+    }
+    
     /// The level of logging to be performed by the HeapLogger.
     @objc
     public var logLevel: LogLevel {

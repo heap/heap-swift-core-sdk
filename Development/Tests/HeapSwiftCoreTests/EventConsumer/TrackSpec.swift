@@ -235,15 +235,16 @@ final class EventConsumer_TrackSpec: HeapSpec {
                     // Disable logging for this test because it's a lot of messages and slows things down.
                     HeapLogger.shared.logLevel = .info
                     
+                    var threadFinished = false
                     Thread.detachNewThread {
                         expect(Thread.isMainThread).to(beFalse(), description: "PRECONDITION: Expected work to happen in a background queue")
                         for n in 1...1000 {
                             consumer.track("event-\(n)")
                         }
+                        threadFinished = true
                     }
                     
-                    // Background events dispatch tasks onto the main queue, so it needs a chance to process them.
-                    expect(try dataStore.getAllMessages()).toEventually(haveCount(1003))
+                    expect(threadFinished).toEventually(beTrue(), timeout: .seconds(3), description: "The background thread did not finish")
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
                     let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 1003)

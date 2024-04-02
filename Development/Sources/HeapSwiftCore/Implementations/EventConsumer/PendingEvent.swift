@@ -9,14 +9,17 @@ class PendingEvent {
     private var _needsKind: Bool = true
     private var _needsPageviewInfo: Bool = true
     private var _committed: Bool = false
-    private var dataStore: any DataStoreProtocol
+    private var transformPipeline: TransformPipeline
+    private let transformProcessor: TransformProcessor
     
-    init(partialEventMessage: Message, toBeCommittedTo dataStore: any DataStoreProtocol) {
+    init(partialEventMessage: Message, toBeCommittedTo transformPipeline: TransformPipeline) {
         self._eventMessage = partialEventMessage
-        self.dataStore = dataStore
+        self.transformPipeline = transformPipeline
+        self.transformProcessor = transformPipeline.processor(for: partialEventMessage)
         _needsKind = partialEventMessage.event.kind == nil
         _needsPageviewInfo = !partialEventMessage.hasPageviewInfo
         
+        transformProcessor.execute()
         onMainThread {
             self.setAppVisibilityState(.current)
         }
@@ -61,7 +64,7 @@ class PendingEvent {
         _lock.signal()
         
         if let message = message {
-            dataStore.insertPendingMessage(message)
+            transformPipeline.insertPendingMessage(message, processor: transformProcessor)
             HeapLogger.shared.trace("Committed event message:\n\(message)")
         }
     }

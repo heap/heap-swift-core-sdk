@@ -260,6 +260,190 @@ extension CoreSdk_V1_DeviceInfo.DeviceType: CaseIterable {
 
 #endif  // swift(>=4.2)
 
+/// SessionInfo sub-property definition
+struct CoreSdk_V1_SessionInfo {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// string id
+  var id: String {
+    get {return _storage._id}
+    set {_uniqueStorage()._id = newValue}
+  }
+
+  /// time of type google.protobuf.Timestamp
+  var time: SwiftProtobuf.Google_Protobuf_Timestamp {
+    get {return _storage._time ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+    set {_uniqueStorage()._time = newValue}
+  }
+  /// Returns true if `time` has been explicitly set.
+  var hasTime: Bool {return _storage._time != nil}
+  /// Clears the value of `time`. Subsequent reads from it will return its default value.
+  mutating func clearTime() {_uniqueStorage()._time = nil}
+
+  /// referrer
+  var referrer: String {
+    get {return _storage._referrer ?? String()}
+    set {_uniqueStorage()._referrer = newValue}
+  }
+  /// Returns true if `referrer` has been explicitly set.
+  var hasReferrer: Bool {return _storage._referrer != nil}
+  /// Clears the value of `referrer`. Subsequent reads from it will return its default value.
+  mutating func clearReferrer() {_uniqueStorage()._referrer = nil}
+
+  /// search_keyword
+  var searchKeyword: String {
+    get {return _storage._searchKeyword ?? String()}
+    set {_uniqueStorage()._searchKeyword = newValue}
+  }
+  /// Returns true if `searchKeyword` has been explicitly set.
+  var hasSearchKeyword: Bool {return _storage._searchKeyword != nil}
+  /// Clears the value of `searchKeyword`. Subsequent reads from it will return its default value.
+  mutating func clearSearchKeyword() {_uniqueStorage()._searchKeyword = nil}
+
+  /// utm
+  var utm: CoreSdk_V1_Utm {
+    get {return _storage._utm ?? CoreSdk_V1_Utm()}
+    set {_uniqueStorage()._utm = newValue}
+  }
+  /// Returns true if `utm` has been explicitly set.
+  var hasUtm: Bool {return _storage._utm != nil}
+  /// Clears the value of `utm`. Subsequent reads from it will return its default value.
+  mutating func clearUtm() {_uniqueStorage()._utm = nil}
+
+  /// PageviewInfo object
+  var initialPageviewInfo: CoreSdk_V1_PageviewInfo {
+    get {return _storage._initialPageviewInfo ?? CoreSdk_V1_PageviewInfo()}
+    set {_uniqueStorage()._initialPageviewInfo = newValue}
+  }
+  /// Returns true if `initialPageviewInfo` has been explicitly set.
+  var hasInitialPageviewInfo: Bool {return _storage._initialPageviewInfo != nil}
+  /// Clears the value of `initialPageviewInfo`. Subsequent reads from it will return its default value.
+  mutating func clearInitialPageviewInfo() {_uniqueStorage()._initialPageviewInfo = nil}
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+
+  fileprivate var _storage = _StorageClass.defaultInstance
+}
+
+/// Pageview property defintion
+struct CoreSdk_V1_PageviewInfo {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Pageview id. (heapjs:v)
+  var id: String = String()
+
+  /// heapjs:ts
+  var time: SwiftProtobuf.Google_Protobuf_Timestamp {
+    get {return _time ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+    set {_time = newValue}
+  }
+  /// Returns true if `time` has been explicitly set.
+  var hasTime: Bool {return self._time != nil}
+  /// Clears the value of `time`. Subsequent reads from it will return its default value.
+  mutating func clearTime() {self._time = nil}
+
+  /// View controller, activity, ReactNative control name
+  var componentOrClassName: String {
+    get {return _componentOrClassName ?? String()}
+    set {_componentOrClassName = newValue}
+  }
+  /// Returns true if `componentOrClassName` has been explicitly set.
+  var hasComponentOrClassName: Bool {return self._componentOrClassName != nil}
+  /// Clears the value of `componentOrClassName`. Subsequent reads from it will return its default value.
+  mutating func clearComponentOrClassName() {self._componentOrClassName = nil}
+
+  /// Web page or view controller title
+  var title: String {
+    get {return _title ?? String()}
+    set {_title = newValue}
+  }
+  /// Returns true if `title` has been explicitly set.
+  var hasTitle: Bool {return self._title != nil}
+  /// Clears the value of `title`. Subsequent reads from it will return its default value.
+  mutating func clearTitle() {self._title = nil}
+
+  /// Web page URL
+  var url: CoreSdk_V1_PageviewInfo.Url {
+    get {return _url ?? CoreSdk_V1_PageviewInfo.Url()}
+    set {_url = newValue}
+  }
+  /// Returns true if `url` has been explicitly set.
+  var hasURL: Bool {return self._url != nil}
+  /// Clears the value of `url`. Subsequent reads from it will return its default value.
+  mutating func clearURL() {self._url = nil}
+
+  /// Source-specific properties
+  var sourceProperties: Dictionary<String,CoreSdk_V1_Value> = [:]
+
+  /// heapjs:pr
+  var previousPage: String {
+    get {return _previousPage ?? String()}
+    set {_previousPage = newValue}
+  }
+  /// Returns true if `previousPage` has been explicitly set.
+  var hasPreviousPage: Bool {return self._previousPage != nil}
+  /// Clears the value of `previousPage`. Subsequent reads from it will return its default value.
+  mutating func clearPreviousPage() {self._previousPage = nil}
+
+  /// custom pageview properties (heapjs:k)
+  var properties: Dictionary<String,CoreSdk_V1_Value> = [:]
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  /// Url message definition
+  struct Url {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var domain: String = String()
+
+    var path: String = String()
+
+    var query: String = String()
+
+    var hash: String = String()
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+  }
+
+  init() {}
+
+  fileprivate var _time: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
+  fileprivate var _componentOrClassName: String? = nil
+  fileprivate var _title: String? = nil
+  fileprivate var _url: CoreSdk_V1_PageviewInfo.Url? = nil
+  fileprivate var _previousPage: String? = nil
+}
+
+struct CoreSdk_V1_Utm {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var source: String = String()
+
+  var medium: String = String()
+
+  var term: String = String()
+
+  var content: String = String()
+
+  var campaign: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
 #if swift(>=5.5) && canImport(_Concurrency)
 extension CoreSdk_V1_Value: @unchecked Sendable {}
 extension CoreSdk_V1_LibraryInfo: @unchecked Sendable {}
@@ -267,6 +451,10 @@ extension CoreSdk_V1_ApplicationInfo: @unchecked Sendable {}
 extension CoreSdk_V1_UserAgentClientHintsInfo: @unchecked Sendable {}
 extension CoreSdk_V1_DeviceInfo: @unchecked Sendable {}
 extension CoreSdk_V1_DeviceInfo.DeviceType: @unchecked Sendable {}
+extension CoreSdk_V1_SessionInfo: @unchecked Sendable {}
+extension CoreSdk_V1_PageviewInfo: @unchecked Sendable {}
+extension CoreSdk_V1_PageviewInfo.Url: @unchecked Sendable {}
+extension CoreSdk_V1_Utm: @unchecked Sendable {}
 #endif  // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -539,4 +727,296 @@ extension CoreSdk_V1_DeviceInfo.DeviceType: SwiftProtobuf._ProtoNameProviding {
     5: .same(proto: "DEVICE_TYPE_WATCH"),
     6: .same(proto: "DEVICE_TYPE_AUTOMOTIVE"),
   ]
+}
+
+extension CoreSdk_V1_SessionInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".SessionInfo"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "id"),
+    2: .same(proto: "time"),
+    3: .same(proto: "referrer"),
+    4: .standard(proto: "search_keyword"),
+    5: .same(proto: "utm"),
+    6: .standard(proto: "initial_pageview_info"),
+  ]
+
+  fileprivate class _StorageClass {
+    var _id: String = String()
+    var _time: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
+    var _referrer: String? = nil
+    var _searchKeyword: String? = nil
+    var _utm: CoreSdk_V1_Utm? = nil
+    var _initialPageviewInfo: CoreSdk_V1_PageviewInfo? = nil
+
+    static let defaultInstance = _StorageClass()
+
+    private init() {}
+
+    init(copying source: _StorageClass) {
+      _id = source._id
+      _time = source._time
+      _referrer = source._referrer
+      _searchKeyword = source._searchKeyword
+      _utm = source._utm
+      _initialPageviewInfo = source._initialPageviewInfo
+    }
+  }
+
+  fileprivate mutating func _uniqueStorage() -> _StorageClass {
+    if !isKnownUniquelyReferenced(&_storage) {
+      _storage = _StorageClass(copying: _storage)
+    }
+    return _storage
+  }
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    _ = _uniqueStorage()
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      while let fieldNumber = try decoder.nextFieldNumber() {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch fieldNumber {
+        case 1: try { try decoder.decodeSingularStringField(value: &_storage._id) }()
+        case 2: try { try decoder.decodeSingularMessageField(value: &_storage._time) }()
+        case 3: try { try decoder.decodeSingularStringField(value: &_storage._referrer) }()
+        case 4: try { try decoder.decodeSingularStringField(value: &_storage._searchKeyword) }()
+        case 5: try { try decoder.decodeSingularMessageField(value: &_storage._utm) }()
+        case 6: try { try decoder.decodeSingularMessageField(value: &_storage._initialPageviewInfo) }()
+        default: break
+        }
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
+      if !_storage._id.isEmpty {
+        try visitor.visitSingularStringField(value: _storage._id, fieldNumber: 1)
+      }
+      try { if let v = _storage._time {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+      } }()
+      try { if let v = _storage._referrer {
+        try visitor.visitSingularStringField(value: v, fieldNumber: 3)
+      } }()
+      try { if let v = _storage._searchKeyword {
+        try visitor.visitSingularStringField(value: v, fieldNumber: 4)
+      } }()
+      try { if let v = _storage._utm {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+      } }()
+      try { if let v = _storage._initialPageviewInfo {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
+      } }()
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: CoreSdk_V1_SessionInfo, rhs: CoreSdk_V1_SessionInfo) -> Bool {
+    if lhs._storage !== rhs._storage {
+      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
+        let _storage = _args.0
+        let rhs_storage = _args.1
+        if _storage._id != rhs_storage._id {return false}
+        if _storage._time != rhs_storage._time {return false}
+        if _storage._referrer != rhs_storage._referrer {return false}
+        if _storage._searchKeyword != rhs_storage._searchKeyword {return false}
+        if _storage._utm != rhs_storage._utm {return false}
+        if _storage._initialPageviewInfo != rhs_storage._initialPageviewInfo {return false}
+        return true
+      }
+      if !storagesAreEqual {return false}
+    }
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension CoreSdk_V1_PageviewInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".PageviewInfo"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "id"),
+    2: .same(proto: "time"),
+    3: .standard(proto: "component_or_class_name"),
+    4: .same(proto: "title"),
+    5: .same(proto: "url"),
+    6: .standard(proto: "source_properties"),
+    7: .standard(proto: "previous_page"),
+    8: .same(proto: "properties"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.id) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._time) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self._componentOrClassName) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self._title) }()
+      case 5: try { try decoder.decodeSingularMessageField(value: &self._url) }()
+      case 6: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,CoreSdk_V1_Value>.self, value: &self.sourceProperties) }()
+      case 7: try { try decoder.decodeSingularStringField(value: &self._previousPage) }()
+      case 8: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,CoreSdk_V1_Value>.self, value: &self.properties) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if !self.id.isEmpty {
+      try visitor.visitSingularStringField(value: self.id, fieldNumber: 1)
+    }
+    try { if let v = self._time {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try { if let v = self._componentOrClassName {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 3)
+    } }()
+    try { if let v = self._title {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 4)
+    } }()
+    try { if let v = self._url {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+    } }()
+    if !self.sourceProperties.isEmpty {
+      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,CoreSdk_V1_Value>.self, value: self.sourceProperties, fieldNumber: 6)
+    }
+    try { if let v = self._previousPage {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 7)
+    } }()
+    if !self.properties.isEmpty {
+      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,CoreSdk_V1_Value>.self, value: self.properties, fieldNumber: 8)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: CoreSdk_V1_PageviewInfo, rhs: CoreSdk_V1_PageviewInfo) -> Bool {
+    if lhs.id != rhs.id {return false}
+    if lhs._time != rhs._time {return false}
+    if lhs._componentOrClassName != rhs._componentOrClassName {return false}
+    if lhs._title != rhs._title {return false}
+    if lhs._url != rhs._url {return false}
+    if lhs.sourceProperties != rhs.sourceProperties {return false}
+    if lhs._previousPage != rhs._previousPage {return false}
+    if lhs.properties != rhs.properties {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension CoreSdk_V1_PageviewInfo.Url: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = CoreSdk_V1_PageviewInfo.protoMessageName + ".Url"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "domain"),
+    2: .same(proto: "path"),
+    3: .same(proto: "query"),
+    4: .same(proto: "hash"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.domain) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.path) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.query) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self.hash) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.domain.isEmpty {
+      try visitor.visitSingularStringField(value: self.domain, fieldNumber: 1)
+    }
+    if !self.path.isEmpty {
+      try visitor.visitSingularStringField(value: self.path, fieldNumber: 2)
+    }
+    if !self.query.isEmpty {
+      try visitor.visitSingularStringField(value: self.query, fieldNumber: 3)
+    }
+    if !self.hash.isEmpty {
+      try visitor.visitSingularStringField(value: self.hash, fieldNumber: 4)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: CoreSdk_V1_PageviewInfo.Url, rhs: CoreSdk_V1_PageviewInfo.Url) -> Bool {
+    if lhs.domain != rhs.domain {return false}
+    if lhs.path != rhs.path {return false}
+    if lhs.query != rhs.query {return false}
+    if lhs.hash != rhs.hash {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension CoreSdk_V1_Utm: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".Utm"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "source"),
+    2: .same(proto: "medium"),
+    3: .same(proto: "term"),
+    4: .same(proto: "content"),
+    5: .same(proto: "campaign"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.source) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.medium) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.term) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self.content) }()
+      case 5: try { try decoder.decodeSingularStringField(value: &self.campaign) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.source.isEmpty {
+      try visitor.visitSingularStringField(value: self.source, fieldNumber: 1)
+    }
+    if !self.medium.isEmpty {
+      try visitor.visitSingularStringField(value: self.medium, fieldNumber: 2)
+    }
+    if !self.term.isEmpty {
+      try visitor.visitSingularStringField(value: self.term, fieldNumber: 3)
+    }
+    if !self.content.isEmpty {
+      try visitor.visitSingularStringField(value: self.content, fieldNumber: 4)
+    }
+    if !self.campaign.isEmpty {
+      try visitor.visitSingularStringField(value: self.campaign, fieldNumber: 5)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: CoreSdk_V1_Utm, rhs: CoreSdk_V1_Utm) -> Bool {
+    if lhs.source != rhs.source {return false}
+    if lhs.medium != rhs.medium {return false}
+    if lhs.term != rhs.term {return false}
+    if lhs.content != rhs.content {return false}
+    if lhs.campaign != rhs.campaign {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }

@@ -46,7 +46,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     var environmentStates: [String: EnvironmentState] = [:]
 
     func loadState(for environmentId: String) -> EnvironmentState {
-        OperationQueue.inMemoryDataStore.addOperationAndWait { [self] in
+        OperationQueue.dataStore.addOperationAndWait { [self] in
             if let state = environmentStates[environmentId] {
                 return state
             }
@@ -58,7 +58,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
 
     func save(_ environmentState: EnvironmentState) {
-        OperationQueue.inMemoryDataStore.addOperation {
+        OperationQueue.dataStore.addOperation {
             self.environmentStates[environmentState.envID] = environmentState
         }
     }
@@ -96,7 +96,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
 
     func createNewUserIfNeeded(environmentId: String, userId: String, identity: String?, creationDate: Date) {
-        OperationQueue.inMemoryDataStore.addOperation { [self] in
+        OperationQueue.dataStore.addOperation { [self] in
             with(environmentId: environmentId) {
                 if $0.users[userId] == nil {
                     $0.users[userId] = .init(id: userId, identity: identity, creationDate: creationDate)
@@ -107,7 +107,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
 
     func setIdentityIfNull(environmentId: String, userId: String, identity: String) {
-        OperationQueue.inMemoryDataStore.addOperation { [self] in
+        OperationQueue.dataStore.addOperation { [self] in
             do {
                 try with(environmentId: environmentId, userId: userId) {
                     if $0.identity == nil {
@@ -121,7 +121,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
 
     func insertOrUpdateUserProperty(environmentId: String, userId: String, name: String, value: String) {
-        OperationQueue.inMemoryDataStore.addOperation { [self] in
+        OperationQueue.dataStore.addOperation { [self] in
             do {
                 try with(environmentId: environmentId, userId: userId) {
                     if $0.userProperties[name]?.value != value {
@@ -149,7 +149,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
     
     func createSessionIfNeeded(with message: Message) {
-        OperationQueue.inMemoryDataStore.addOperation { [self] in
+        OperationQueue.dataStore.addOperation { [self] in
             do {
                 let sessionId = message.sessionInfo.id
                 var sessionInserted = false
@@ -174,7 +174,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
 
     func insertPendingMessage(_ message: Message) {
-        OperationQueue.inMemoryDataStore.addOperation { [self] in
+        OperationQueue.dataStore.addOperation { [self] in
             do {
                 let data = try message.serializedData()
                 guard self.dataStoreSettings.isWithinMessageSizeLimit(data) else { return }
@@ -189,7 +189,16 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
 
     func usersToUpload() -> [UserToUpload] {
-        OperationQueue.inMemoryDataStore.addOperationAndWait { [self] in
+        // Since the `transform` queue pushes messages onto the `dataStore` queue, it introduces an
+        // unpredictable gap between when an event is tracked and when it lands in the `dataStore`
+        // queue.  This is expected and works fine in production, but makes testing a lot harder.
+        //
+        // To overcome this, the synchronous methods of `InMemoryDataStore` first block on the
+        // `transform` queue.  This ensures all queued messages make it into the `dataStore` queue
+        // before reading from it.
+        OperationQueue.transform.waitUntilAllOperationsAreFinished()
+        
+        return OperationQueue.dataStore.addOperationAndWait { [self] in
             environments.flatMap({ (environmentId, environment) in
                 environment.users.map({ (userId, user) in
                     UserToUpload(environmentId: environmentId,
@@ -205,7 +214,10 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
 
     func getPendingEncodedMessages(environmentId: String, userId: String, sessionId: String, messageLimit: Int, byteLimit: Int) -> [(identifier: MessageIdentifier, payload: Data)] {
-        OperationQueue.inMemoryDataStore.addOperationAndWait { [self] in
+        // See the explanation for this call in `usersToUpload`.
+        OperationQueue.transform.waitUntilAllOperationsAreFinished()
+        
+        return OperationQueue.dataStore.addOperationAndWait { [self] in
             var messages: [(MessageIdentifier, Data)] = []
             
             do {
@@ -228,7 +240,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
 
     func setHasSentInitialUser(environmentId: String, userId: String) {
-        OperationQueue.inMemoryDataStore.addOperation { [self] in
+        OperationQueue.dataStore.addOperation { [self] in
             do {
                 try with(environmentId: environmentId, userId: userId) {
                     $0.hasUserBeenSent = true
@@ -240,7 +252,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
 
     func setHasSentIdentity(environmentId: String, userId: String) {
-        OperationQueue.inMemoryDataStore.addOperation { [self] in
+        OperationQueue.dataStore.addOperation { [self] in
             do {
                 try with(environmentId: environmentId, userId: userId) {
                     if $0.identity != nil {
@@ -254,7 +266,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
 
     func setHasSentUserProperty(environmentId: String, userId: String, name: String, value: String) {
-        OperationQueue.inMemoryDataStore.addOperation { [self] in
+        OperationQueue.dataStore.addOperation { [self] in
             do {
                 try with(environmentId: environmentId, userId: userId) {
                     if $0.userProperties[name]?.value == value {
@@ -268,7 +280,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
 
     func deleteSentMessages(_ identifiers: Set<MessageIdentifier>) {
-        OperationQueue.inMemoryDataStore.addOperation { [self] in
+        OperationQueue.dataStore.addOperation { [self] in
             environments = environments.mapValues({ environment in
                 var environment = environment
                 environment.users = environment.users.mapValues({ user in
@@ -288,7 +300,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
 
     func deleteUser(environmentId: String, userId: String) {
-        OperationQueue.inMemoryDataStore.addOperation { [self] in
+        OperationQueue.dataStore.addOperation { [self] in
             with(environmentId: environmentId) {
                 $0.users[userId] = nil
             }
@@ -296,7 +308,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
 
     func deleteSession(environmentId: String, userId: String, sessionId: String) {
-        OperationQueue.inMemoryDataStore.addOperation { [self] in
+        OperationQueue.dataStore.addOperation { [self] in
             do {
                 try with(environmentId: environmentId, userId: userId) {
                     $0.sessions[sessionId] = nil
@@ -308,7 +320,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
 
     func pruneOldData(activeEnvironmentId: String, activeUserId: String, activeSessionId: String, minLastMessageDate: Date, minUserCreationDate: Date) {
-        OperationQueue.inMemoryDataStore.addOperation { [self] in
+        OperationQueue.dataStore.addOperation { [self] in
             environments = environments.mapValues({ environment in
                 var environment = environment
                 environment.users = environment.users.compactMapValues({ user in

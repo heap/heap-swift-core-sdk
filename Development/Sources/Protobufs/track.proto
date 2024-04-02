@@ -8,12 +8,18 @@ import "common.proto";
 option java_package = "com.heap.core_sdk.v1";
 option go_package = "core_sdk/v1";
 
-message Utm {
-  string source = 1;
-  string medium = 2;
-  string term = 3;
-  string content = 4;
-  string campaign = 5;
+// contentsquare properties
+message CSProperties {
+  // project id
+  string cspid = 1;
+  // pageview id
+  string cspvid = 2;
+  // session number
+  string cssn = 3;
+  // timestamp
+  string csts = 4;
+  //user id
+  string csuu = 5;
 }
 
 // SessionReplayInfo sub-property
@@ -35,50 +41,6 @@ message SessionReplayInfo {
   google.protobuf.Timestamp time = 2;
   // includes values like site id, session id, etc
   map<string, Value> url_metadata = 3;
-}
-
-// SessionInfo sub-property definition
-message SessionInfo {
-  // string id
-  string id = 1;
-  // time of type google.protobuf.Timestamp
-  google.protobuf.Timestamp time = 2;
-  // referrer
-  optional string referrer = 3;
-  // search_keyword
-  optional string search_keyword = 4;
-  // utm
-  optional Utm utm = 5;
-  // PageviewInfo object
-  optional PageviewInfo initial_pageview_info = 6;
-}
-
-// Pageview property defintion
-message PageviewInfo {
-  // Url message definition
-  message Url {
-    string domain = 1;
-    string path = 2;
-    string query = 3;
-    string hash = 4;
-  }
-
-  // Pageview id. (heapjs:v)
-  string id = 1;
-  // heapjs:ts
-  google.protobuf.Timestamp time = 2;
-  // View controller, activity, ReactNative control name
-  optional string component_or_class_name = 3;
-  // Web page or view controller title
-  optional string title = 4;
-  // Web page URL
-  optional Url url = 5;
-  // Source-specific properties
-  map<string, Value> source_properties = 6;
-  // heapjs:pr
-  optional string previous_page = 7;
-  // custom pageview properties (heapjs:k)
-  map<string, Value> properties = 8;
 }
 
 // User property definition
@@ -183,6 +145,8 @@ message Event {
     string name = 1;
     // Properties from `track`.
     map<string, Value> properties = 2;
+    // Properties from custom client-side sources hjs:sProps
+    map<string, Value> source_properties = 3;
   }
 
   oneof kind {
@@ -208,7 +172,8 @@ message Message {
   string env_id = 2;
   // string user_id
   string user_id = 3;
-
+  // string identity
+  string identity = 19;
   // timestamp of type google.protobuf.Timestamp
   google.protobuf.Timestamp time = 4;
   // The library that implements base functionality.
@@ -246,6 +211,9 @@ message Message {
 
   // Components that are user visible at the time the message is fired.
   repeated ElementNode active_contexts = 18;
+
+   // contentsquare properties
+   CSProperties cs_properties = 20;
 }
 
 // message batch events container

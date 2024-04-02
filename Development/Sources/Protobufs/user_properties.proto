@@ -12,4 +12,5 @@ message UserProperties {
   DeviceInfo initial_device = 4;
   ApplicationInfo initial_application = 5;
   LibraryInfo library = 6;
+  SessionInfo initial_session_info = 7;
 }
