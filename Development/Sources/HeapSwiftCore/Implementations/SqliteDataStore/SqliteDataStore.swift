@@ -155,44 +155,27 @@ On Conflict (environmentId, userId, name) Do Update
 """, parameters: [environmentId, userId, name, value])
         }
     }
-
-    func createSessionIfNeeded(with message: Message) {
-        performOnSqliteQueue { connection in
-            
-            let environmentId = message.envID
-            let userId = message.userID
-            let sessionId = message.sessionInfo.id
-            let lastEventDate = message.time.date
-            let payload = try message.serializedData()
-            
-            try connection.perform(query: """
+    
+    private static func insertSession(connection: SqliteConnection, environmentId: String, userId: String, sessionId: String, lastEventDate: Date) throws {
+        try connection.perform(query: """
 Insert Into Sessions (environmentId, userId, sessionId, lastEventDate) Values (?1, ?2, ?3, ?4);
 """, parameters: [environmentId, userId, sessionId, lastEventDate])
-            
-            guard self.isWithinMessageSizeLimit(payload) else { return }
-            
-            try connection.perform(query: """
-Insert Into PendingMessages (environmentId, userId, sessionId, payload) Values (?1, ?2, ?3, ?4);
-""", parameters: [environmentId, userId, sessionId, payload])
-        }
     }
-
-    func insertPendingMessage(_ message: Message) {
-        performOnSqliteQueue { connection in
-            
-            let environmentId = message.envID
-            let userId = message.userID
-            let sessionId = message.sessionInfo.id
-            let lastEventDate = message.time.date
-            let payload = try message.serializedData()
-            
-            guard self.isWithinMessageSizeLimit(payload) else { return }
-            
-            try connection.perform(query: """
+    
+    private static func insertPendingMessage(connection: SqliteConnection, message: Message, settings: DataStoreSettings) throws {
+        let environmentId = message.envID
+        let userId = message.userID
+        let sessionId = message.sessionInfo.id
+        let lastEventDate = message.time.date
+        let payload = try message.serializedData()
+        
+        guard settings.isWithinMessageSizeLimit(payload) else { return }
+        
+        try connection.perform(query: """
 Insert Into PendingMessages (environmentId, userId, sessionId, payload) Values (?1, ?2, ?3, ?4);
 """, parameters: [environmentId, userId, sessionId, payload])
-            
-            try connection.perform(query: """
+        
+        try connection.perform(query: """
 Update Sessions
 Set lastEventDate = ?4
 Where
@@ -201,6 +184,30 @@ Where
     And sessionId = ?3
     And lastEventDate < ?4;
 """, parameters: [environmentId, userId, sessionId, lastEventDate])
+    }
+
+    func createSessionWithoutMessageIfNeeded(environmentId: String, userId: String, sessionId: String, lastEventDate: Date) {
+        performOnSqliteQueue { connection in
+            try SqliteDataStore.insertSession(connection: connection, environmentId: environmentId, userId: userId, sessionId: sessionId, lastEventDate: lastEventDate)
+        }
+    }
+    
+    func createSessionIfNeeded(with message: Message) {
+        let environmentId = message.envID
+        let userId = message.userID
+        let sessionId = message.sessionInfo.id
+        let lastEventDate = message.time.date
+        
+        performOnSqliteQueue { [dataStoreSettings] connection in
+            try SqliteDataStore.insertSession(connection: connection, environmentId: environmentId, userId: userId, sessionId: sessionId, lastEventDate: lastEventDate)
+            // The above line will fail with Sqlite error 19 if there's a key collision, preventing duplicate session messages.
+            try SqliteDataStore.insertPendingMessage(connection: connection, message: message, settings: dataStoreSettings)
+        }
+    }
+
+    func insertPendingMessage(_ message: Message) {
+        performOnSqliteQueue { [dataStoreSettings] connection in
+            try SqliteDataStore.insertPendingMessage(connection: connection, message: message, settings: dataStoreSettings)
         }
     }
 

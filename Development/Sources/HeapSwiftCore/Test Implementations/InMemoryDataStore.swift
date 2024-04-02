@@ -133,20 +133,40 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
             }
         }
     }
-
+    
+    func createSessionWithoutMessageIfNeeded(environmentId: String, userId: String, sessionId: String, lastEventDate: Date) {
+        OperationQueue.inMemoryDataStore.addOperation { [self] in
+            do {
+                try with(environmentId: environmentId, userId: userId, {
+                    if $0.sessions[sessionId] == nil {
+                        $0.sessions[sessionId] = .init(id: sessionId, lastEventDate: lastEventDate, messages: [])
+                    }
+                })
+            } catch {
+                HeapLogger.shared.error("Error in createSessionIfNeeded: \(error)")
+            }
+        }
+    }
+    
     func createSessionIfNeeded(with message: Message) {
         OperationQueue.inMemoryDataStore.addOperation { [self] in
             do {
-                let data = try message.serializedData()
-                guard self.isWithinMessageSizeLimit(data) else { return }
-                
                 let sessionId = message.sessionInfo.id
+                var sessionInserted = false
                 
                 try with(environmentId: message.envID, userId: message.userID, {
                     if $0.sessions[sessionId] == nil {
-                        $0.sessions[sessionId] = .init(id: sessionId, lastEventDate: message.time.date, messages: [(nextIdentifier(), data)])
+                        $0.sessions[sessionId] = .init(id: sessionId, lastEventDate: message.time.date, messages: [])
+                        sessionInserted = true
                     }
                 })
+                
+                let data = try message.serializedData()
+                guard sessionInserted && self.dataStoreSettings.isWithinMessageSizeLimit(data) else { return }
+                
+                try with(environmentId: message.envID, userId: message.userID, sessionId: message.sessionInfo.id) {
+                    $0.messages.append((nextIdentifier(), data))
+                }
             } catch {
                 HeapLogger.shared.error("Error in createSessionIfNeeded: \(error)")
             }
@@ -157,7 +177,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
         OperationQueue.inMemoryDataStore.addOperation { [self] in
             do {
                 let data = try message.serializedData()
-                guard self.isWithinMessageSizeLimit(data) else { return }
+                guard self.dataStoreSettings.isWithinMessageSizeLimit(data) else { return }
                 
                 try with(environmentId: message.envID, userId: message.userID, sessionId: message.sessionInfo.id) {
                     $0.messages.append((nextIdentifier(), data))

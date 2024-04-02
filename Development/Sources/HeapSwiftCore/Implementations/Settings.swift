@@ -1,6 +1,11 @@
 import Foundation
 import HeapSwiftCoreInterfaces
 
+extension Option {
+    // TODO: Move to HeapSwiftCoreInterfaces
+    static let resumePreviousSession = Option.register(name: "resumePreviousSession", type: .boolean)
+}
+
 struct UploaderSettings {
     var uploadInterval: TimeInterval
     var baseUrl: URL?
@@ -87,10 +92,12 @@ extension FieldSettings {
 struct BehaviorSettings {
     var startSessionImmediately: Bool
     var clearEventPropertiesOnNewUser: Bool
+    var resumePreviousSession: Bool
     
     static let `default` = BehaviorSettings(
         startSessionImmediately: false,
-        clearEventPropertiesOnNewUser: false
+        clearEventPropertiesOnNewUser: false,
+        resumePreviousSession: false
     )
 }
 
@@ -102,7 +109,8 @@ extension BehaviorSettings {
         
         self.init(
             startSessionImmediately: options.boolean(at: .startSessionImmediately) ?? base.startSessionImmediately,
-            clearEventPropertiesOnNewUser: options.boolean(at: .clearEventPropertiesOnNewUser) ?? base.clearEventPropertiesOnNewUser
+            clearEventPropertiesOnNewUser: options.boolean(at: .clearEventPropertiesOnNewUser) ?? base.clearEventPropertiesOnNewUser,
+            resumePreviousSession: options.boolean(at: .resumePreviousSession) ?? base.resumePreviousSession
         )
     }
     

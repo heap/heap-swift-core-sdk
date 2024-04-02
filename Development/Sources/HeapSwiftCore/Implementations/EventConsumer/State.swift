@@ -8,21 +8,37 @@ struct State {
     let behaviorSettings: BehaviorSettings
     
     var environment: EnvironmentState
-    var sessionInfo: SessionInfo
+    var sessionInfo: SessionInfo {
+        get { environment.sessionInfo }
+        set { environment.sessionInfo = newValue }
+    }
     
     /// A synthetic pageview created at the start of the session.
     ///
     /// This event should be used when tracking with `Pageview.none` to signal that the event
     /// doesn't belong to a pageview.
-    var unattributedPageviewInfo: PageviewInfo
+    var unattributedPageviewInfo: PageviewInfo {
+        get { environment.unattributedPageviewInfo }
+        set { environment.unattributedPageviewInfo = newValue }
+    }
     
     /// The `pageviewInfo` for the last pageview tracked in the session.
     ///
     /// Events will be attributed to this if tracked without a pageview or if the appropriate
     /// pageview cannot be resolved.
-    var lastPageviewInfo: PageviewInfo
+    var lastPageviewInfo: PageviewInfo = .init()
     
-    var sessionExpirationDate: Date
+    /// The session expiration date, truncating to the second.
+    ///
+    /// The expiration date is truncated to the second to reduce the odds of state being written
+    /// more than once per second.  In testing (StateStorePerformanceTests), this eliminated the
+    /// already miniscule overhead of writing to disk.
+    var sessionExpirationDate: Date {
+        get { environment.sessionExpirationDate.date }
+        set { environment.sessionExpirationDate = .init(date: newValue).truncatedToSeconds }
+    }
+    
+    var hasCheckedForVersionChange = false
     
     init(partialWith loadedEnvironment: EnvironmentState, sanitizedOptions: [Option: Any]) {
         environment = loadedEnvironment
@@ -31,12 +47,6 @@ struct State {
         fieldSettings = .init(with: sanitizedOptions)
         behaviorSettings = .init(with: sanitizedOptions)
         sdkInfo = .current(with: fieldSettings)
-        
-        // Init with placeholder data while we get started. Otherwise, we have to recreate logic here.
-        sessionInfo = .init()
-        unattributedPageviewInfo = .init()
-        lastPageviewInfo = .init()
-        sessionExpirationDate = .init(timeIntervalSince1970: 0)
     }
     
     struct UpdateResults {
@@ -47,6 +57,7 @@ struct State {
             var alreadyRecording = false
             var userCreated = false
             var sessionCreated = false
+            var sessionRestored = false
             var identitySet = false
             var identityReset = false
             var wasAlreadyUnindentified = false
@@ -76,27 +87,36 @@ extension State {
         
         if !environment.hasUserID {
             createUser(identity: nil, outcomes: &outcomes)
+        } else if behaviorSettings.resumePreviousSession && sessionExpirationDate >= timestamp {
+            outcomes.sessionRestored = true
+        } else {
+            endSession()
         }
         
         if behaviorSettings.startSessionImmediately {
-            createSession(at: timestamp, outcomes: &outcomes)
-        } else {
-            createExpiredSession()
+            createSessionIfExpired(extendIfNotExpired: true, at: timestamp, outcomes: &outcomes)
         }
     }
     
-    mutating func createSession(at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
+    private mutating func createSession(at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
         let initialPageviewInfo = PageviewInfo(newPageviewAt: timestamp)
         sessionInfo = .init(newSessionAt: timestamp)
         unattributedPageviewInfo = initialPageviewInfo
         lastPageviewInfo = initialPageviewInfo
-        extendCurrentSessionUnconditionally(timestamp: timestamp)
+        extendCurrentSessionUnconditionally(timestamp: timestamp, outcomes: &outcomes)
         outcomes.sessionCreated = true
         
         checkForVersionChange(outcomes: &outcomes)
     }
     
-    mutating func checkForVersionChange(outcomes: inout UpdateResults.Outcomes) {
+    private mutating func endSession() {
+        sessionInfo = .init()
+        sessionExpirationDate = .init(timeIntervalSince1970: 0)
+    }
+    
+    private mutating func checkForVersionChange(outcomes: inout UpdateResults.Outcomes) {
+        guard !hasCheckedForVersionChange else { return }
+        hasCheckedForVersionChange = true
         
         let previousVersion = environment.hasLastObservedVersion ? environment.lastObservedVersion : nil
         let currentVersion = sdkInfo.applicationInfo
@@ -107,21 +127,18 @@ extension State {
         }
     }
     
-    
-    mutating func createExpiredSession() {
-        sessionInfo = .init()
-    }
-    
     mutating func createSessionIfExpired(extendIfNotExpired: Bool, at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
         if sessionExpirationDate < timestamp {
             createSession(at: timestamp, outcomes: &outcomes)
         } else if extendIfNotExpired {
-            extendCurrentSessionUnconditionally(timestamp: timestamp)
+            extendCurrentSessionUnconditionally(timestamp: timestamp, outcomes: &outcomes)
         }
     }
     
-    mutating func createUser(identity: String?, outcomes: inout UpdateResults.Outcomes) {
+    private mutating func createUser(identity: String?, outcomes: inout UpdateResults.Outcomes) {
         environment.userID = generateRandomHeapId()
+        endSession()
+        
         if let identity = identity {
             environment.identity = identity
             outcomes.identitySet = true
@@ -129,16 +146,11 @@ extension State {
             environment.clearIdentity()
         }
         
-        if behaviorSettings.clearEventPropertiesOnNewUser
-        {
+        if behaviorSettings.clearEventPropertiesOnNewUser {
             environment.properties.removeAll()
         }
+        
         outcomes.userCreated = true
-    }
-    
-    mutating func createUserAndSession(identity: String?, at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
-        createUser(identity: identity, outcomes: &outcomes)
-        createSession(at: timestamp, outcomes: &outcomes)
     }
  
     mutating func extendSessionAndSetLastPageview(_ pageviewInfo: inout PageviewInfo, outcomes: inout UpdateResults.Outcomes) {
@@ -157,12 +169,12 @@ extension State {
         lastPageviewInfo = pageviewInfo
     }
     
-    mutating func extendSession(sessionId: String, preferredExpirationDate: Date, timestamp: Date) {
+    mutating func extendSession(sessionId: String, preferredExpirationDate: Date, timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
         guard sessionInfo.id == sessionId else { return }
-        extendCurrentSessionUnconditionally(preferredExpirationDate: preferredExpirationDate, timestamp: timestamp)
+        extendCurrentSessionUnconditionally(preferredExpirationDate: preferredExpirationDate, timestamp: timestamp, outcomes: &outcomes)
     }
     
-    private mutating func extendCurrentSessionUnconditionally(preferredExpirationDate: Date? = nil, timestamp: Date) {
+    private mutating func extendCurrentSessionUnconditionally(preferredExpirationDate: Date? = nil, timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
         
         let targetExpirationDate: Date
         
@@ -184,6 +196,17 @@ extension State {
         if sessionExpirationDate < targetExpirationDate {
             sessionExpirationDate = targetExpirationDate
         }
+        
+        // This is a strange place to put this, but it's a good spot for it.  We want version
+        // change events to be the first event of an app launch but we don't want them to cause a
+        // session to start.  If they can start a session, customers with background launch can end
+        // up with phantom sessions that just have a version change event.
+        //
+        // For apps without `resumePreviousSession`, the appropriate point is when the first
+        // session is created.  For apps with `resumePreviousSession`, the appropriate point is
+        // when the first event (or whatever) asks to extend the session.  In both cases, they
+        // pass through this method.
+        checkForVersionChange(outcomes: &outcomes)
     }
     
     mutating func resetIdentity(at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
@@ -195,7 +218,9 @@ extension State {
         }
         
         outcomes.identityReset = true
-        createUserAndSession(identity: nil, at: timestamp, outcomes: &outcomes)
+        
+        createUser(identity: nil, outcomes: &outcomes)
+        createSession(at: timestamp, outcomes: &outcomes)
     }
     
     mutating func identify(_ identity: String, at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
@@ -210,7 +235,8 @@ extension State {
         if identity.isEmpty { return }
         
         if environment.hasIdentity {
-            createUserAndSession(identity: identity, at: timestamp, outcomes: &outcomes)
+            createUser(identity: identity, outcomes: &outcomes)
+            createSession(at: timestamp, outcomes: &outcomes)
         } else {
             environment.identity = identity
             outcomes.identitySet = true

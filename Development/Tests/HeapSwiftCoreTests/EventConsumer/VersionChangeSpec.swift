@@ -4,6 +4,27 @@ import Nimble
 @testable import HeapSwiftCore
 @testable import HeapSwiftCoreTestSupport
 
+public func beVersionChange(file: StaticString = #file, line: UInt = #line, _ expected: VersionChange? = nil) -> Nimble.Predicate<CoreSdk_V1_Event.OneOf_Kind> {
+    .init { actualExpression in
+        
+        let msg = ExpectationMessage.expectedActualValueTo("be a version change")
+        
+        // Let nil into the expression so this works on non-events.
+        let actualValue = try actualExpression.evaluate()
+        
+        switch actualValue {
+        case .versionChange(let actualVersionChange):
+            if let expected = expected, expected != actualVersionChange {
+                return .init(status: .doesNotMatch, message: msg.appended(message: "with value \(expected)"))
+            } else {
+                return .init(status: .matches, message: msg)
+            }
+        default:
+            return .init(status: .doesNotMatch, message: msg)
+        }
+    }
+}
+
 final class EventConsumer_VersionChangeSpec: HeapSpec {
     
     override func spec() {
@@ -33,6 +54,54 @@ final class EventConsumer_VersionChangeSpec: HeapSpec {
                 expect(user.sessionIds).to(beEmpty())
             }
             
+            it("does not track a message on startRecording when resuming a previous session") {
+                let environment = dataStore.applyPreviousSession(to: "11", expirationDate: Date().addingTimeInterval(60))
+                consumer.startRecording("11", with: [ .resumePreviousSession: true ])
+
+                let user = try dataStore.assertOnlyOneUserToUpload()
+                try dataStore.assertSession(for: user, sessionId: environment.sessionInfo.id, hasPostStartMessageCount: 0)
+            }
+            
+            it("sends a version change event when the session is created") {
+                consumer.startRecording("11")
+                consumer.track("event")
+                
+                let user = try dataStore.assertOnlyOneUserToUpload()
+                let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
+                
+                expect(messages[2].event.kind).to(beVersionChange())
+            }
+            
+            it("sends a version change event when the session is resumed") {
+                _ = dataStore.applyPreviousSession(to: "11", expirationDate: Date().addingTimeInterval(60))
+                consumer.startRecording("11", with: [ .resumePreviousSession: true ])
+                consumer.track("event")
+                
+                let user = try dataStore.assertOnlyOneUserToUpload()
+                let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 2)
+                
+                expect(messages[0].event.kind).to(beVersionChange())
+            }
+            
+            it("sends a version change event when the session is created with ") {
+                consumer.startRecording("11", with: [ .startSessionImmediately: true ])
+                
+                let user = try dataStore.assertOnlyOneUserToUpload()
+                let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                
+                expect(messages[2].event.kind).to(beVersionChange())
+            }
+            
+            it("sends a version change event when the session is resumed") {
+                _ = dataStore.applyPreviousSession(to: "11", expirationDate: Date().addingTimeInterval(60))
+                consumer.startRecording("11", with: [ .resumePreviousSession: true, .startSessionImmediately: true ])
+                
+                let user = try dataStore.assertOnlyOneUserToUpload()
+                let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 1)
+                
+                expect(messages[0].event.kind).to(beVersionChange())
+            }
+            
             it("does not send a version change event message if the version has not changed") {
                 let applicationInfo = SDKInfo.withoutAdvertiserId.applicationInfo
                 _ = dataStore.applyApplicationInfo(to: "11", applicationInfo: applicationInfo)
@@ -44,9 +113,7 @@ final class EventConsumer_VersionChangeSpec: HeapSpec {
                 let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
                 
                 for message in messages {
-                    if case .versionChange(_) = message.event.kind {
-                        throw TestFailure("Unexpected version change event message found.")
-                    }
+                    expect(message.event.kind).notTo(beVersionChange())
                 }
             }
             
@@ -61,7 +128,7 @@ final class EventConsumer_VersionChangeSpec: HeapSpec {
                 let versionChange = VersionChange.with {
                     $0.currentVersion = SDKInfo.withoutAdvertiserId.applicationInfo
                 }
-                expect(messages[2].event.kind).to(equal(.versionChange(versionChange)))
+                expect(messages[2].event.kind).to(beVersionChange(versionChange))
                 messages[2].expectEventMessage(user: user, timestamp: trackTimestamp, eventProperties: consumer.eventProperties, pageviewMessage: messages[1])
             }
             
@@ -80,7 +147,7 @@ final class EventConsumer_VersionChangeSpec: HeapSpec {
                     $0.previousVersion = applicationInfo
                     $0.currentVersion = SDKInfo.withoutAdvertiserId.applicationInfo
                 }
-                expect(messages[2].event.kind).to(equal(.versionChange(versionChange)))
+                expect(messages[2].event.kind).to(beVersionChange(versionChange))
                 messages[2].expectEventMessage(user: user, timestamp: trackTimestamp, eventProperties: consumer.eventProperties, pageviewMessage: messages[1])
             }
             
@@ -99,7 +166,7 @@ final class EventConsumer_VersionChangeSpec: HeapSpec {
                     $0.previousVersion = applicationInfo
                     $0.currentVersion = SDKInfo.withoutAdvertiserId.applicationInfo
                 }
-                expect(messages[2].event.kind).to(equal(.versionChange(versionChange)))
+                expect(messages[2].event.kind).to(beVersionChange(versionChange))
                 messages[2].expectEventMessage(user: user, timestamp: trackTimestamp, eventProperties: consumer.eventProperties, pageviewMessage: messages[1])
             }
             
@@ -118,7 +185,7 @@ final class EventConsumer_VersionChangeSpec: HeapSpec {
                     $0.previousVersion = applicationInfo
                     $0.currentVersion = SDKInfo.withoutAdvertiserId.applicationInfo
                 }
-                expect(messages[2].event.kind).to(equal(.versionChange(versionChange)))
+                expect(messages[2].event.kind).to(beVersionChange(versionChange))
                 messages[2].expectEventMessage(user: user, timestamp: trackTimestamp, eventProperties: consumer.eventProperties, pageviewMessage: messages[1])
             }
         }

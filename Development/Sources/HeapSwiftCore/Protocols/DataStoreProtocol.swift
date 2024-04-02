@@ -77,6 +77,7 @@ protocol DataStoreProtocol {
     func setIdentityIfNull(environmentId: String, userId: String, identity: String)
     func insertOrUpdateUserProperty(environmentId: String, userId: String, name: String, value: String)
     
+    func createSessionWithoutMessageIfNeeded(environmentId: String, userId: String, sessionId: String, lastEventDate: Date)
     func createSessionIfNeeded(with message: Message)
     func insertPendingMessage(_ message: Message)
 
@@ -94,14 +95,13 @@ protocol DataStoreProtocol {
     func pruneOldData(activeEnvironmentId: String, activeUserId: String, activeSessionId: String, minLastMessageDate: Date, minUserCreationDate: Date)
 }
 
-extension DataStoreProtocol {
+extension DataStoreSettings {
     
     func isWithinMessageSizeLimit(_ serializedMessage: Data) -> Bool {
-        let sizeLimit = self.dataStoreSettings.messageByteLimit
         let messageSize = serializedMessage.count
-        if messageSize > sizeLimit {
+        if messageSize > messageByteLimit {
             HeapLogger.shared.warn("An event was dropped because it was too large.")
-            HeapLogger.shared.trace("The message size (\(messageSize) bytes) exceeded the maximum allowed size (\(sizeLimit) bytes)")
+            HeapLogger.shared.trace("The message size (\(messageSize) bytes) exceeded the maximum allowed size (\(messageByteLimit) bytes)")
             return false
         }
         return true

@@ -28,11 +28,11 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
 
             context("without an existing persisted state") {
 
-                var sessionTimestamp: Date!
+                var startTimestamp: Date!
 
                 beforeEach {
-                    sessionTimestamp = Date()
-                    consumer.startRecording("11", timestamp: sessionTimestamp)
+                    startTimestamp = Date()
+                    consumer.startRecording("11", timestamp: startTimestamp)
                 }
 
                 it("creates a user") {
@@ -54,17 +54,25 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                     expect(user.identity).to(beNil())
                     expect(user.pendingUserProperties).to(equal([:]))
                 }
+                
+                it("does not start with an active session") {
+                    guard let sessionId = consumer.activeOrExpiredSessionId else {
+                        throw TestFailure("Starting recording should have started with an expired session.")
+                    }
+                    expect(sessionId).to(beEmpty())
+                    expect(consumer.sessionExpirationDate).to(equal(Date(timeIntervalSince1970: 0)))
+                }
             }
 
             context("with an existing persisted state") {
 
-                var sessionTimestamp: Date!
+                var startTimestamp: Date!
                 var originalState: EnvironmentState!
 
                 beforeEach {
-                    sessionTimestamp = Date()
+                    startTimestamp = Date()
                     originalState = dataStore.applyIdentifiedState(to: "11")
-                    consumer.startRecording("11", timestamp: sessionTimestamp)
+                    consumer.startRecording("11", timestamp: startTimestamp)
                 }
 
                 it("uses the existing user") {
@@ -87,89 +95,253 @@ final class EventConsumer_StartRecordingSpec: HeapSpec {
                     expect(user.identity).to(equal(consumer.identity))
                     expect(user.pendingUserProperties).to(equal([:]))
                 }
-            }
-            
-            it("creates an expired session") {
-                let sessionTimestamp = Date()
-                consumer.startRecording("11", timestamp: sessionTimestamp)
                 
-                guard let sessionId = consumer.activeOrExpiredSessionId else {
-                    throw TestFailure("Starting recording should have created an expired session.")
+                it("does not start with an active session") {
+                    guard let sessionId = consumer.activeOrExpiredSessionId else {
+                        throw TestFailure("Starting recording should have started with an expired session.")
+                    }
+                    expect(sessionId).to(beEmpty())
+                    expect(consumer.sessionExpirationDate).to(equal(Date(timeIntervalSince1970: 0)))
+                    expect(consumer.sessionId).to(beNil())
                 }
-                expect(sessionId).to(beEmpty())
-                expect(consumer.sessionExpirationDate).to(equal(Date(timeIntervalSince1970: 0)))
-            }
-
-            it("creates a new session with a synthesized pageview and version change event when called with startSessionImmediately") {
-
-                let sessionTimestamp = Date()
-                consumer.startRecording("11", with: [ .startSessionImmediately: true ], timestamp: sessionTimestamp)
-
-                let user = try dataStore.assertOnlyOneUserToUpload()
-
-                guard let sessionId = consumer.activeOrExpiredSessionId else {
-                    throw TestFailure("Starting recording should have created a new session.")
-                }
-
-                expect(sessionId).to(beAValidId())
-                expect(user.sessionIds).to(equal([sessionId]))
-
-                let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
-                messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: sessionTimestamp, eventProperties: consumer.eventProperties)
-            }
-
-            it("extends the session when called with startSessionImmediately") {
-
-                let sessionTimestamp = Date()
-                consumer.startRecording("11", with: [ .startSessionImmediately: true ], timestamp: sessionTimestamp)
-
-                try consumer.assertSessionWasExtended(from: sessionTimestamp)
-            }
-
-            it("only runs once when called repeatedly with the same options") {
-                consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true ])
-                consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true ])
-                consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true ])
-
-                let user = try dataStore.assertOnlyOneUserToUpload()
-                expect(user.sessionIds).to(haveCount(1))
-            }
-
-            it("reinitializes with a new session when called with different options") {
-                consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true ])
-                consumer.startRecording("11", with: [ .myOption: false, .startSessionImmediately: true ])
-
-                let user = try dataStore.assertOnlyOneUserToUpload(message: "Calling the method multiple times, even with different options, should not have produced multiple users.")
-                expect(user.sessionIds).to(haveCount(2))
-            }
-
-            it("creates new users when switching environments") {
-                consumer.startRecording("11")
-                consumer.startRecording("12")
-                consumer.startRecording("13")
-                consumer.startRecording("11")
-                consumer.startRecording("12")
-                consumer.startRecording("13")
-
-                let usersToUpload = dataStore.usersToUpload()
-
-                expect(usersToUpload).to(haveCount(3))
-                expect(Set(usersToUpload.map(\.environmentId))).to(equal(["11", "12", "13"]))
-                expect(Set(usersToUpload.map(\.userId))).to(haveCount(3), description: "Each environment should have its own persisted user ID")
             }
             
-            it("creates new sessions when switching environments when called with startSessionImmediately") {
-                consumer.startRecording("11", with: [ .startSessionImmediately: true ])
-                consumer.startRecording("12", with: [ .startSessionImmediately: true ])
-                consumer.startRecording("13", with: [ .startSessionImmediately: true ])
-                consumer.startRecording("11", with: [ .startSessionImmediately: true ])
-                consumer.startRecording("12", with: [ .startSessionImmediately: true ])
-                consumer.startRecording("13", with: [ .startSessionImmediately: true ])
+            context("with an existing persisted session and resumePreviousSession") {
 
-                let usersToUpload = dataStore.usersToUpload()
+                var startTimestamp: Date!
+                var originalState: EnvironmentState!
 
-                expect(usersToUpload).to(haveCount(3))
-                expect(usersToUpload.map(\.sessionIds)).to(allPass(haveCount(2)), description: "Each environment should have its own sessions, and switching should have produced new sessions")
+                beforeEach {
+                    startTimestamp = Date()
+                    _ = dataStore.applyPreviousSession(to: "11", expirationDate: startTimestamp.addingTimeInterval(60))
+                    originalState = dataStore.applyIdentifiedState(to: "11")
+                    consumer.startRecording("11", with: [ .resumePreviousSession: true ], timestamp: startTimestamp)
+                }
+
+                it("uses the existing user") {
+                    expect(consumer.userId).to(equal(originalState.userID))
+                    expect(consumer.identity).to(equal(originalState.identity))
+                    expect(consumer.eventProperties).to(equal(originalState.properties))
+                }
+
+                it("does not overwrite the original state") {
+                    let state = dataStore.loadState(for: "11")
+                    expect(state.userID).to(equal(originalState.userID))
+                    expect(state.identity).to(equal(originalState.identity))
+                    expect(state.properties).to(equal(originalState.properties))
+                }
+
+                it("queues the new user for upload if missing") {
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+
+                    expect(user.userId).to(equal(consumer.userId))
+                    expect(user.identity).to(equal(consumer.identity))
+                    expect(user.pendingUserProperties).to(equal([:]))
+                }
+                
+                it("does not start with an active session") {
+                    guard let sessionId = consumer.activeOrExpiredSessionId else {
+                        throw TestFailure("Starting recording should have started with an expired session.")
+                    }
+                    expect(sessionId).to(equal(originalState.sessionInfo.id))
+                    expect(consumer.sessionExpirationDate).to(equal(originalState.sessionExpirationDate.date))
+                    expect(consumer.sessionId).to(equal(originalState.sessionInfo.id))
+                }
+            }
+            
+            context("with an existing persisted expired session and resumePreviousSession") {
+
+                var startTimestamp: Date!
+                var originalState: EnvironmentState!
+
+                beforeEach {
+                    startTimestamp = Date()
+                    _ = dataStore.applyPreviousSession(to: "11", expirationDate: startTimestamp.addingTimeInterval(-60))
+                    originalState = dataStore.applyIdentifiedState(to: "11")
+                    consumer.startRecording("11", with: [ .resumePreviousSession: true ], timestamp: startTimestamp)
+                }
+
+                it("uses the existing user") {
+                    expect(consumer.userId).to(equal(originalState.userID))
+                    expect(consumer.identity).to(equal(originalState.identity))
+                    expect(consumer.eventProperties).to(equal(originalState.properties))
+                }
+
+                it("does not overwrite the original state") {
+                    let state = dataStore.loadState(for: "11")
+                    expect(state.userID).to(equal(originalState.userID))
+                    expect(state.identity).to(equal(originalState.identity))
+                    expect(state.properties).to(equal(originalState.properties))
+                }
+
+                it("queues the new user for upload if missing") {
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+
+                    expect(user.userId).to(equal(consumer.userId))
+                    expect(user.identity).to(equal(consumer.identity))
+                    expect(user.pendingUserProperties).to(equal([:]))
+                }
+                
+                it("does not start with an active session") {
+                    guard let sessionId = consumer.activeOrExpiredSessionId else {
+                        throw TestFailure("Starting recording should have started with an expired session.")
+                    }
+                    expect(sessionId).to(beEmpty())
+                    expect(consumer.sessionExpirationDate).to(equal(Date(timeIntervalSince1970: 0)))
+                    expect(consumer.sessionId).to(beNil())
+                }
+            }
+            
+            context("without resumePreviousSession") {
+                
+                it("creates a new session with a synthesized pageview and version change event when called with startSessionImmediately") {
+                    
+                    let sessionTimestamp = Date()
+                    consumer.startRecording("11", with: [ .startSessionImmediately: true ], timestamp: sessionTimestamp)
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    
+                    guard let sessionId = consumer.activeOrExpiredSessionId else {
+                        throw TestFailure("Starting recording should have created a new session.")
+                    }
+                    
+                    expect(sessionId).to(beAValidId())
+                    expect(user.sessionIds).to(equal([sessionId]))
+                    
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 3)
+                    messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: sessionTimestamp, eventProperties: consumer.eventProperties)
+                }
+                
+                it("extends the session when called with startSessionImmediately") {
+                    
+                    let sessionTimestamp = Date()
+                    consumer.startRecording("11", with: [ .startSessionImmediately: true ], timestamp: sessionTimestamp)
+                    
+                    try consumer.assertSessionWasExtended(from: sessionTimestamp)
+                }
+                
+                it("doesn't create a new session when called repeatedly with the same options") {
+                    consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true ])
+                    consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true ])
+                    consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true ])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    expect(user.sessionIds).to(haveCount(1))
+                }
+                
+                it("creates a new session when called with different options") {
+                    consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true ])
+                    consumer.startRecording("11", with: [ .myOption: false, .startSessionImmediately: true ])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload(message: "Calling the method multiple times, even with different options, should not have produced multiple users.")
+                    expect(user.sessionIds).to(haveCount(2))
+                }
+                
+                it("creates new users when switching environments") {
+                    consumer.startRecording("11")
+                    consumer.startRecording("12")
+                    consumer.startRecording("13")
+                    consumer.startRecording("11")
+                    consumer.startRecording("12")
+                    consumer.startRecording("13")
+                    
+                    let usersToUpload = dataStore.usersToUpload()
+                    
+                    expect(usersToUpload).to(haveCount(3))
+                    expect(Set(usersToUpload.map(\.environmentId))).to(equal(["11", "12", "13"]))
+                    expect(Set(usersToUpload.map(\.userId))).to(haveCount(3), description: "Each environment should have its own persisted user ID")
+                }
+                
+                it("creates new sessions when switching environments when called with startSessionImmediately") {
+                    consumer.startRecording("11", with: [ .startSessionImmediately: true ])
+                    consumer.startRecording("12", with: [ .startSessionImmediately: true ])
+                    consumer.startRecording("13", with: [ .startSessionImmediately: true ])
+                    consumer.startRecording("11", with: [ .startSessionImmediately: true ])
+                    consumer.startRecording("12", with: [ .startSessionImmediately: true ])
+                    consumer.startRecording("13", with: [ .startSessionImmediately: true ])
+                    
+                    let usersToUpload = dataStore.usersToUpload()
+                    
+                    expect(usersToUpload).to(haveCount(3))
+                    expect(usersToUpload.map(\.sessionIds)).to(allPass(haveCount(2)), description: "Each environment should have its own sessions, and switching should have produced new sessions")
+                }
+            }
+            
+            context("with resumePreviousSession") {
+                
+                it("only sends version change event when called with startSessionImmediately") {
+                    
+                    let sessionTimestamp = Date()
+                    _ = dataStore.applyPreviousSession(to: "11", expirationDate: sessionTimestamp.addingTimeInterval(60))
+                    consumer.startRecording("11", with: [ .startSessionImmediately: true, .resumePreviousSession: true ], timestamp: sessionTimestamp)
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    
+                    guard let sessionId = consumer.activeOrExpiredSessionId else {
+                        throw TestFailure("Starting recording should have created a new session.")
+                    }
+                    
+                    expect(sessionId).to(beAValidId())
+                    expect(user.sessionIds).to(equal([sessionId]))
+                    
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 1)
+                    expect(messages[0].event.kind).to(beVersionChange())
+                }
+                
+                it("extends the session when called with startSessionImmediately") {
+                    
+                    let sessionTimestamp = Date()
+                    _ = dataStore.applyPreviousSession(to: "11", expirationDate: sessionTimestamp.addingTimeInterval(60))
+                    consumer.startRecording("11", with: [ .startSessionImmediately: true, .resumePreviousSession: true ], timestamp: sessionTimestamp)
+                    
+                    try consumer.assertSessionWasExtended(from: sessionTimestamp)
+                }
+                
+                it("doesn't create a new session when called repeatedly with the same options") {
+                    consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true, .resumePreviousSession: true ])
+                    consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true, .resumePreviousSession: true ])
+                    consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true, .resumePreviousSession: true ])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    expect(user.sessionIds).to(haveCount(1))
+                }
+                
+                it("doesn't create a new session when called repeatedly with different options") {
+                    consumer.startRecording("11", with: [ .myOption: true, .startSessionImmediately: true, .resumePreviousSession: true ])
+                    consumer.startRecording("11", with: [ .myOption: false, .startSessionImmediately: true, .resumePreviousSession: true ])
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    expect(user.sessionIds).to(haveCount(1))
+                }
+                
+                it("creates new users when switching environments") {
+                    consumer.startRecording("11", with: [ .resumePreviousSession: true ])
+                    consumer.startRecording("12", with: [ .resumePreviousSession: true ])
+                    consumer.startRecording("13", with: [ .resumePreviousSession: true ])
+                    consumer.startRecording("11", with: [ .resumePreviousSession: true ])
+                    consumer.startRecording("12", with: [ .resumePreviousSession: true ])
+                    consumer.startRecording("13", with: [ .resumePreviousSession: true ])
+                    
+                    let usersToUpload = dataStore.usersToUpload()
+                    
+                    expect(usersToUpload).to(haveCount(3))
+                    expect(Set(usersToUpload.map(\.environmentId))).to(equal(["11", "12", "13"]))
+                    expect(Set(usersToUpload.map(\.userId))).to(haveCount(3), description: "Each environment should have its own persisted user ID")
+                }
+                
+                it("restores sessions when switching environments") {
+                    consumer.startRecording("11", with: [ .startSessionImmediately: true, .resumePreviousSession: true ])
+                    consumer.startRecording("12", with: [ .startSessionImmediately: true, .resumePreviousSession: true ])
+                    consumer.startRecording("13", with: [ .startSessionImmediately: true, .resumePreviousSession: true ])
+                    consumer.startRecording("11", with: [ .startSessionImmediately: true, .resumePreviousSession: true ])
+                    consumer.startRecording("12", with: [ .startSessionImmediately: true, .resumePreviousSession: true ])
+                    consumer.startRecording("13", with: [ .startSessionImmediately: true, .resumePreviousSession: true ])
+                    
+                    let usersToUpload = dataStore.usersToUpload()
+                    
+                    expect(usersToUpload).to(haveCount(3))
+                    expect(usersToUpload.map(\.sessionIds)).to(allPass(haveCount(1)), description: "Each environment should have its own sessions, and those sessions should be restored")
+                }
             }
 
             it("triggers a cleanup of old data") {

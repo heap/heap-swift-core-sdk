@@ -60,6 +60,10 @@ class EventConsumer<StateStore: StateStoreProtocol, DataStore: DataStoreProtocol
             dataStore.createSessionIfNeeded(with: sessionMessage)
             dataStore.insertPendingMessage(pageviewMessage)
         }
+        
+        if updateResults.outcomes.sessionRestored {
+            dataStore.createSessionWithoutMessageIfNeeded(environmentId: environment.envID, userId: environment.userID, sessionId: environment.sessionInfo.id, lastEventDate: timestamp)
+        }
 
         if updateResults.outcomes.versionChanged {
 

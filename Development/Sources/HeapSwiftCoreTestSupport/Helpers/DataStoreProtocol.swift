@@ -13,7 +13,7 @@ extension DataStoreProtocol {
     func getPendingMessages(for user: UserToUpload, sessionId: String?, messageLimit: Int = .max, file: StaticString = #file, line: UInt = #line) throws -> [Message] {
 
         guard let sessionId = sessionId, user.sessionIds.contains(sessionId) else {
-            throw TestFailure("User does not have session \(String(describing: sessionId)).  Found \(user.sessionIds).")
+            throw TestFailure("User does not have session \(String(describing: sessionId)).  Found \(user.sessionIds).", file: file, line: line)
         }
 
         return try getPendingEncodedMessages(environmentId: user.environmentId, userId: user.userId, sessionId: sessionId, messageLimit: messageLimit, byteLimit: .max).map({

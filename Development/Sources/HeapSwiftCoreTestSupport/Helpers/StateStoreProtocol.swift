@@ -26,4 +26,14 @@ extension StateStoreProtocol {
         save(state)
         return state
     }
+    
+    func applyPreviousSession(to environmentId: String, expirationDate: Date) -> EnvironmentState {
+        var state = loadState(for: environmentId)
+        if !state.hasUserID { state.userID = "9999999" }
+        state.sessionInfo = .init(newSessionAt: expirationDate)
+        state.unattributedPageviewInfo = .init(newPageviewAt: expirationDate)
+        state.sessionExpirationDate = .init(date: expirationDate)
+        save(state)
+        return state
+    }
 }
