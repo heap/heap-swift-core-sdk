@@ -88,6 +88,7 @@ public extension Option {
     static let captureVendorId = register(name: "captureVendorId", type: .boolean)
     static let startSessionImmediately = register(name: "startSessionImmediately", type: .boolean)
     static let clearEventPropertiesOnNewUser = register(name: "clearEventPropertiesOnNewUser", type: .boolean)
+    static let resumePreviousSession = register(name: "resumePreviousSession", type: .boolean)
 }
 
 @objc
@@ -123,17 +124,18 @@ extension Option {
             Option.messageBatchMessageLimit,
             Option.captureAdvertiserId,
             Option.captureVendorId,
+            Option.startSessionImmediately,
+            Option.clearEventPropertiesOnNewUser,
+            Option.resumePreviousSession,
             
             Option.disablePageviewAutocapture,
             Option.disablePageviewTitleCapture,
             Option.disableInteractionAutocapture,
             Option.disableInteractionTextCapture,
-            Option.startSessionImmediately,
             Option.disableInteractionAccessibilityLabelCapture,
             Option.disableInteractionReferencingPropertyCapture,
             Option.enableInteractionReferencingPropertyCapture,
             Option.interactionHierarchyCaptureLimit,
-            Option.clearEventPropertiesOnNewUser,
         ]
     }()
 }

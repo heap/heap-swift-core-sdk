@@ -6,6 +6,8 @@ public protocol HeapProtocol {
     
     func stopRecording()
     
+    func stopRecording(deleteUser: Bool)
+    
     func track(_ event: String, properties: [String: HeapPropertyValue], timestamp: Date, sourceInfo: SourceInfo?, pageview: Pageview?)
     
     func trackPageview(_ properties: PageviewProperties, timestamp: Date, sourceInfo: SourceInfo?, bridge: RuntimeBridge?, userInfo: Any?) -> Pageview?
@@ -29,6 +31,8 @@ public protocol HeapProtocol {
     
     func clearEventProperties()
     
+    var environmentId: String? { get }
+    
     var userId: String? { get }
     
     var identity: String? { get }
@@ -44,4 +48,6 @@ public protocol HeapProtocol {
     func addRuntimeBridge(_ bridge: RuntimeBridge)
     
     func removeRuntimeBridge(_ bridge: RuntimeBridge)
+    
+    func addTransformer(_ transformer: Transformer)
 }

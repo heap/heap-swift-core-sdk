@@ -135,7 +135,7 @@ class InMemoryDataStore: StateStoreProtocol, DataStoreProtocol {
     }
     
     func createSessionWithoutMessageIfNeeded(environmentId: String, userId: String, sessionId: String, lastEventDate: Date) {
-        OperationQueue.inMemoryDataStore.addOperation { [self] in
+        OperationQueue.dataStore.addOperation { [self] in
             do {
                 try with(environmentId: environmentId, userId: userId, {
                     if $0.sessions[sessionId] == nil {

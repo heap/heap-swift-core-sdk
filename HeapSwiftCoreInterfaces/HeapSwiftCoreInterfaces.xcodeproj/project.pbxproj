@@ -17,6 +17,8 @@
 		EB79BE652A144E0600F9EEBD /* HeapProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB79BE5C2A144E0600F9EEBD /* HeapProtocol.swift */; };
 		EB79BE662A144E0600F9EEBD /* RuntimeBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB79BE5D2A144E0600F9EEBD /* RuntimeBridge.swift */; };
 		EB79BE672A144E0600F9EEBD /* Interaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB79BE5E2A144E0600F9EEBD /* Interaction.swift */; };
+		EB8A7D182BBDC957008C3B80 /* Transformer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB8A7D172BBDC957008C3B80 /* Transformer.swift */; };
+		EB8A7D1A2BBDCB06008C3B80 /* _ContentsquareIntegration.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB8A7D192BBDCB06008C3B80 /* _ContentsquareIntegration.swift */; };
 		EBF245AB2A327A9600C8296D /* HeapObjcPropertyValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBF245AA2A327A9600C8296D /* HeapObjcPropertyValue.swift */; };
 /* End PBXBuildFile section */
 
@@ -33,6 +35,8 @@
 		EB79BE5D2A144E0600F9EEBD /* RuntimeBridge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RuntimeBridge.swift; sourceTree = "<group>"; };
 		EB79BE5E2A144E0600F9EEBD /* Interaction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Interaction.swift; sourceTree = "<group>"; };
 		EB79BE682A14508300F9EEBD /* HeapSwiftCoreInterfaces.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = HeapSwiftCoreInterfaces.modulemap; sourceTree = "<group>"; };
+		EB8A7D172BBDC957008C3B80 /* Transformer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transformer.swift; sourceTree = "<group>"; };
+		EB8A7D192BBDCB06008C3B80 /* _ContentsquareIntegration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = _ContentsquareIntegration.swift; sourceTree = "<group>"; };
 		EBF245AA2A327A9600C8296D /* HeapObjcPropertyValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeapObjcPropertyValue.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -78,6 +82,8 @@
 				EB79BE5D2A144E0600F9EEBD /* RuntimeBridge.swift */,
 				EB79BE5B2A144E0600F9EEBD /* Source.swift */,
 				EB79BE592A144E0600F9EEBD /* SourceInfo.swift */,
+				EB8A7D172BBDC957008C3B80 /* Transformer.swift */,
+				EB8A7D192BBDCB06008C3B80 /* _ContentsquareIntegration.swift */,
 			);
 			path = HeapSwiftCoreInterfaces;
 			sourceTree = "<group>";
@@ -184,6 +190,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB8A7D182BBDC957008C3B80 /* Transformer.swift in Sources */,
+				EB8A7D1A2BBDCB06008C3B80 /* _ContentsquareIntegration.swift in Sources */,
 				EB79BE622A144E0600F9EEBD /* SourceInfo.swift in Sources */,
 				EB79BE652A144E0600F9EEBD /* HeapProtocol.swift in Sources */,
 				EB79BE5F2A144E0600F9EEBD /* HeapLogger.swift in Sources */,

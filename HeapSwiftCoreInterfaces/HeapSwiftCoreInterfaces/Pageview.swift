@@ -14,10 +14,16 @@ open class Pageview {
     /// A unique string representing the session that the pageview originated in.
     public let sessionId: String
     
-    /// The properties provided in the the `trackPageview` call.
+    /// The properties provided in the `trackPageview` call.
     ///
     /// These properties are passed to the server and available for analysis in Heap.
     public let properties: PageviewProperties
+    
+    /// The timestamp of the pageview or `nil` if `isNone` is true.
+    public let timestamp: Date?
+    
+    /// The source info provided in the `trackPageview` call.
+    public let sourceInfo: SourceInfo?
     
     /// An arbitrary object used to contain local information about the pageview.
     ///
@@ -50,17 +56,31 @@ open class Pageview {
         isNone = true
         sessionId = ""
         properties = .init()
+        timestamp = nil
+        sourceInfo = nil
         userInfo = nil
     }
     
-    /// Initializes a new Pageview.
-    ///
-    /// This method should not be called directly and pageviews created with this will be ignored.
-    /// Instead, use `Heap.trackPageview` to create a pageview.
+    @available(*, deprecated, renamed: "init(sessionId:properties:timestamp:sourceInfo:userInfo:)", message: "More properties have been added to this type. Use the new initializer.")
     public init(sessionId: String, properties: PageviewProperties, userInfo: Any?) {
         isNone = false
         self.sessionId = sessionId
         self.properties = properties
+        self.timestamp = nil
+        self.sourceInfo = nil
+        self.userInfo = userInfo
+    }
+    
+    /// Initializes a new Pageview.
+    ///
+    /// This method should not be called directly and pageviews created with this initializer will
+    /// be ignored.  Instead, use `Heap.trackPageview` to create a pageview.
+    public init(sessionId: String, properties: PageviewProperties, timestamp: Date, sourceInfo: SourceInfo?, userInfo: Any?) {
+        isNone = false
+        self.sessionId = sessionId
+        self.properties = properties
+        self.timestamp = timestamp
+        self.sourceInfo = sourceInfo
         self.userInfo = userInfo
     }
     
@@ -100,6 +120,11 @@ public struct PageviewProperties {
     /// This could be used for properties that are specific to a single platform or have been
     /// recently introduced but not added as first-class properties.
     public var sourceProperties: [String: HeapPropertyValue] = [:]
+    
+    /// A dictionary of custom properties attached to the pageview.
+    ///
+    /// The source SDK is responsible for determining a mechanism for setting these properties.
+    public var properties: [String: HeapPropertyValue] = [:]
     
     /// Creates an empty `Pageview`.
     init() {}
