@@ -32,7 +32,7 @@ public struct TransformableEvent: Transformable, Equatable {
     public var sessionReplays: [String] = []
     public var contentsquareProperties: ContentsquareProperties? = nil
     
-    init(environmentId: String, userId: String, sessionId: String, timestamp: Date) {
+    public init(environmentId: String, userId: String, sessionId: String, timestamp: Date) {
         self.environmentId = environmentId
         self.userId = userId
         self.sessionId = sessionId
