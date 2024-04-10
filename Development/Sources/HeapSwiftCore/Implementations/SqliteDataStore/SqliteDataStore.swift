@@ -14,12 +14,12 @@ extension OperationQueue {
 }
 
 extension Operation {
-    static func forSqlite(connection: SqliteConnection, block: @escaping (_ connection: SqliteConnection) throws -> Void) -> Operation {
+    static func forSqlite(connection: SqliteConnection, file: String = #fileID, line: UInt = #line, block: @escaping (_ connection: SqliteConnection) throws -> Void) -> Operation {
         BlockOperation {
             do {
                 try block(connection)
             } catch {
-                HeapLogger.shared.trace("Error occurred executing query: \(error)")
+                HeapLogger.shared.trace("Error occurred executing query: \(error)", file: file, line: line)
             }
         }
     }
@@ -30,9 +30,9 @@ class SqliteDataStore: DataStoreProtocol {
     private let connection: SqliteConnection
     internal let dataStoreSettings: DataStoreSettings
     
-    func performOnSqliteQueue(waitUntilFinished: Bool = false, block: @escaping (_ connection: SqliteConnection) throws -> Void) {
+    func performOnSqliteQueue(waitUntilFinished: Bool = false, file: String = #fileID, line: UInt = #line, block: @escaping (_ connection: SqliteConnection) throws -> Void) {
         OperationQueue.sqliteDataStoreQueue.addOperations([
-            .forSqlite(connection: connection, block: block),
+            .forSqlite(connection: connection, file: file, line: line, block: block),
         ], waitUntilFinished: waitUntilFinished)
     }
     

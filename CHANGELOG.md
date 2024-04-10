@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3]
+
+### Changed
+
+- Improved trace logging for failed Sqlite queries.
+
 ## [0.5.2]
 
 ### Added
@@ -165,6 +171,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
 [Unreleased]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.2...main
+[0.5.3]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.2...0.5.3
 [0.5.2]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.1...0.5.2
 [0.5.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.4.0...0.5.0

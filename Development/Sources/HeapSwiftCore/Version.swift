@@ -8,7 +8,7 @@ struct Version {
     static let minor = 5
 
     /// Revision number.
-    static let revision = 2
+    static let revision = 3
 
     /// Optional pre-release version
     static let prerelease: String? = nil
