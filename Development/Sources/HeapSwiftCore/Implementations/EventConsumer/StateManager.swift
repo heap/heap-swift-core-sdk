@@ -23,6 +23,10 @@ class StateManager<StateStore: StateStoreProtocol> {
         if let current = current, current.environment != previous?.environment {
             _loadedEnvironmentStates[current.environment.envID] = current.environment
             stateStore.save(current.environment)
+        } else if let previous = previous, outcomes.userDeleted {
+            let emptyEnvironment = EnvironmentState(environmentId: previous.environment.envID)
+            _loadedEnvironmentStates[previous.environment.envID] = emptyEnvironment
+            stateStore.save(emptyEnvironment)
         }
 
         _currentLock.signal()
@@ -54,9 +58,9 @@ extension StateManager {
         }
     }
     
-    func stop() -> State.UpdateResults {
+    func stop(deleteUser: Bool) -> State.UpdateResults {
         update { state, outcomes in
-            state.stop(outcomes: &outcomes)
+            state.stop(deleteUser: deleteUser, outcomes: &outcomes)
         }
     }
     

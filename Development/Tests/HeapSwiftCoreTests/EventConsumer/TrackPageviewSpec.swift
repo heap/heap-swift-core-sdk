@@ -396,12 +396,13 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     let sourceInfo = SourceInfo(name: "heap-turbo-pascal", version: "0.0.0-beta.10", platform: "comadore 64", properties: ["a": 1, "b": false])
                     let bridge = CountingRuntimeBridge()
                     let userInfo = NSObject()
+                    let timestamp = Date()
 
                     let properties = PageviewProperties.with({
                         $0.title = "page 1 of 100"
                     })
                     
-                    let pageview = consumer.trackPageview(properties, sourceInfo: sourceInfo, bridge: bridge, userInfo: userInfo)
+                    let pageview = consumer.trackPageview(properties, timestamp: timestamp, sourceInfo: sourceInfo, bridge: bridge, userInfo: userInfo)
                     
                     expect(pageview).notTo(beNil())
                     expect(pageview?.isNone).to(beFalse())
@@ -412,6 +413,8 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     expect(pageview?._isFromBridge).to(beTrue())
                     expect(pageview?.sessionId).to(equal(consumer.getSessionId()))
                     expect(pageview?.properties.title).to(equal(properties.title))
+                    expect(pageview?.sourceInfo).to(equal(sourceInfo))
+                    expect(pageview?.timestamp).to(equal(timestamp))
                     expect(pageview?.userInfo as? NSObject).to(equal(userInfo))
                 }
                 

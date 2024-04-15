@@ -55,7 +55,7 @@ public class HeapBridgeSupport
         case "startRecording":
             return try startRecording(arguments: arguments)
         case "stopRecording":
-            return try stopRecording()
+            return try stopRecording(arguments: arguments)
         case "track":
             return try track(arguments: arguments)
         case "trackPageview":
@@ -130,8 +130,9 @@ public class HeapBridgeSupport
         return nil
     }
     
-    func stopRecording() throws -> JSONEncodable? {
-        eventConsumer.stopRecording()
+    func stopRecording(arguments: [String: Any]) throws -> JSONEncodable? {
+        let deleteUser = try getOptionalBool(named: "deleteUser", from: arguments, message: "HeapBridgeSupport.stopRecording received an invalid deleteUser and will not complete the bridged method call.")
+        eventConsumer.stopRecording(deleteUser: deleteUser ?? false)
         return nil
     }
     
@@ -253,7 +254,7 @@ public class HeapBridgeSupport
         case .none: break // Let's not bother throwing here.
             
         @unknown default:
-            // This is not technically possible since we always link to the same or older versions, but we'll apply a safe default.
+            // This is not technically possible since we always link to a specific version of HeapSwiftCoreInterfaces.
             break
         }
         return nil
@@ -270,6 +271,18 @@ public class HeapBridgeSupport
 }
 
 extension HeapBridgeSupport {
+    
+    func getOptionalBool(named name: String, from arguments: [String: Any], message: @autoclosure () -> String) throws -> Bool? {
+        guard let rawString = arguments[name] else {
+            return nil
+        }
+        
+        guard let value = rawString as? Bool else {
+            pipelineLogger?.debug(message())
+            throw InvocationError.invalidParameters
+        }
+        return value
+    }
     
     func getOptionalString(named name: String, from arguments: [String: Any], message: @autoclosure () -> String) throws -> String? {
         guard let rawString = arguments[name] else {
@@ -514,7 +527,7 @@ extension HeapBridgeSupport {
         case .trace: return "trace"
         case .none: return "none"
         @unknown default:
-            // This is not technically possible since we always link to the same or older versions, but we'll apply a safe default.
+            // This is not technically possible since we always link to a specific version of HeapSwiftCoreInterfaces.
             return "none"
         }
     }

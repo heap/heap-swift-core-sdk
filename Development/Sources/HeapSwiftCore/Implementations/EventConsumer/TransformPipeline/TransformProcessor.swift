@@ -110,6 +110,9 @@ fileprivate extension CallbackStore<Transformable> {
         switch result {
         case .continue(let result):
             self.success(callbackId: callbackId, data: result)
+        @unknown default:
+            // This is not technically possible since we always link to a specific version of HeapSwiftCoreInterfaces.
+            self.failure(callbackId: callbackId, error: "Unknown continuation")
         }
     }
 }

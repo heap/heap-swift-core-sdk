@@ -171,9 +171,10 @@ extension EventConsumer {
         handleChanges(results, timestamp: timestamp)
     }
 
-    func stopRecording(timestamp: Date = Date()) {
+    func stopRecording(deleteUser: Bool = false, timestamp: Date = Date()) {
         
-        let results = stateManager.stop()
+        // TODO: Delete the user.
+        let results = stateManager.stop(deleteUser: deleteUser)
         
         if results.outcomes.previousStopped {
             HeapLogger.shared.info("Heap has stopped recording.")
@@ -252,7 +253,7 @@ extension EventConsumer {
         }
         HeapLogger.shared.trace("Committed event message:\n\(message)")
         
-        return ConcretePageview(sessionInfo: state.sessionInfo, pageviewInfo: pageviewInfo, sourceLibrary: sourceLibrary, bridge: bridge, properties: properties, userInfo: userInfo)
+        return ConcretePageview(sessionInfo: state.sessionInfo, pageviewInfo: pageviewInfo, sourceLibrary: sourceLibrary, bridge: bridge, properties: properties, timestamp: timestamp, sourceInfo: sourceInfo, userInfo: userInfo)
     }
     
     func uncommittedInteractionEvent(timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, pageview: Pageview? = nil) -> InteractionEventProtocol? {
@@ -523,6 +524,10 @@ extension EventConsumer: InternalHeapProtocol {
     
     func stopRecording() {
         stopRecording(timestamp: Date())
+    }
+    
+    func stopRecording(deleteUser: Bool) {
+        stopRecording(deleteUser: deleteUser, timestamp: Date())
     }
     
     func identify(_ identity: String) {

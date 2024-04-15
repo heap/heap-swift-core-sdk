@@ -333,17 +333,6 @@ final class EventConsumer_TrackInteractionSpec: HeapSpec {
                     expect(node.hasReferencingPropertyName).to(beTrue())
                 }
                 
-                it("erases referencingPropertyName on commit given option disableInteractionReferencingPropertyCapture") {
-                    
-                    let node = try trackTestNode(with: [
-                        .disableInteractionReferencingPropertyCapture: true,
-                    ])
-                    
-                    expect(node.hasReferencingPropertyName).to(beFalse())
-                    expect(node.hasNodeText).to(beTrue())
-                    expect(node.hasAccessibilityLabel).to(beTrue())
-                }
-                
                 it("limits node hierarchy to 30 if no option is given") {
                     
                     let testNodes = (0..<100).map { InteractionNode(nodeName: "TestNode_\($0)") }

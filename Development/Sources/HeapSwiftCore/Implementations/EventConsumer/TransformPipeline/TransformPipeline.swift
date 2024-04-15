@@ -15,12 +15,15 @@ class TransformPipeline {
     }
     
     func add(_ transformer: Transformer) {
-        state.mutate { data in
-            // We may eventually support additional phases. This switch is a reminder that we need to handle them.
-            switch transformer.phase {
-            case .early:
+        // We may eventually support additional phases. This switch is a reminder that we need to handle them.
+        switch transformer.phase {
+        case .early:
+            state.mutate { data in
                 data.transformers.append(transformer)
             }
+        @unknown default:
+            // This is not technically possible since we always link to a specific version of HeapSwiftCoreInterfaces.
+            HeapLogger.shared.warn("Transformer \(transformer.name) added with unknown phase: \(transformer.phase)")
         }
     }
     

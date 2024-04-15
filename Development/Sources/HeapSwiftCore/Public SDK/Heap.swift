@@ -43,6 +43,11 @@ public class Heap: NSObject, HeapProtocol {
     public func stopRecording() {
         consumer.stopRecording()
     }
+    
+    @objc
+    public func stopRecording(deleteUser: Bool) {
+        consumer.stopRecording(deleteUser: deleteUser)
+    }
 
     public func track(_ event: String, properties: [String: HeapPropertyValue] = [:], timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, pageview: Pageview? = nil) {
         consumer.track(event, properties: properties, timestamp: timestamp, sourceInfo: sourceInfo, pageview: pageview)

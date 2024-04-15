@@ -120,7 +120,7 @@ extension Interaction {
         case .builtin(let value): return .builtin(.UNRECOGNIZED(value))
             
         @unknown default:
-            // This is not technically possible since we always link to the same or older versions, but we'll apply a safe default.
+            // This is not technically possible since we always link to a specific version of HeapSwiftCoreInterfaces.
             return .builtin(.unspecified)
         }
     }
@@ -138,7 +138,7 @@ extension Interaction: CustomStringConvertible {
         case .builtin(let value): return "\(value) (unknown built-in)"
             
         @unknown default:
-            // This is not technically possible since we always link to the same or older versions, but we'll apply a safe default.
+            // This is not technically possible since we always link to a specific version of HeapSwiftCoreInterfaces.
             return "unknown type"
         }
     }
@@ -154,7 +154,7 @@ extension InteractionNode {
             $0.setIfNotNil(\.nodeHtmlClass, nodeHtmlClass)
             $0.setIfNotNil(\.href, href)
             $0.setIfNotNil(\.accessibilityLabel, accessibilityLabel?.trimmed?.truncated(toUtf16Count: 64).result.trimmed, andTrue: fieldSettings.captureInteractionAccessibilityLabel)
-            $0.setIfNotNil(\.referencingPropertyName, referencingPropertyName, andTrue: fieldSettings.captureInteractionReferencingProperty)
+            $0.setIfNotNil(\.referencingPropertyName, referencingPropertyName)
             $0.attributes = attributes.mapValues(\.protoValue)
         }
     }

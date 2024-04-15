@@ -64,6 +64,7 @@ struct State {
             var wasAlreadyIdentified = false
             var versionChanged = false
             var lastObservedVersion: ApplicationInfo? = nil
+            var userDeleted = false
         }
 
         let previous: State?
@@ -265,12 +266,13 @@ extension Optional where Wrapped == State {
         outcomes.currentStarted = true
     }
     
-    mutating func stop(outcomes: inout State.UpdateResults.Outcomes) {
+    mutating func stop(deleteUser: Bool, outcomes: inout State.UpdateResults.Outcomes) {
         
         // Don't stop if we're already stopped.
         guard case .some = self else { return }
         
         self = .none
         outcomes.previousStopped = true
+        outcomes.userDeleted = deleteUser
     }
 }

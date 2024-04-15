@@ -14,6 +14,8 @@ final public class ConcretePageview: Pageview {
         sourceLibrary: LibraryInfo?,
         bridge: RuntimeBridge?,
         properties: PageviewProperties,
+        timestamp: Date,
+        sourceInfo: SourceInfo?,
         userInfo: Any?
     ) {
         self.sessionInfo = sessionInfo
@@ -21,6 +23,6 @@ final public class ConcretePageview: Pageview {
         self.sourceLibrary = sourceLibrary
         self.bridge = bridge
         self.isFromBridge = bridge != nil
-        super.init(sessionId: sessionInfo.id, properties: properties, userInfo: userInfo)
+        super.init(sessionId: sessionInfo.id, properties: properties, timestamp: timestamp, sourceInfo: sourceInfo, userInfo: userInfo)
     }
 }

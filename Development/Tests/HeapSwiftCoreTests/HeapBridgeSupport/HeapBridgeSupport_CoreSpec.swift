@@ -101,6 +101,60 @@ final class HeapBridgeSupport_CoreSpec: HeapSpec {
                 _ = try bridgeSupport.handleInvocation(method: method, arguments: [:])
                 expect(consumer.stateManager.current).to(beNil())
             }
+            
+            it("throws when deleteUser is not a boolean") {
+                expect(try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "deleteUser": "quack",
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("does not delete the user when deleteUser is omitted") {
+                consumer.startRecording("11")
+                let userId = consumer.userId
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [:])
+                consumer.startRecording("11")
+                expect(consumer.userId).to(equal(userId))
+            }
+            
+            it("does not delete the user when deleteUser is ObjC false") {
+                consumer.startRecording("11")
+                let userId = consumer.userId
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "deleteUser": NSNumber(false)
+                ])
+                consumer.startRecording("11")
+                expect(consumer.userId).to(equal(userId))
+            }
+            
+            it("does not delete the user when deleteUser is false") {
+                consumer.startRecording("11")
+                let userId = consumer.userId
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "deleteUser": false
+                ])
+                consumer.startRecording("11")
+                expect(consumer.userId).to(equal(userId))
+            }
+            
+            it("deletes the user when deleteUser is ObjC true") {
+                consumer.startRecording("11")
+                let userId = consumer.userId
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "deleteUser": NSNumber(true)
+                ])
+                consumer.startRecording("11")
+                expect(consumer.userId).notTo(equal(userId))
+            }
+            
+            it("deletes the user when deleteUser is true") {
+                consumer.startRecording("11")
+                let userId = consumer.userId
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "deleteUser": true
+                ])
+                consumer.startRecording("11")
+                expect(consumer.userId).notTo(equal(userId))
+            }
         }
         
         describeMethod("track") { method in

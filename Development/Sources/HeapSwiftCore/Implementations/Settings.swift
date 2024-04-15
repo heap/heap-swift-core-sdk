@@ -1,11 +1,6 @@
 import Foundation
 import HeapSwiftCoreInterfaces
 
-extension Option {
-    // TODO: Move to HeapSwiftCoreInterfaces
-    static let resumePreviousSession = Option.register(name: "resumePreviousSession", type: .boolean)
-}
-
 struct UploaderSettings {
     var uploadInterval: TimeInterval
     var baseUrl: URL?
@@ -47,7 +42,6 @@ struct FieldSettings {
     var capturePageviewTitle: Bool
     var captureInteractionText: Bool
     var captureInteractionAccessibilityLabel: Bool
-    var captureInteractionReferencingProperty: Bool
     var maxInteractionNodeCount: Int
     
     static let `default` = FieldSettings(
@@ -56,7 +50,6 @@ struct FieldSettings {
         capturePageviewTitle: true,
         captureInteractionText: true,
         captureInteractionAccessibilityLabel: true,
-        captureInteractionReferencingProperty: true,
         maxInteractionNodeCount: 30
     )
 }
@@ -77,7 +70,6 @@ extension FieldSettings {
             capturePageviewTitle: negated(.disablePageviewTitleCapture) ?? base.capturePageviewTitle,
             captureInteractionText: negated(.disableInteractionTextCapture) ?? base.captureInteractionText,
             captureInteractionAccessibilityLabel: negated(.disableInteractionAccessibilityLabelCapture) ?? base.captureInteractionAccessibilityLabel,
-            captureInteractionReferencingProperty: negated(.disableInteractionReferencingPropertyCapture) ?? base.captureInteractionReferencingProperty,
             maxInteractionNodeCount: options.integer(at: .interactionHierarchyCaptureLimit) ?? base.maxInteractionNodeCount
         )
     }
