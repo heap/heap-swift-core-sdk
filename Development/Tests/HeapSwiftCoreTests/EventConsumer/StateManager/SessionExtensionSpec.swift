@@ -27,7 +27,7 @@ final class SessionExtensionSpec: HeapSpec {
             it("does nothing if not expired and extendIfNotExpired is false") {
                 let timestamp = sessionTimestamp.addingTimeInterval(60)
                 
-                let result = manager.createSessionIfExpired(extendIfNotExpired: false, at: timestamp)
+                let result = manager.createSessionIfExpired(extendIfNotExpired: false, properties: .init(), at: timestamp)
                 
                 expect(result.current?.sessionInfo.id).to(equal(originalSessionId))
                 expect(result.current?.sessionExpirationDate).to(beCloseTo(originalExpirationTime, within: 1))
@@ -37,7 +37,7 @@ final class SessionExtensionSpec: HeapSpec {
                 let timestamp = sessionTimestamp.addingTimeInterval(60)
                 let expectedExpirationDate = timestamp.addingTimeInterval(300)
                 
-                let result = manager.createSessionIfExpired(extendIfNotExpired: true, at: timestamp)
+                let result = manager.createSessionIfExpired(extendIfNotExpired: true, properties: .init(), at: timestamp)
                 
                 expect(result.current?.sessionInfo.id).to(equal(originalSessionId))
                 expect(result.current?.sessionExpirationDate).to(beCloseTo(expectedExpirationDate, within: 1))
@@ -47,7 +47,7 @@ final class SessionExtensionSpec: HeapSpec {
                 let timestamp = sessionTimestamp.addingTimeInterval(60000)
                 let expectedExpirationDate = timestamp.addingTimeInterval(300)
                 
-                let result = manager.createSessionIfExpired(extendIfNotExpired: true, at: timestamp)
+                let result = manager.createSessionIfExpired(extendIfNotExpired: true, properties: .init(), at: timestamp)
                 
                 expect(result.current?.sessionInfo.id).toNot(equal(originalSessionId))
                 expect(result.current?.sessionExpirationDate).to(beCloseTo(expectedExpirationDate, within: 1))
@@ -57,9 +57,66 @@ final class SessionExtensionSpec: HeapSpec {
                 let originalResult = manager.extendSession(sessionId: originalSessionId, preferredExpirationDate: .distantFuture, timestamp: sessionTimestamp)
                 let expectedExpirationDate = originalResult.current!.sessionExpirationDate
                 
-                let result = manager.createSessionIfExpired(extendIfNotExpired: true, at: sessionTimestamp)
+                let result = manager.createSessionIfExpired(extendIfNotExpired: true, properties: .init(), at: sessionTimestamp)
                 
                 expect(result.current?.sessionExpirationDate).to(beCloseTo(expectedExpirationDate, within: 1))
+            }
+            
+            it("does not apply contentsquareProperties when extending the session") {
+                let timestamp = sessionTimestamp.addingTimeInterval(60)
+                let result = manager.createSessionIfExpired(extendIfNotExpired: true, properties: .fromContentsquareScreenView, at: timestamp)
+                
+                expect(result.current?.contentsquareSessionProperties.createdByContentsquareScreenView).to(beFalse())
+            }
+
+            
+            it("applies contentsquareProperties when creating the session") {
+                let timestamp = sessionTimestamp.addingTimeInterval(60000)
+                let result = manager.createSessionIfExpired(extendIfNotExpired: true, properties: .fromContentsquareScreenView, at: timestamp)
+                
+                expect(result.current?.contentsquareSessionProperties.createdByContentsquareScreenView).to(beTrue())
+            }
+            
+            context("with _ContentsquareIntegration") {
+                
+                var integration: CountingContentsquareIntegration!
+                
+                beforeEach {
+                    integration = CountingContentsquareIntegration(sessionTimeoutDuration: 600)
+                    manager.contentsquareIntegration = integration
+                }
+                
+                it("extends the session using the Contentsquare expiration date if greater than the default") {
+                    let timestamp = sessionTimestamp.addingTimeInterval(60)
+                    let expectedExpirationDate = timestamp.addingTimeInterval(600)
+                    
+                    let result = manager.createSessionIfExpired(extendIfNotExpired: true, properties: .init(), at: timestamp)
+                    
+                    expect(result.current?.sessionInfo.id).to(equal(originalSessionId))
+                    expect(result.current?.sessionExpirationDate).to(beCloseTo(expectedExpirationDate, within: 1))
+                }
+                
+                it("extends the session using the Heap timeout if greater than the the Contentsquare expiration date") {
+                    integration.sessionTimeoutDuration = 5
+                    let timestamp = sessionTimestamp.addingTimeInterval(60)
+                    let expectedExpirationDate = timestamp.addingTimeInterval(300)
+                    
+                    let result = manager.createSessionIfExpired(extendIfNotExpired: true, properties: .init(), at: timestamp)
+                    
+                    expect(result.current?.sessionInfo.id).to(equal(originalSessionId))
+                    expect(result.current?.sessionExpirationDate).to(beCloseTo(expectedExpirationDate, within: 1))
+                }
+                
+                it("extends can extend the session arbitrarily far") {
+                    integration.sessionTimeoutDuration = 600_000
+                    let timestamp = sessionTimestamp.addingTimeInterval(60)
+                    let expectedExpirationDate = timestamp.addingTimeInterval(600_000)
+                    
+                    let result = manager.createSessionIfExpired(extendIfNotExpired: true, properties: .init(), at: timestamp)
+                    
+                    expect(result.current?.sessionInfo.id).to(equal(originalSessionId))
+                    expect(result.current?.sessionExpirationDate).to(beCloseTo(expectedExpirationDate, within: 1))
+                }
             }
         }
         
@@ -168,6 +225,38 @@ final class SessionExtensionSpec: HeapSpec {
                 
                 expect(result.current?.sessionExpirationDate).to(beCloseTo(preferredExpirationDate, within: 1))
                 expect(result.current?.sessionInfo.id).to(equal(originalSessionId))
+            }
+            
+            context("with _ContentsquareIntegration") {
+                
+                var integration: CountingContentsquareIntegration!
+                
+                beforeEach {
+                    integration = CountingContentsquareIntegration(sessionTimeoutDuration: 600)
+                    manager.contentsquareIntegration = integration
+                }
+                
+                it("extends the session using the Contentsquare expiration date if greater than the preferred date") {
+                    let timestamp = sessionTimestamp.addingTimeInterval(60)
+                    let preferredExpirationDate = timestamp.addingTimeInterval(400)
+                    let expectedExpirationDate = timestamp.addingTimeInterval(600)
+                    
+                    let result = manager.extendSession(sessionId: originalSessionId, preferredExpirationDate: preferredExpirationDate, timestamp: timestamp)
+                    
+                    expect(result.current?.sessionInfo.id).to(equal(originalSessionId))
+                    expect(result.current?.sessionExpirationDate).to(beCloseTo(expectedExpirationDate, within: 1))
+                }
+                
+                it("extends the session using the preferred date if greater than the Contentsquare expiration date") {
+                    let timestamp = sessionTimestamp.addingTimeInterval(60)
+                    let preferredExpirationDate = timestamp.addingTimeInterval(1000)
+                    let expectedExpirationDate = timestamp.addingTimeInterval(1000)
+                    
+                    let result = manager.extendSession(sessionId: originalSessionId, preferredExpirationDate: preferredExpirationDate, timestamp: timestamp)
+                    
+                    expect(result.current?.sessionInfo.id).to(equal(originalSessionId))
+                    expect(result.current?.sessionExpirationDate).to(beCloseTo(expectedExpirationDate, within: 1))
+                }
             }
         }
     }

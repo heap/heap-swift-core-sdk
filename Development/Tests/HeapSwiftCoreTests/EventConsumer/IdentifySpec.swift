@@ -160,6 +160,10 @@ final class EventConsumer_IdentifySpec: HeapSpec {
                         it("extends the session") {
                             try consumer.assertSessionWasExtended(from: identifyTimestamp)
                         }
+                        
+                        it("does not mark new session as coming from a user change") {
+                            expect(consumer.currentSessionProperties.previousSessionHadDifferentUser).to(beFalse())
+                        }
                     }
                 }
             }
@@ -290,6 +294,10 @@ final class EventConsumer_IdentifySpec: HeapSpec {
                         it("extends the session") {
                             try consumer.assertSessionWasExtended(from: identifyTimestamp)
                         }
+                        
+                        it("marks the new session as coming from a user change") {
+                            expect(consumer.currentSessionProperties.previousSessionHadDifferentUser).to(beTrue())
+                        }
                     }
                     
                     context("called with a valid identity, before the session expires") {
@@ -324,6 +332,10 @@ final class EventConsumer_IdentifySpec: HeapSpec {
                         it("extends the session") {
                             try consumer.assertSessionWasExtended(from: identifyTimestamp)
                         }
+                        
+                        it("marks the new session as coming from a user change") {
+                            expect(consumer.currentSessionProperties.previousSessionHadDifferentUser).to(beTrue())
+                        }
                     }
 
                     context("called with a valid identity, after the session expires") {
@@ -357,6 +369,10 @@ final class EventConsumer_IdentifySpec: HeapSpec {
                         
                         it("extends the session") {
                             try consumer.assertSessionWasExtended(from: identifyTimestamp)
+                        }
+                        
+                        it("marks the new session as coming from a user change") {
+                            expect(consumer.currentSessionProperties.previousSessionHadDifferentUser).to(beTrue())
                         }
                     }
                 }

@@ -38,13 +38,13 @@ final class TransformPipelineSpec: HeapSpec {
                 pipeline.add(transformerB)
                 pipeline.add(transformerC)
                 
-                let processor = pipeline.processor(environmentId: "1", userId: "2", sessionId: "3", timestamp: Date())
+                let processor = pipeline.processor(environmentId: "1", userId: "2", sessionId: "3", timestamp: Date(), transformableDescription: "my transformable")
                 expect(processor.state.current.remainingTransformers.map(\.name)).to(equal(["A", "B", "C"]))
             }
             
             it("returns an processor with the correct property values") {
                 let timestamp = Date(timeIntervalSinceReferenceDate: 0)
-                let processor = pipeline.processor(environmentId: "1", userId: "2", sessionId: "3", timestamp: timestamp)
+                let processor = pipeline.processor(environmentId: "1", userId: "2", sessionId: "3", timestamp: timestamp, transformableDescription: "my transformable")
                 let state = processor.state.current
                 let transformable = state.transformable as? TransformableEvent
                 

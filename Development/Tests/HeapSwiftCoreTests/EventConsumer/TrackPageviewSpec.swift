@@ -423,6 +423,24 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     expect(pageview?._bridge).toEventually(beNil())
                     expect(pageview?._isFromBridge).to(beTrue())
                 }
+                
+                context("with _ContentsquareIntegration") {
+                    
+                    var integration: CountingContentsquareIntegration!
+                    
+                    beforeEach {
+                        integration = CountingContentsquareIntegration(sessionTimeoutDuration: 600)
+                        consumer.contentsquareIntegration = integration
+                    }
+                    
+                    it("sends pageviews to the integration") {
+                        let trackedPageviews = (1...10).map { _ in
+                            consumer.trackPageview(.with({ _ in }))
+                        }
+                        
+                        expect(integration.pageviews.map({ ObjectIdentifier($0) })).to(equal(trackedPageviews.map({ ObjectIdentifier($0!) })))
+                    }
+                }
             }
             
             context("field options are applied") {

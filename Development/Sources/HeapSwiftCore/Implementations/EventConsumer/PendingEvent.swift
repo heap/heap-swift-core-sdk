@@ -65,7 +65,6 @@ class PendingEvent {
         
         if let message = message {
             transformPipeline.insertPendingMessage(message, processor: transformProcessor)
-            HeapLogger.shared.trace("Committed event message:\n\(message)")
         }
     }
 }

@@ -24,8 +24,10 @@ class CommitAfterTransformOperation: AsynchronousOperation {
             let transformedMessage = transformable.apply(to: message)
             if isSessionMessage {
                 dataStore.createSessionIfNeeded(with: transformedMessage)
+                HeapLogger.shared.trace("Committed session message:\n\(transformedMessage)")
             } else {
                 dataStore.insertPendingMessage(transformedMessage)
+                HeapLogger.shared.trace("Committed event message:\n\(transformedMessage)")
             }
             finish()
         }

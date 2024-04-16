@@ -155,3 +155,19 @@ public class Heap: NSObject, HeapProtocol {
        set { HeapLogger.shared.logChannel = newValue }
     }
 }
+
+extension Heap {
+    
+    @objc(_setContentsquareIntegration:)
+    private func _setContentsquareIntegration(_ integration: AnyObject?) {
+        guard let integration = integration as? _ContentsquareIntegration else {
+            HeapLogger.shared.error("Failed to apply Contentsquare integration to Heap SDK.")
+            if let integration = integration {
+                HeapLogger.shared.trace("_setContentsquareIntegration(_:) received object of type \(type(of: integration))")
+            }
+            return
+        }
+        
+        consumer.contentsquareIntegration = integration
+    }
+}

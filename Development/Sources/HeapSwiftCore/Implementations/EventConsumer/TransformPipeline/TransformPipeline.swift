@@ -31,7 +31,7 @@ class TransformPipeline {
         state.current.transformers
     }
     
-    func processor(environmentId: String, userId: String, sessionId: String, timestamp: Date) -> TransformProcessor {
+    func processor(environmentId: String, userId: String, sessionId: String, timestamp: Date, transformableDescription: String) -> TransformProcessor {
         return TransformProcessor(
             transformable: TransformableEvent(
                 environmentId: environmentId,
@@ -39,11 +39,12 @@ class TransformPipeline {
                 sessionId: sessionId,
                 timestamp: timestamp
             ),
+            transformableDescription: transformableDescription,
             transformers: transformers)
     }
     
     func processor(for message: Message) -> TransformProcessor {
-        return processor(environmentId: message.envID, userId: message.userID, sessionId: message.sessionInfo.id, timestamp: message.time.date)
+        return processor(environmentId: message.envID, userId: message.userID, sessionId: message.sessionInfo.id, timestamp: message.time.date, transformableDescription: "message \(message.id)")
     }
     
     func createSessionIfNeeded(with message: Message, processor: TransformProcessor? = nil) {
@@ -57,6 +58,8 @@ class TransformPipeline {
     private func transformAndCommit(message: Message, isSessionMessage: Bool, processor: TransformProcessor?) {
         
         let destinationProcessor = processor ?? self.processor(for: message)
+        HeapLogger.shared.trace("Adding message \(message.id) added to transform queue with \(destinationProcessor.state.current.remainingTransformers.count)")
+        
         destinationProcessor.execute() // Execute immediately so they can operate in parallel.
         
         OperationQueue.transform.addOperation(CommitAfterTransformOperation(

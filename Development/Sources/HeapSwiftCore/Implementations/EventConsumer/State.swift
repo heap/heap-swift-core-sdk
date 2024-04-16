@@ -38,6 +38,11 @@ struct State {
         set { environment.sessionExpirationDate = .init(date: newValue).truncatedToSeconds }
     }
     
+    /// Properties of the session start, used to drive Contentsquare integration behavior.
+    ///
+    /// This property is not persisted across app launches.
+    var contentsquareSessionProperties: _ContentsquareSessionProperties = .init()
+    
     var hasCheckedForVersionChange = false
     
     init(partialWith loadedEnvironment: EnvironmentState, sanitizedOptions: [Option: Any]) {
@@ -82,7 +87,7 @@ extension State.UpdateResults.Outcomes {
 
 extension State {
     
-    init(loadedEnvironment: EnvironmentState, sanitizedOptions: [Option: Any], at timestamp: Date, outcomes: inout State.UpdateResults.Outcomes) {
+    init(loadedEnvironment: EnvironmentState, sanitizedOptions: [Option: Any], at timestamp: Date, contentsquareTimeout: TimeInterval?, outcomes: inout State.UpdateResults.Outcomes) {
         
         self.init(partialWith: loadedEnvironment, sanitizedOptions: sanitizedOptions)
         
@@ -95,16 +100,17 @@ extension State {
         }
         
         if behaviorSettings.startSessionImmediately {
-            createSessionIfExpired(extendIfNotExpired: true, at: timestamp, outcomes: &outcomes)
+            createSessionIfExpired(extendIfNotExpired: true, properties: .init(), at: timestamp, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
         }
     }
     
-    private mutating func createSession(at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
+    private mutating func createSession(at timestamp: Date, properties: _ContentsquareSessionProperties, contentsquareTimeout: TimeInterval?, outcomes: inout UpdateResults.Outcomes) {
         let initialPageviewInfo = PageviewInfo(newPageviewAt: timestamp)
         sessionInfo = .init(newSessionAt: timestamp)
         unattributedPageviewInfo = initialPageviewInfo
         lastPageviewInfo = initialPageviewInfo
-        extendCurrentSessionUnconditionally(timestamp: timestamp, outcomes: &outcomes)
+        contentsquareSessionProperties = properties
+        extendCurrentSessionUnconditionally(timestamp: timestamp, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
         outcomes.sessionCreated = true
         
         checkForVersionChange(outcomes: &outcomes)
@@ -128,11 +134,11 @@ extension State {
         }
     }
     
-    mutating func createSessionIfExpired(extendIfNotExpired: Bool, at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
+    mutating func createSessionIfExpired(extendIfNotExpired: Bool, properties: _ContentsquareSessionProperties, at timestamp: Date, contentsquareTimeout: TimeInterval?, outcomes: inout UpdateResults.Outcomes) {
         if sessionExpirationDate < timestamp {
-            createSession(at: timestamp, outcomes: &outcomes)
+            createSession(at: timestamp, properties: properties, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
         } else if extendIfNotExpired {
-            extendCurrentSessionUnconditionally(timestamp: timestamp, outcomes: &outcomes)
+            extendCurrentSessionUnconditionally(timestamp: timestamp, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
         }
     }
     
@@ -154,8 +160,8 @@ extension State {
         outcomes.userCreated = true
     }
  
-    mutating func extendSessionAndSetLastPageview(_ pageviewInfo: inout PageviewInfo, outcomes: inout UpdateResults.Outcomes) {
-        createSessionIfExpired(extendIfNotExpired: true, at: pageviewInfo.time.date, outcomes: &outcomes)
+    mutating func extendSessionAndSetLastPageview(_ pageviewInfo: inout PageviewInfo, contentsquareTimeout: TimeInterval?, outcomes: inout UpdateResults.Outcomes) {
+        createSessionIfExpired(extendIfNotExpired: true, properties: .init(), at: pageviewInfo.time.date, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
         
         // It is a little counter-intuitive to bury the logic here, but we need to know the current
         // state to know the field settings to know whether the title should be used.
@@ -170,12 +176,12 @@ extension State {
         lastPageviewInfo = pageviewInfo
     }
     
-    mutating func extendSession(sessionId: String, preferredExpirationDate: Date, timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
+    mutating func extendSession(sessionId: String, preferredExpirationDate: Date, timestamp: Date, contentsquareTimeout: TimeInterval?, outcomes: inout UpdateResults.Outcomes) {
         guard sessionInfo.id == sessionId else { return }
-        extendCurrentSessionUnconditionally(preferredExpirationDate: preferredExpirationDate, timestamp: timestamp, outcomes: &outcomes)
+        extendCurrentSessionUnconditionally(preferredExpirationDate: preferredExpirationDate, timestamp: timestamp, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
     }
     
-    private mutating func extendCurrentSessionUnconditionally(preferredExpirationDate: Date? = nil, timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
+    private mutating func extendCurrentSessionUnconditionally(preferredExpirationDate: Date? = nil, timestamp: Date, contentsquareTimeout: TimeInterval?, outcomes: inout UpdateResults.Outcomes) {
         
         let targetExpirationDate: Date
         
@@ -198,6 +204,15 @@ extension State {
             sessionExpirationDate = targetExpirationDate
         }
         
+        // If Contentsquare proves a session timeout, and it's greater than the Heap timeout,
+        // extend the session to that date.
+        if let contentsquareTimeout = contentsquareTimeout {
+            let contentsquareExpirationDate = timestamp.addingTimeInterval(contentsquareTimeout)
+            if sessionExpirationDate < contentsquareExpirationDate {
+                sessionExpirationDate = contentsquareExpirationDate
+            }
+        }
+
         // This is a strange place to put this, but it's a good spot for it.  We want version
         // change events to be the first event of an app launch but we don't want them to cause a
         // session to start.  If they can start a session, customers with background launch can end
@@ -210,7 +225,7 @@ extension State {
         checkForVersionChange(outcomes: &outcomes)
     }
     
-    mutating func resetIdentity(at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
+    mutating func resetIdentity(at timestamp: Date, contentsquareTimeout: TimeInterval?, outcomes: inout UpdateResults.Outcomes) {
         
         // Don't do anything if Heap isn't running or the user isn't identified.
         guard environment.hasIdentity else {
@@ -221,10 +236,10 @@ extension State {
         outcomes.identityReset = true
         
         createUser(identity: nil, outcomes: &outcomes)
-        createSession(at: timestamp, outcomes: &outcomes)
+        createSession(at: timestamp, properties: .fromNewUser, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
     }
     
-    mutating func identify(_ identity: String, at timestamp: Date, outcomes: inout UpdateResults.Outcomes) {
+    mutating func identify(_ identity: String, at timestamp: Date, contentsquareTimeout: TimeInterval?, outcomes: inout UpdateResults.Outcomes) {
         
         // Don't do anything if the identity isn't changing.
         if environment.hasIdentity && environment.identity == identity {
@@ -237,19 +252,19 @@ extension State {
         
         if environment.hasIdentity {
             createUser(identity: identity, outcomes: &outcomes)
-            createSession(at: timestamp, outcomes: &outcomes)
+            createSession(at: timestamp, properties: .fromNewUser, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
         } else {
             environment.identity = identity
             outcomes.identitySet = true
             
-            createSessionIfExpired(extendIfNotExpired: true, at: timestamp, outcomes: &outcomes)
+            createSessionIfExpired(extendIfNotExpired: true, properties: .init(), at: timestamp, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
         }
     }
 }
 
 extension Optional where Wrapped == State {
     
-    mutating func start(loadedEnvironment: EnvironmentState, sanitizedOptions: [Option: Any], at timestamp: Date, outcomes: inout State.UpdateResults.Outcomes) {
+    mutating func start(loadedEnvironment: EnvironmentState, sanitizedOptions: [Option: Any], at timestamp: Date, contentsquareTimeout: TimeInterval?, outcomes: inout State.UpdateResults.Outcomes) {
         
         if case .some(let state) = self {
             
@@ -262,7 +277,7 @@ extension Optional where Wrapped == State {
             outcomes.previousStopped = true
         }
         
-        self = State.init(loadedEnvironment: loadedEnvironment, sanitizedOptions: sanitizedOptions, at: timestamp, outcomes: &outcomes)
+        self = State.init(loadedEnvironment: loadedEnvironment, sanitizedOptions: sanitizedOptions, at: timestamp, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
         outcomes.currentStarted = true
     }
     

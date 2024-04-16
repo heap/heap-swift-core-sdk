@@ -200,7 +200,7 @@ extension EventConsumer {
         }
         
         let sourceLibrary = sourceInfo?.libraryInfo
-        let results = stateManager.createSessionIfExpired(extendIfNotExpired: true, at: timestamp)
+        let results = stateManager.createSessionIfExpired(extendIfNotExpired: true, properties: .init(), at: timestamp)
         handleChanges(results, timestamp: timestamp)
         
         guard let state = results.current else { return }
@@ -245,15 +245,20 @@ extension EventConsumer {
         
         let message = Message(forPageviewWith: pageviewInfo, sourceLibrary: sourceLibrary, in: state)
         
-        transformPipeline.insertPendingMessage(message)
         if let sourceName = sourceInfo?.name {
             HeapLogger.shared.debug("Tracked pageview from \(sourceName) on \(properties.componentOrClassName ?? "an unknown component") titled \"\(properties.title ?? "")\".")
         } else {
             HeapLogger.shared.debug("Tracked pageview on \(properties.componentOrClassName ?? "an unknown component") titled \"\(properties.title ?? "")\".")
         }
-        HeapLogger.shared.trace("Committed event message:\n\(message)")
         
-        return ConcretePageview(sessionInfo: state.sessionInfo, pageviewInfo: pageviewInfo, sourceLibrary: sourceLibrary, bridge: bridge, properties: properties, timestamp: timestamp, sourceInfo: sourceInfo, userInfo: userInfo)
+        let pageview = ConcretePageview(sessionInfo: state.sessionInfo, pageviewInfo: pageviewInfo, sourceLibrary: sourceLibrary, bridge: bridge, properties: properties, timestamp: timestamp, sourceInfo: sourceInfo, userInfo: userInfo)
+        
+        stateManager.contentsquareIntegration?.didTrackHeapPageview(pageview)
+        
+        // Insert after calling `didTrackHeapPageview` so we have a chance to pause the transform.
+        transformPipeline.insertPendingMessage(message)
+
+        return pageview
     }
     
     func uncommittedInteractionEvent(timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, pageview: Pageview? = nil) -> InteractionEventProtocol? {
@@ -267,7 +272,7 @@ extension EventConsumer {
             return nil
         }
         
-        let results = stateManager.createSessionIfExpired(extendIfNotExpired: true, at: timestamp)
+        let results = stateManager.createSessionIfExpired(extendIfNotExpired: true, properties: .init(), at: timestamp)
  
         handleChanges(results, timestamp: timestamp)
         
@@ -461,7 +466,7 @@ extension EventConsumer {
     /// heap.js in a webview.
     func fetchSession(timestamp: Date) -> State? {
         
-        let results = stateManager.createSessionIfExpired(extendIfNotExpired: false, at: timestamp)
+        let results = stateManager.createSessionIfExpired(extendIfNotExpired: false, properties: .init(), at: timestamp)
         handleChanges(results, timestamp: timestamp)
         
         return results.current
@@ -514,6 +519,25 @@ extension EventConsumer {
             }
         }
     }
+    
+    func advanceOrExtendSession(fromContentsquareScreenView: Bool, timestamp: Date) -> (environmentId: String, userId: String, sessionId: String)? {
+        let results = stateManager.createSessionIfExpired(extendIfNotExpired: true, properties: fromContentsquareScreenView ? .fromContentsquareScreenView : .init(), at: timestamp)
+        handleChanges(results, timestamp: timestamp)
+        
+        guard let environment = results.current?.environment else { return nil }
+        return (environment.envID, environment.userID, environment.sessionInfo.id)
+    }
+}
+
+extension EventConsumer: _ContentsquareMethods {
+    
+    func advanceOrExtendSession(fromContentsquareScreenView: Bool) -> (environmentId: String, userId: String, sessionId: String)? {
+        advanceOrExtendSession(fromContentsquareScreenView: fromContentsquareScreenView, timestamp: Date())
+    }
+    
+    var currentSessionProperties: _ContentsquareSessionProperties {
+        stateManager.current?.contentsquareSessionProperties ?? .init()
+    }
 }
 
 extension EventConsumer: InternalHeapProtocol {
@@ -560,6 +584,16 @@ extension EventConsumer: InternalHeapProtocol {
     
     func fetchSession() -> State? {
         fetchSession(timestamp: Date())
+    }
+    
+    var contentsquareIntegration: _ContentsquareIntegration? {
+        get {
+            stateManager.contentsquareIntegration
+        }
+        set {
+            stateManager.contentsquareIntegration = newValue
+            newValue?.setContentsquareMethods(self)
+        }
     }
 }
     

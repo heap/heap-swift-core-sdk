@@ -21,7 +21,11 @@ final class TransformProcessorSpec: HeapSpec {
                     transformerB = TriggerableTransformer(name: "B", timeout: 0.1)
                     transformerC = TriggerableTransformer(name: "C", timeout: 0.1)
                     event = TransformableEvent(environmentId: "1", userId: "2", sessionId: "3", timestamp: Date(timeIntervalSinceReferenceDate: 0))
-                    processor = TransformProcessor(transformable: event, transformers: [transformerA, transformerB, transformerC])
+                    processor = TransformProcessor(
+                        transformable: event,
+                        transformableDescription: "my message",
+                        transformers: [transformerA, transformerB, transformerC]
+                    )
                     processor.execute()
                 }
                 
@@ -108,7 +112,7 @@ final class TransformProcessorSpec: HeapSpec {
                 
                 beforeEach {
                     event = TransformableEvent(environmentId: "1", userId: "2", sessionId: "3", timestamp: Date(timeIntervalSinceReferenceDate: 0))
-                    processor = TransformProcessor(transformable: event, transformers: [])
+                    processor = TransformProcessor(transformable: event, transformableDescription: "my message", transformers: [])
                 }
                         
                 it("does not put the event in the executing state") {

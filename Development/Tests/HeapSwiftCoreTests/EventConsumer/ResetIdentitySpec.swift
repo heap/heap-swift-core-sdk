@@ -168,6 +168,10 @@ final class EventConsumer_ResetIdentitySpec: HeapSpec {
                         expect(source.sessions).to(equal(bridge.sessions))
                     }
                     
+                    it("marks the new session as coming from a user change") {
+                        expect(consumer.currentSessionProperties.previousSessionHadDifferentUser).to(beTrue())
+                    }
+                    
                     it("extends the session") {
                         try consumer.assertSessionWasExtended(from: resetTimestamp)
                     }                    
