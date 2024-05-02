@@ -231,6 +231,7 @@ extension EventConsumer {
         let truncatedTitle = properties.title?.truncatedLoggingToDev(message: "trackPageview: Pageview title was truncated because the value exceeded 1024 utf-16 code units.")
         
         let sanitizedSourceProperties = properties.sourceProperties.sanitized(methodName: "trackPageview")
+        let sanitizedProperties = properties.properties.sanitized(methodName: "trackPageview")
         
         let sourceLibrary = sourceInfo?.libraryInfo
         var pageviewInfo = PageviewInfo(newPageviewAt: timestamp)
@@ -238,7 +239,8 @@ extension EventConsumer {
         pageviewInfo.setIfNotNil(\.title, truncatedTitle) // Sanitized in the state manager.
         pageviewInfo.setIfNotNil(\.url, properties.url?.pageviewUrl)
         pageviewInfo.sourceProperties = sanitizedSourceProperties.mapValues(\.protoValue)
-        
+        pageviewInfo.properties = sanitizedProperties.mapValues(\.protoValue)
+
         let results = stateManager.extendSessionAndSetLastPageview(&pageviewInfo)
         handleChanges(results, timestamp: timestamp)
         guard let state = results.current else { return nil }

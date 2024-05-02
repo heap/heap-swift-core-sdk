@@ -43,6 +43,12 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                             "c": false,
                             "d": 1.5,
                         ] as [String : Any],
+                        "properties": [
+                            "A": 1,
+                            "B": "2",
+                            "C": false,
+                            "D": 1.5,
+                        ] as [String : Any],
                     ] as [String : Any],
                     "sourceLibrary": [
                         "name": "my source",
@@ -66,6 +72,12 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                             "c": false,
                             "d": 1.5,
                         ] as [String : Any],
+                        "properties": [
+                            "A": 1,
+                            "B": "2",
+                            "C": false,
+                            "D": 1.5,
+                        ] as [String : Any],
                     ] as [String : Any],
                     "sourceLibrary": [
                         "name": "my source",
@@ -88,6 +100,12 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                             "c": false,
                             "d": 1.5,
                         ] as [String : Any],
+                        "properties": [
+                            "A": 1,
+                            "B": "2",
+                            "C": false,
+                            "D": 1.5,
+                        ] as [String : Any],
                     ] as [String : Any],
                     "javascriptEpochTimestamp": Date().timeIntervalSince1970 * 1000,
                     "deadKeys": ["a", "b", "c"],
@@ -105,6 +123,12 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                             "b": "2",
                             "c": false,
                             "d": 1.5,
+                        ] as [String : Any],
+                        "properties": [
+                            "A": 1,
+                            "B": "2",
+                            "C": false,
+                            "D": 1.5,
                         ] as [String : Any],
                     ] as [String : Any],
                     "sourceLibrary": [
@@ -127,6 +151,12 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                             "c": false,
                             "d": 1.5,
                         ] as [String : Any],
+                        "properties": [
+                            "A": 1,
+                            "B": "2",
+                            "C": false,
+                            "D": 1.5,
+                        ] as [String : Any],
                     ] as [String : Any],
                 ])
             }
@@ -141,6 +171,12 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                             "b": "2",
                             "c": false,
                             "d": 1.5,
+                        ] as [String : Any],
+                        "properties": [
+                            "A": 1,
+                            "B": "2",
+                            "C": false,
+                            "D": 1.5,
                         ] as [String : Any],
                     ] as [String : Any],
                 ])
@@ -157,11 +193,33 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                             "c": false,
                             "d": 1.5,
                         ] as [String : Any],
+                        "properties": [
+                            "A": 1,
+                            "B": "2",
+                            "C": false,
+                            "D": 1.5,
+                        ] as [String : Any],
                     ] as [String : Any],
                 ])
             }
             
             it("does not throw when properties.sourceProperties is omitted") {
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "componentOrClassName": "My Component",
+                        "title": "My page",
+                        "url": "https://example.com/",
+                        "properties": [
+                            "A": 1,
+                            "B": "2",
+                            "C": false,
+                            "D": 1.5,
+                        ] as [String : Any],
+                    ] as [String : Any],
+                ])
+            }
+            
+            it("does not throw when properties.properties is omitted") {
                 _ = try bridgeSupport.handleInvocation(method: method, arguments: [
                     "properties": [
                         "componentOrClassName": "My Component",
@@ -185,6 +243,16 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                         "componentOrClassName": "My Component",
                         "title": "My page",
                         "sourceProperties": ["UNKNOWN": ["a", "b"]],
+                    ] as [String : Any],
+                ])
+            }
+            
+            it("does not throw when passed unsupported property types") {
+                _ = try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "properties": [
+                        "componentOrClassName": "My Component",
+                        "title": "My page",
+                        "properties": ["UNKNOWN": ["a", "b"]],
                     ] as [String : Any],
                 ])
             }
@@ -232,6 +300,12 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
             it("throws when properties.sourceProperties is not an object") {
                 expect(try bridgeSupport.handleInvocation(method: method, arguments: [
                     "properties": ["sourceProperties": "something else"],
+                ])).to(throwError(InvocationError.invalidParameters))
+            }
+            
+            it("throws when properties.sourceProperties is not an object") {
+                expect(try bridgeSupport.handleInvocation(method: method, arguments: [
+                    "properties": ["properties": "something else"],
                 ])).to(throwError(InvocationError.invalidParameters))
             }
             
@@ -293,6 +367,12 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                             "c": false,
                             "d": 1.5,
                         ] as [String : Any],
+                        "properties": [
+                            "A": 1,
+                            "B": "2",
+                            "C": false,
+                            "D": 1.5,
+                        ] as [String : Any],
                     ] as [String : Any],
                     "sourceLibrary": [
                         "name": "my source",
@@ -326,6 +406,10 @@ final class HeapBridgeSupport_AutocaptureExtensionsSpec: HeapSpec {
                 expect(pageviewInfo.sourceProperties["b"]).to(equal(.init(value: "2")))
                 expect(pageviewInfo.sourceProperties["c"]).to(equal(.init(value: "false")))
                 expect(pageviewInfo.sourceProperties["d"]).to(equal(.init(value: "1.5")))
+                expect(pageviewInfo.properties["A"]).to(equal(.init(value: "1")))
+                expect(pageviewInfo.properties["B"]).to(equal(.init(value: "2")))
+                expect(pageviewInfo.properties["C"]).to(equal(.init(value: "false")))
+                expect(pageviewInfo.properties["D"]).to(equal(.init(value: "1.5")))
             }
             
             it("returns a valid payload") {

@@ -515,6 +515,7 @@ extension HeapBridgeSupport {
             $0.title = try getOptionalString(named: "title", from: dictionary, message: errorMessage())
             $0.url = try getOptionalUrl(named: "url", from: dictionary, message: errorMessage())
             $0.sourceProperties = try getOptionalParameterDictionary(named: "sourceProperties", from: dictionary, message: errorMessage())
+            $0.properties = try getOptionalParameterDictionary(named: "properties", from: dictionary, message: errorMessage())
         }
     }
     

@@ -246,6 +246,7 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                         $0.title = "Home screen"
                         $0.url = URL(string: "https://example.com/path/to/resource.jsp?state=AAABBBCCCDDD#!/elsewhere")
                         $0.sourceProperties = ["a": 1, "b": "2", "c": false]
+                        $0.properties = ["A": 1, "B": "2", "C": false]
                     }), timestamp: trackTimestamp)
 
                     let user = try dataStore.assertOnlyOneUserToUpload()
@@ -268,8 +269,10 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     expect(pageviewInfo.sourceProperties["a"]).to(equal(.init(value: "1")))
                     expect(pageviewInfo.sourceProperties["b"]).to(equal(.init(value: "2")))
                     expect(pageviewInfo.sourceProperties["c"]).to(equal(.init(value: "false")))
+                    expect(pageviewInfo.properties["A"]).to(equal(.init(value: "1")))
+                    expect(pageviewInfo.properties["B"]).to(equal(.init(value: "2")))
+                    expect(pageviewInfo.properties["C"]).to(equal(.init(value: "false")))
                 }
-                
                 
                 it("sanitizes sourceProperties using [String: HeapPropertyValue].sanitized") {
                     
@@ -287,6 +290,26 @@ final class EventConsumer_TrackPageviewSpec: HeapSpec {
                     let pageviewInfo = messages[3].pageviewInfo
                     
                     expect(pageviewInfo.sourceProperties).to(equal([
+                        "a": .init(value: String(repeating: "あ", count: 1024)),
+                    ]))
+                }
+                
+                it("sanitizes properties using [String: HeapPropertyValue].sanitized") {
+                    
+                    _ = consumer.trackPageview(.with({
+                        $0.properties = [
+                            "a": String(repeating: "あ", count: 1030),
+                            "b": "    ",
+                            " ": "test",
+                            String(repeating: "あ", count: 513): "?",
+                        ]
+                    }))
+                    
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    let messages = try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
+                    let pageviewInfo = messages[3].pageviewInfo
+                    
+                    expect(pageviewInfo.properties).to(equal([
                         "a": .init(value: String(repeating: "あ", count: 1024)),
                     ]))
                 }
