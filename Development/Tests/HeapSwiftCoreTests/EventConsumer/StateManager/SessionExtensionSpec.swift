@@ -64,19 +64,25 @@ final class SessionExtensionSpec: HeapSpec {
             
             it("does not apply contentsquareProperties when extending the session") {
                 let timestamp = sessionTimestamp.addingTimeInterval(60)
-                let result = manager.createSessionIfExpired(extendIfNotExpired: true, properties: .fromContentsquareScreenView, at: timestamp)
+                let result = manager.createSessionIfExpired(extendIfNotExpired: true, properties: .createdByContentsquareScreenView, at: timestamp)
                 
-                expect(result.current?.contentsquareSessionProperties.createdByContentsquareScreenView).to(beFalse())
+                expect(result.current?.contentsquareSessionProperties).to(equal([]))
             }
 
-            
-            it("applies contentsquareProperties when creating the session") {
+            it("applies contentsquareProperties when creating the session with .createdByContentsquare") {
                 let timestamp = sessionTimestamp.addingTimeInterval(60000)
-                let result = manager.createSessionIfExpired(extendIfNotExpired: true, properties: .fromContentsquareScreenView, at: timestamp)
+                let result = manager.createSessionIfExpired(extendIfNotExpired: true, properties: .createdByContentsquare, at: timestamp)
                 
-                expect(result.current?.contentsquareSessionProperties.createdByContentsquareScreenView).to(beTrue())
+                expect(result.current?.contentsquareSessionProperties).to(equal(.createdByContentsquare))
             }
             
+            it("applies contentsquareProperties when creating the session with .createdByContentsquareScreenView") {
+                let timestamp = sessionTimestamp.addingTimeInterval(60000)
+                let result = manager.createSessionIfExpired(extendIfNotExpired: true, properties: .createdByContentsquareScreenView, at: timestamp)
+                
+                expect(result.current?.contentsquareSessionProperties).to(equal(.createdByContentsquareScreenView))
+            }
+
             context("with _ContentsquareIntegration") {
                 
                 var integration: CountingContentsquareIntegration!
@@ -154,7 +160,6 @@ final class SessionExtensionSpec: HeapSpec {
                 expect(result.current?.sessionExpirationDate).to(beCloseTo(expectedExpirationDate, within: 1))
             }
         }
-        
         
         describe("extendSession") {
             
@@ -257,6 +262,23 @@ final class SessionExtensionSpec: HeapSpec {
                     expect(result.current?.sessionInfo.id).to(equal(originalSessionId))
                     expect(result.current?.sessionExpirationDate).to(beCloseTo(expectedExpirationDate, within: 1))
                 }
+            }
+        }
+        
+        describe("extendSessionIfNotExpired") {
+            
+            it("extends the session if not expired") {
+                let timestamp = originalExpirationTime.addingTimeInterval(-5)
+                let expectedExpirationDate = timestamp.addingTimeInterval(60 * 5)
+                let result = manager.extendSessionIfNotExpired(timestamp: timestamp)
+                expect(result.current?.sessionExpirationDate).to(beCloseTo(expectedExpirationDate, within: 1))
+            }
+            
+            it("does not extend the session if expired") {
+                let timestamp = originalExpirationTime.addingTimeInterval(5)
+                let expectedExpirationDate = originalExpirationTime!
+                let result = manager.extendSessionIfNotExpired(timestamp: timestamp)
+                expect(result.current?.sessionExpirationDate).to(beCloseTo(expectedExpirationDate, within: 1))
             }
         }
     }

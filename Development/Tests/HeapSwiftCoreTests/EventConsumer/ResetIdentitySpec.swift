@@ -169,7 +169,7 @@ final class EventConsumer_ResetIdentitySpec: HeapSpec {
                     }
                     
                     it("marks the new session as coming from a user change") {
-                        expect(consumer.currentSessionProperties.previousSessionHadDifferentUser).to(beTrue())
+                        expect(consumer.currentSessionProperties).to(equal(.previousSessionHadDifferentUser))
                     }
                     
                     it("extends the session") {

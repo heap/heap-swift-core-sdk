@@ -51,20 +51,6 @@ class StateManager<StateStore: StateStoreProtocol> {
     }
 }
 
-extension _ContentsquareSessionProperties {
-    static let fromContentsquareScreenView = {
-        var properties = _ContentsquareSessionProperties()
-        properties.createdByContentsquareScreenView = true
-        return properties
-    }()
-    
-    static let fromNewUser = {
-        var properties = _ContentsquareSessionProperties()
-        properties.previousSessionHadDifferentUser = true
-        return properties
-    }()
-}
-
 extension StateManager {
     
     func start(environmentId: String, sanitizedOptions: [Option: Any], at timestamp: Date) -> State.UpdateResults {
@@ -94,6 +80,12 @@ extension StateManager {
     func extendSession(sessionId: String, preferredExpirationDate: Date, timestamp: Date) -> State.UpdateResults {
         update { state, contentsquareTimeout, outcomes in
             state?.extendSession(sessionId: sessionId, preferredExpirationDate: preferredExpirationDate, timestamp: timestamp, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
+        }
+    }
+    
+    func extendSessionIfNotExpired(timestamp: Date) -> State.UpdateResults {
+        update { state, contentsquareTimeout, outcomes in
+            state?.extendSessionIfNotExpired(timestamp: timestamp, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
         }
     }
     

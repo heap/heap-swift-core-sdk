@@ -522,23 +522,41 @@ extension EventConsumer {
         }
     }
     
-    func advanceOrExtendSession(fromContentsquareScreenView: Bool, timestamp: Date) -> (environmentId: String, userId: String, sessionId: String)? {
-        let results = stateManager.createSessionIfExpired(extendIfNotExpired: true, properties: fromContentsquareScreenView ? .fromContentsquareScreenView : .init(), at: timestamp)
-        handleChanges(results, timestamp: timestamp)
+    func advanceOrExtendSession(source: _ContentsquareSessionExtensionSource, timestamp: Date) -> _AdvanceOrExtendSessionResults {
         
-        guard let environment = results.current?.environment else { return nil }
-        return (environment.envID, environment.userID, environment.sessionInfo.id)
+        let results: State.UpdateResults
+        
+        switch source {
+        case .screenview:
+            results = stateManager.createSessionIfExpired(extendIfNotExpired: true, properties: .createdByContentsquareScreenView, at: timestamp)
+        case .appStartOrShow:
+            results = stateManager.extendSessionIfNotExpired(timestamp: timestamp)
+        case .other:
+            fallthrough
+        @unknown default:
+            results = stateManager.createSessionIfExpired(extendIfNotExpired: true, properties: .createdByContentsquare, at: timestamp)
+        }
+        
+        var output = _AdvanceOrExtendSessionResults()
+        if let state = results.current {
+            let environment = state.environment
+            output.environmentId = environment.envID
+            output.userId = environment.userID
+            output.sessionId = state.sessionExpirationDate >= timestamp ? environment.sessionInfo.id : nil
+            output.newSessionCreated = results.outcomes.sessionCreated
+        }
+        
+        return output
     }
 }
 
 extension EventConsumer: _ContentsquareMethods {
-    
-    func advanceOrExtendSession(fromContentsquareScreenView: Bool) -> (environmentId: String, userId: String, sessionId: String)? {
-        advanceOrExtendSession(fromContentsquareScreenView: fromContentsquareScreenView, timestamp: Date())
+    func advanceOrExtendSession(source: _ContentsquareSessionExtensionSource) -> _AdvanceOrExtendSessionResults {
+        advanceOrExtendSession(source: source, timestamp: Date())
     }
     
     var currentSessionProperties: _ContentsquareSessionProperties {
-        stateManager.current?.contentsquareSessionProperties ?? .init()
+        stateManager.current?.contentsquareSessionProperties ?? []
     }
 }
 

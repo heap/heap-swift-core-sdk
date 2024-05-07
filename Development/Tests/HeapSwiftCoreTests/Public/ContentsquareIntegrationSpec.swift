@@ -26,13 +26,13 @@ final class ContentsquareIntegrationSpec: QuickSpec {
             describe("_setContentsquareIntegration") {
                 it("sets the integration") {
                     let integration = CountingContentsquareIntegration(sessionTimeoutDuration: 600)
-                    Heap.shared.perform(selector, with: integration)
+                    _ = Heap.shared.perform(selector, with: integration)
                     expect(Heap.shared.consumer.contentsquareIntegration).toNot(beNil())
                 }
                 
                 it("triggers setContentsquareMethods") {
                     let integration = CountingContentsquareIntegration(sessionTimeoutDuration: 600)
-                    Heap.shared.perform(selector, with: integration)
+                    _ = Heap.shared.perform(selector, with: integration)
                     expect(integration.contentsquareMethods).toNot(beNil())
                 }
             }

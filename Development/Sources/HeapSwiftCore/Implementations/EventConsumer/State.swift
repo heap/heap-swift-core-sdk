@@ -142,6 +142,12 @@ extension State {
         }
     }
     
+    mutating func extendSessionIfNotExpired(timestamp: Date, contentsquareTimeout: TimeInterval?, outcomes: inout UpdateResults.Outcomes) {
+        if sessionExpirationDate >= timestamp {
+            extendCurrentSessionUnconditionally(timestamp: timestamp, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
+        }
+    }
+    
     private mutating func createUser(identity: String?, outcomes: inout UpdateResults.Outcomes) {
         environment.userID = generateRandomHeapId()
         endSession()
@@ -236,7 +242,7 @@ extension State {
         outcomes.identityReset = true
         
         createUser(identity: nil, outcomes: &outcomes)
-        createSession(at: timestamp, properties: .fromNewUser, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
+        createSession(at: timestamp, properties: .previousSessionHadDifferentUser, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
     }
     
     mutating func identify(_ identity: String, at timestamp: Date, contentsquareTimeout: TimeInterval?, outcomes: inout UpdateResults.Outcomes) {
@@ -252,7 +258,7 @@ extension State {
         
         if environment.hasIdentity {
             createUser(identity: identity, outcomes: &outcomes)
-            createSession(at: timestamp, properties: .fromNewUser, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
+            createSession(at: timestamp, properties: .previousSessionHadDifferentUser, contentsquareTimeout: contentsquareTimeout, outcomes: &outcomes)
         } else {
             environment.identity = identity
             outcomes.identitySet = true

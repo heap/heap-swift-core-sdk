@@ -162,7 +162,7 @@ final class EventConsumer_IdentifySpec: HeapSpec {
                         }
                         
                         it("does not mark new session as coming from a user change") {
-                            expect(consumer.currentSessionProperties.previousSessionHadDifferentUser).to(beFalse())
+                            expect(consumer.currentSessionProperties).to(equal([]))
                         }
                     }
                 }
@@ -296,7 +296,7 @@ final class EventConsumer_IdentifySpec: HeapSpec {
                         }
                         
                         it("marks the new session as coming from a user change") {
-                            expect(consumer.currentSessionProperties.previousSessionHadDifferentUser).to(beTrue())
+                            expect(consumer.currentSessionProperties).to(equal(.previousSessionHadDifferentUser))
                         }
                     }
                     
@@ -334,7 +334,7 @@ final class EventConsumer_IdentifySpec: HeapSpec {
                         }
                         
                         it("marks the new session as coming from a user change") {
-                            expect(consumer.currentSessionProperties.previousSessionHadDifferentUser).to(beTrue())
+                            expect(consumer.currentSessionProperties).to(equal(.previousSessionHadDifferentUser))
                         }
                     }
 
@@ -372,7 +372,7 @@ final class EventConsumer_IdentifySpec: HeapSpec {
                         }
                         
                         it("marks the new session as coming from a user change") {
-                            expect(consumer.currentSessionProperties.previousSessionHadDifferentUser).to(beTrue())
+                            expect(consumer.currentSessionProperties).to(equal(.previousSessionHadDifferentUser))
                         }
                     }
                 }
