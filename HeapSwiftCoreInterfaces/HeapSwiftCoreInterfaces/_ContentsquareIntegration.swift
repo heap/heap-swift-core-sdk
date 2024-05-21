@@ -33,7 +33,7 @@ public protocol _ContentsquareMethods: AnyObject {
 }
 
 public protocol _ContentsquareIntegration: AnyObject {
-    var sessionTimeoutDuration: TimeInterval { get }
+    var sessionTimeoutDuration: TimeInterval? { get }
     func didTrackHeapPageview(_ pageview: Pageview)
     func setContentsquareMethods(_ methods: _ContentsquareMethods)
 }

@@ -10,17 +10,17 @@ public struct TransformableEvent: Transformable, Equatable {
     
     public struct ContentsquareProperties: Equatable {
         public let cspid: String
-        public let cspvid: String
-        public let cssn: String
-        public let csts: String
         public let csuu: String
+        public let cssn: String
+        public let cspvid: String
+        public let csts: String
         
-        public init(cspid: String, cspvid: String, cssn: String, csts: String, csuu: String) {
+        public init(cspid: String, csuu: String, cssn: String, cspvid: String, csts: String) {
             self.cspid = cspid
-            self.cspvid = cspvid
-            self.cssn = cssn
-            self.csts = csts
             self.csuu = csuu
+            self.cssn = cssn
+            self.cspvid = cspvid
+            self.csts = csts
         }
     }
     
