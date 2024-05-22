@@ -2,12 +2,12 @@ import HeapSwiftCoreInterfaces
 
 class CountingContentsquareIntegration: _ContentsquareIntegration {
     
-    var sessionTimeoutDuration: TimeInterval
+    var sessionTimeoutDuration: TimeInterval?
     var contentsquareMethods: _ContentsquareMethods? = nil
     
     var pageviews: [Pageview] = []
     
-    init(sessionTimeoutDuration: TimeInterval) {
+    init(sessionTimeoutDuration: TimeInterval?) {
         self.sessionTimeoutDuration = sessionTimeoutDuration
     }
     

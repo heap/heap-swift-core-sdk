@@ -13,6 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0]
+
+### Added
+
+- Added new `startRecording` option, `resumePreviousSession`, which resumes the previous session on
+  start if the session has not yet expired.
+- Added new signature `stopRecording(deleteUser: Bool)` which deletes the current user state.
+  Subsequent calls to `startRecording` will have a new user and session as a result.
+- Added several internal interfaces to support an upcoming integration.
+
+## [0.5.3]
+
+### Changed
+
+- Improved trace logging for failed Sqlite queries.
+
 ## [0.5.2]
 
 ### Added
@@ -164,7 +180,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
-[Unreleased]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.2...main
+[Unreleased]: https://github.com/heap/heap-swift-core-sdk/compare/0.6.0...main
+[0.6.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.3...0.6.0
+[0.5.3]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.2...0.5.3
 [0.5.2]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.1...0.5.2
 [0.5.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.4.0...0.5.0

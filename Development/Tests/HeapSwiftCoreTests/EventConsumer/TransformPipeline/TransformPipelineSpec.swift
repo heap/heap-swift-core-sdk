@@ -72,7 +72,7 @@ final class TransformPipelineSpec: HeapSpec {
             }
             
             it("transforms the data") {
-                transformerA.applyToAll(sessionReplay: "SR", contentsquareProperties: .init(cspid: "PID", cspvid: "PVID", cssn: "SN", csts: "TS", csuu: "UU"))
+                transformerA.applyToAll(sessionReplay: "SR", contentsquareProperties: .init(cspid: "PID", csuu: "UU", cssn: "SN", cspvid: "PVID", csts: "TS"))
                 
                 pipeline.add(transformerA)
                 dataStore.createNewUserIfNeeded(environmentId: "11", userId: "123", identity: nil, creationDate: Date())
@@ -111,7 +111,7 @@ final class TransformPipelineSpec: HeapSpec {
                 }
                 
                 it("transforms the data") {
-                    transformerA.applyToAll(sessionReplay: "SR", contentsquareProperties: .init(cspid: "PID", cspvid: "PVID", cssn: "SN", csts: "TS", csuu: "UU"))
+                    transformerA.applyToAll(sessionReplay: "SR", contentsquareProperties: .init(cspid: "PID", csuu: "UU", cssn: "SN", cspvid: "PVID", csts: "TS"))
                     pipeline.add(transformerA)
                     
                     pipeline.insertPendingMessage(message)
@@ -129,7 +129,7 @@ final class TransformPipelineSpec: HeapSpec {
                 }
                 
                 it("works with an already completed processor") {
-                    transformerA.applyToAll(sessionReplay: "SR", contentsquareProperties: .init(cspid: "PID", cspvid: "PVID", cssn: "SN", csts: "TS", csuu: "UU"))
+                    transformerA.applyToAll(sessionReplay: "SR", contentsquareProperties: .init(cspid: "PID", csuu: "UU", cssn: "SN", cspvid: "PVID", csts: "TS"))
                     pipeline.add(transformerA)
                     
                     let processor = pipeline.processor(for: message)

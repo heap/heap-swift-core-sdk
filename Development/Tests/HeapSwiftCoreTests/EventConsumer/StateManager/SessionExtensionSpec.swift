@@ -83,7 +83,7 @@ final class SessionExtensionSpec: HeapSpec {
                 expect(result.current?.contentsquareSessionProperties).to(equal(.createdByContentsquareScreenView))
             }
 
-            context("with _ContentsquareIntegration") {
+            context("with _ContentsquareIntegration providing a value") {
                 
                 var integration: CountingContentsquareIntegration!
                 
@@ -117,6 +117,27 @@ final class SessionExtensionSpec: HeapSpec {
                     integration.sessionTimeoutDuration = 600_000
                     let timestamp = sessionTimestamp.addingTimeInterval(60)
                     let expectedExpirationDate = timestamp.addingTimeInterval(600_000)
+                    
+                    let result = manager.createSessionIfExpired(extendIfNotExpired: true, properties: .init(), at: timestamp)
+                    
+                    expect(result.current?.sessionInfo.id).to(equal(originalSessionId))
+                    expect(result.current?.sessionExpirationDate).to(beCloseTo(expectedExpirationDate, within: 1))
+                }
+            }
+            
+            context("with _ContentsquareIntegration not providing a value") {
+                
+                var integration: CountingContentsquareIntegration!
+                
+                beforeEach {
+                    integration = CountingContentsquareIntegration(sessionTimeoutDuration: nil)
+                    manager.contentsquareIntegration = integration
+                }
+                
+                it("extends the session using the Heap timeout") {
+                    integration.sessionTimeoutDuration = 5
+                    let timestamp = sessionTimestamp.addingTimeInterval(60)
+                    let expectedExpirationDate = timestamp.addingTimeInterval(300)
                     
                     let result = manager.createSessionIfExpired(extendIfNotExpired: true, properties: .init(), at: timestamp)
                     

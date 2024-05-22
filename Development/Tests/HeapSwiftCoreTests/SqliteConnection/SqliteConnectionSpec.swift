@@ -65,6 +65,20 @@ Create Table TestTable (
 
             }
             
+            it("throws with meaningful data") {
+                let query = "Insert Into TestTable (FakeColumn) Values (1);"
+                do {
+                    try connection.perform(query: query)
+                    XCTFail("The above code should have failed")
+                } catch let error as SqliteError {
+                    expect(error.code).to(equal(1))
+                    expect(error.message).to(contain(query))
+                    expect("\(error)").to(contain("HeapSwiftCoreTests/SqliteConnectionSpec.swift:71"))
+                    expect("\(error)").to(contain("error 1"))
+                    expect("\(error)").to(contain(query))
+                }
+            }
+            
             it("can edit and query tables") {
                 
                 // Fun fact! Sqlite only executes the first statement in a query.
