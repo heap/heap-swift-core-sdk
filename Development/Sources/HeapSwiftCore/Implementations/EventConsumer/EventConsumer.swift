@@ -537,6 +537,8 @@ extension EventConsumer {
             results = stateManager.createSessionIfExpired(extendIfNotExpired: true, properties: .createdByContentsquare, at: timestamp)
         }
         
+        handleChanges(results, timestamp: timestamp)
+        
         var output = _AdvanceOrExtendSessionResults()
         if let state = results.current {
             let environment = state.environment

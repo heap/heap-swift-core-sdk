@@ -186,6 +186,19 @@ final class EventConsumer_ContentsquareMethodsSpec: HeapSpec {
                         expect(properties.newSessionCreated).to(equal(false))
                     }
                 }
+                
+                context("calling with .other") {
+                    let source = _ContentsquareSessionExtensionSource.other
+                    
+                    it("creates session messages") {
+                        let timestamp = sessionTimestamp.addingTimeInterval(6000)
+                        _ = consumer.advanceOrExtendSession(source: source, timestamp: timestamp)
+                        
+                        let user = try dataStore.assertOnlyOneUserToUpload()
+                        let messages = try dataStore.assertExactPendingMessagesCount(for: user, sessionId: consumer.activeOrExpiredSessionId, count: 3)
+                        messages.expectStartOfSessionWithSynthesizedPageview(user: user, sessionId: consumer.activeOrExpiredSessionId, sessionTimestamp: timestamp)
+                    }
+                }
             }
         }
     }
