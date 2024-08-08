@@ -10,21 +10,120 @@
 # instance of the heap/monorepo-diff plugin as needed.
 #
 # FOR SMALL REPOS, this file can directly contain build-steps.
----
+
+env:
+  LC_ALL: "en_US.UTF-8"
+  LANG: "en_US.UTF-8"
+
 steps:
-  - label: ":pipeline: PLACEHOLDER FOR REQUIRED STEPS FOR SMALL REPOS"
-    command: |
-      echo "Required steps can be added here"
 
-  # - label: ":pipeline: PLACEHOLDER FOR FAN-OUT TO REQUIRED PIPELINES FOR LARGE REPOS"
-  #   plugins:
-  #     - heap/monorepo-diff#v1.3.6:
-  #         diff: .buildkite/monorepo_diff.bash all
-  #         watch:
-  #           - path: something/
-  #             config:
-  #               trigger: "tbd-pipeline-here"
+# Builds
 
-  #           - path: else/
-  #             config:
-  #               trigger: "tbd-another-pipeline-here"
+  - label: "Validate HeapSwiftCoreInterfaces podspec"
+    timeout_in_minutes: 10
+    command:  "make test_interfaces_podspec"
+    agents:
+      queue: "macos"
+    artifact_paths:
+      - "build/xcframework/*.zip"
+
+  - label: "Validate HeapSwiftCore podspec"
+    timeout_in_minutes: 10
+    command:  "make test_core_podspec"
+    agents:
+      queue: "macos"
+
+  - label: "Build dynamic framework"
+    timeout_in_minutes: 10
+    command:  "make dynamic_xcframework"
+    agents:
+      queue: "macos"
+    artifact_paths:
+      - "build/xcframework/*.zip"
+
+# Unit Tests
+
+  - label: "iOS 12.4 - iPhone - Unit Test Suite"
+    timeout_in_minutes: 5
+    command:  "make clear_results iphone_ios12_unit_tests"
+    agents:
+      queue: "macos"
+    artifact_paths:
+      - "build/reports/*"
+
+  - label: "iOS 16.0 - iPhone - Unit Test Suite"
+    timeout_in_minutes: 5
+    command:  "make clear_results iphone_ios16_unit_tests"
+    agents:
+      queue: "macos"
+    artifact_paths:
+      - "build/reports/*"
+
+  - label: "iPadOS 12.4 - iPad - Unit Test Suite"
+    timeout_in_minutes: 5
+    command:  "make clear_results ipad_unit_tests"
+    agents:
+      queue: "macos"
+    artifact_paths:
+      - "build/reports/*"
+
+  - label: "watchOS 9.0 - Apple Watch - Unit Test Suite"
+    timeout_in_minutes: 5
+    command:  "make clear_results watchos_unit_tests"
+    agents:
+      queue: "macos"
+    artifact_paths:
+      - "build/reports/*"
+
+  - label: "tvOS 12.4 - Apple TV - Unit Test Suite"
+    timeout_in_minutes: 5
+    command:  "make clear_results tvos_unit_tests"
+    agents:
+      queue: "macos"
+    artifact_paths:
+      - "build/reports/*"
+
+  - label: "macOS (current) - macOS - Unit Test Suite"
+    timeout_in_minutes: 5
+    command:  "make clear_results macos_unit_tests"
+    agents:
+      queue: "macos"
+    artifact_paths:
+      - "build/reports/*"
+
+  - label: "macOS (current) - Catalyst - Unit Test Suite"
+    timeout_in_minutes: 5
+    command:  "make clear_results catalyst_unit_tests"
+    agents:
+      queue: "macos"
+    artifact_paths:
+      - "build/reports/*"
+
+# Sample projects
+
+  - label: "macOS - Build Sample App"
+    timeout_in_minutes: 5
+    command:  "make macos_sample_app"
+    agents:
+      queue: "macos"
+
+  - label: "iOS - Build Sample App"
+    timeout_in_minutes: 5
+    command:  "make ios_sample_app"
+    agents:
+      queue: "macos"
+
+  - label: "iOS - Build Sample Extension"
+    timeout_in_minutes: 5
+    command:  "make ios_sample_extension"
+    agents:
+      queue: "macos"
+
+# Test reporting
+
+  - wait: ~
+    continue_on_failure: true
+  - label: "Annotate build with test errors"
+    plugins:
+      - heap/junit-annotate#v1.9.0:
+          artifacts: build/reports/*.xml

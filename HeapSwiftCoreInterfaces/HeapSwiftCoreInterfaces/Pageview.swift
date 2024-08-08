@@ -126,10 +126,10 @@ public struct PageviewProperties {
     /// The source SDK is responsible for determining a mechanism for setting these properties.
     public var properties: [String: HeapPropertyValue] = [:]
     
-    /// Creates an empty `Pageview`.
-    init() {}
+    /// Creates an empty `PageviewProperties`.
+    public init() {}
     
-    /// A shorthand constructor for `Pageview`.
+    /// A shorthand constructor for `PageviewProperties`.
     ///
     /// This can be used with a closure to configure a pageview inline with `trackPageview`:
     ///

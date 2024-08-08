@@ -19,6 +19,8 @@ public protocol HeapProtocol {
     
     func trackInteraction(interaction: Interaction, nodes: [InteractionNode], callbackName: String?, timestamp: Date, sourceInfo: SourceInfo?, sourceProperties: [String: HeapPropertyValue], pageview: Pageview?)
     
+    func trackNotificationInteraction(properties: NotificationInteractionProperties, timestamp: Date, sourceInfo: SourceInfo?)
+    
     func identify(_ identity: String)
     
     func resetIdentity()
