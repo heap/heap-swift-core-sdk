@@ -10,4 +10,12 @@ extension Event {
         }
         return custom
     }
+    
+    @discardableResult
+    func assertIsNotificationInteractionEvent(message: String? = nil, file: StaticString = #file, line: UInt = #line) throws -> NotificationInteraction {
+        guard case let .some(.notificationInteraction(interaction)) = kind else {
+            throw TestFailure(message ?? "Expected an interaction event, got \(String(describing: kind))", file: file, line: line)
+        }
+        return interaction
+    }
 }

@@ -173,7 +173,6 @@ extension EventConsumer {
 
     func stopRecording(deleteUser: Bool = false, timestamp: Date = Date()) {
         
-        // TODO: Delete the user.
         let results = stateManager.stop(deleteUser: deleteUser)
         
         if results.outcomes.previousStopped {
@@ -306,6 +305,41 @@ extension EventConsumer {
         event.sourceProperties = sourceProperties
         
         event.commit()
+    }
+    
+    func trackNotificationInteraction(properties: NotificationInteractionProperties, timestamp: Date = Date(), sourceInfo: SourceInfo? = nil) {
+        guard stateManager.current != nil else {
+            if let sourceName = sourceInfo?.name {
+                HeapLogger.shared.debug("Heap.trackNotificationInteraction was called before Heap.startRecording and will not be recorded. It is possible that the \(sourceName) library was not properly configured.")
+            } else {
+                HeapLogger.shared.debug("Heap.trackNotificationInteraction was called before Heap.startRecording and will not be recorded.")
+            }
+            
+            return
+        }
+        
+        let sourceLibrary = sourceInfo?.libraryInfo
+        let results = stateManager.createSessionIfExpired(extendIfNotExpired: true, properties: .init(), at: timestamp)
+        handleChanges(results, timestamp: timestamp)
+        
+        guard let state = results.current else { return }
+        
+        let message = Message(forPartialEventAt: timestamp, sourceLibrary: sourceLibrary, in: state)
+        
+        let pendingEvent = PendingEvent(partialEventMessage: message, toBeCommittedTo: transformPipeline)
+        pendingEvent.setKind(.notificationInteraction(.with({
+            $0.source = properties.source.protoValue
+            $0.setIfNotNil(\.titleText, properties.titleText?.truncatedLoggingToDev(message: "trackNotificationInteraction: Title was truncated because the value exceeded 1024 utf-16 code units."))
+            $0.setIfNotNil(\.bodyText, properties.bodyText?.truncatedLoggingToDev(message: "trackNotificationInteraction: Body was truncated because the value exceeded 1024 utf-16 code units."))
+            $0.setIfNotNil(\.category, properties.category?.truncatedLoggingToDev(message: "trackNotificationInteraction: Category was truncated because the value exceeded 1024 utf-16 code units."))
+            $0.setIfNotNil(\.componentOrClassName, properties.componentOrClassName?.truncatedLoggingToDev(message: "trackNotificationInteraction: Component or class name was truncated because the value exceeded 1024 utf-16 code units."))
+            $0.setIfNotNil(\.action, properties.action?.truncatedLoggingToDev(message: "trackNotificationInteraction: Action was truncated because the value exceeded 1024 utf-16 code units."))
+        })))
+        PageviewResolver.resolvePageviewInfo(requestedPageview: Pageview.none, eventSourceName: sourceInfo?.name, timestamp: timestamp, delegates: delegateManager.current, state: state) {
+            pendingEvent.setPageviewInfo($0)
+        }
+        
+        HeapLogger.shared.debug("Tracked notification interaction.")
     }
 
     func identify(_ identity: String, timestamp: Date = Date()) {

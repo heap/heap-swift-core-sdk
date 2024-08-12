@@ -12,3 +12,4 @@ typealias Value = CoreSdk_V1_Value
 typealias EventInteraction = CoreSdk_V1_Interaction
 typealias ElementNode = CoreSdk_V1_ElementNode
 typealias VersionChange = CoreSdk_V1_VersionChange
+typealias NotificationInteraction = CoreSdk_V1_NotificationInteraction

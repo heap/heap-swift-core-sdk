@@ -485,6 +485,130 @@ struct CoreSdk_V1_ComponentTransition {
   init() {}
 }
 
+struct CoreSdk_V1_NotificationInteraction {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Where the notification originated in the application. Default to UNKNOWN if unknown.
+  var source: CoreSdk_V1_NotificationInteraction.NotificationSource = .sourceUnknown
+
+  /// The title text of the notification.
+  var titleText: String {
+    get {return _titleText ?? String()}
+    set {_titleText = newValue}
+  }
+  /// Returns true if `titleText` has been explicitly set.
+  var hasTitleText: Bool {return self._titleText != nil}
+  /// Clears the value of `titleText`. Subsequent reads from it will return its default value.
+  mutating func clearTitleText() {self._titleText = nil}
+
+  /// The body text of the notification.
+  var bodyText: String {
+    get {return _bodyText ?? String()}
+    set {_bodyText = newValue}
+  }
+  /// Returns true if `bodyText` has been explicitly set.
+  var hasBodyText: Bool {return self._bodyText != nil}
+  /// Clears the value of `bodyText`. Subsequent reads from it will return its default value.
+  mutating func clearBodyText() {self._bodyText = nil}
+
+  /// If the interaction was on an action, specify action text or identifier.
+  var action: String {
+    get {return _action ?? String()}
+    set {_action = newValue}
+  }
+  /// Returns true if `action` has been explicitly set.
+  var hasAction: Bool {return self._action != nil}
+  /// Clears the value of `action`. Subsequent reads from it will return its default value.
+  mutating func clearAction() {self._action = nil}
+
+  /// The notification category or channel, if known.
+  var category: String {
+    get {return _category ?? String()}
+    set {_category = newValue}
+  }
+  /// Returns true if `category` has been explicitly set.
+  var hasCategory: Bool {return self._category != nil}
+  /// Clears the value of `category`. Subsequent reads from it will return its default value.
+  mutating func clearCategory() {self._category = nil}
+
+  /// The class or component that handles the notification interaction. (Android only)
+  var componentOrClassName: String {
+    get {return _componentOrClassName ?? String()}
+    set {_componentOrClassName = newValue}
+  }
+  /// Returns true if `componentOrClassName` has been explicitly set.
+  var hasComponentOrClassName: Bool {return self._componentOrClassName != nil}
+  /// Clears the value of `componentOrClassName`. Subsequent reads from it will return its default value.
+  mutating func clearComponentOrClassName() {self._componentOrClassName = nil}
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  /// Where the notification originated. Only supporting local/push for now.
+  enum NotificationSource: SwiftProtobuf.Enum {
+    typealias RawValue = Int
+    case sourceUnknown // = 0
+    case sourcePushService // = 1
+    case sourceGeofence // = 2
+
+    /// These two might just be iOS only (TBD)
+    case sourceCalendar // = 3
+    case sourceTimeInterval // = 4
+    case UNRECOGNIZED(Int)
+
+    init() {
+      self = .sourceUnknown
+    }
+
+    init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .sourceUnknown
+      case 1: self = .sourcePushService
+      case 2: self = .sourceGeofence
+      case 3: self = .sourceCalendar
+      case 4: self = .sourceTimeInterval
+      default: self = .UNRECOGNIZED(rawValue)
+      }
+    }
+
+    var rawValue: Int {
+      switch self {
+      case .sourceUnknown: return 0
+      case .sourcePushService: return 1
+      case .sourceGeofence: return 2
+      case .sourceCalendar: return 3
+      case .sourceTimeInterval: return 4
+      case .UNRECOGNIZED(let i): return i
+      }
+    }
+
+  }
+
+  init() {}
+
+  fileprivate var _titleText: String? = nil
+  fileprivate var _bodyText: String? = nil
+  fileprivate var _action: String? = nil
+  fileprivate var _category: String? = nil
+  fileprivate var _componentOrClassName: String? = nil
+}
+
+#if swift(>=4.2)
+
+extension CoreSdk_V1_NotificationInteraction.NotificationSource: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static var allCases: [CoreSdk_V1_NotificationInteraction.NotificationSource] = [
+    .sourceUnknown,
+    .sourcePushService,
+    .sourceGeofence,
+    .sourceCalendar,
+    .sourceTimeInterval,
+  ]
+}
+
+#endif  // swift(>=4.2)
+
 /// Event property definition
 struct CoreSdk_V1_Event {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
@@ -529,6 +653,15 @@ struct CoreSdk_V1_Event {
     set {kind = .componentTransition(newValue)}
   }
 
+  /// See notification interaction definition
+  var notificationInteraction: CoreSdk_V1_NotificationInteraction {
+    get {
+      if case .notificationInteraction(let v)? = kind {return v}
+      return CoreSdk_V1_NotificationInteraction()
+    }
+    set {kind = .notificationInteraction(newValue)}
+  }
+
   /// Mobile app_visibility_state
   var appVisibilityState: CoreSdk_V1_Event.AppVisibility {
     get {return _appVisibilityState ?? .unknownUnspecified}
@@ -550,6 +683,8 @@ struct CoreSdk_V1_Event {
     case versionChange(CoreSdk_V1_VersionChange)
     /// See component transition definition
     case componentTransition(CoreSdk_V1_ComponentTransition)
+    /// See notification interaction definition
+    case notificationInteraction(CoreSdk_V1_NotificationInteraction)
 
   #if !swift(>=4.1)
     static func ==(lhs: CoreSdk_V1_Event.OneOf_Kind, rhs: CoreSdk_V1_Event.OneOf_Kind) -> Bool {
@@ -571,6 +706,10 @@ struct CoreSdk_V1_Event {
       }()
       case (.componentTransition, .componentTransition): return {
         guard case .componentTransition(let l) = lhs, case .componentTransition(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      case (.notificationInteraction, .notificationInteraction): return {
+        guard case .notificationInteraction(let l) = lhs, case .notificationInteraction(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
       default: return false
@@ -943,6 +1082,8 @@ extension CoreSdk_V1_Interaction.OneOf_Kind: @unchecked Sendable {}
 extension CoreSdk_V1_Interaction.BuiltinKind: @unchecked Sendable {}
 extension CoreSdk_V1_VersionChange: @unchecked Sendable {}
 extension CoreSdk_V1_ComponentTransition: @unchecked Sendable {}
+extension CoreSdk_V1_NotificationInteraction: @unchecked Sendable {}
+extension CoreSdk_V1_NotificationInteraction.NotificationSource: @unchecked Sendable {}
 extension CoreSdk_V1_Event: @unchecked Sendable {}
 extension CoreSdk_V1_Event.OneOf_Kind: @unchecked Sendable {}
 extension CoreSdk_V1_Event.AppVisibility: @unchecked Sendable {}
@@ -1438,6 +1579,82 @@ extension CoreSdk_V1_ComponentTransition: SwiftProtobuf.Message, SwiftProtobuf._
   }
 }
 
+extension CoreSdk_V1_NotificationInteraction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".NotificationInteraction"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "source"),
+    2: .standard(proto: "title_text"),
+    3: .standard(proto: "body_text"),
+    4: .same(proto: "action"),
+    5: .same(proto: "category"),
+    6: .standard(proto: "component_or_class_name"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularEnumField(value: &self.source) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self._titleText) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self._bodyText) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self._action) }()
+      case 5: try { try decoder.decodeSingularStringField(value: &self._category) }()
+      case 6: try { try decoder.decodeSingularStringField(value: &self._componentOrClassName) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if self.source != .sourceUnknown {
+      try visitor.visitSingularEnumField(value: self.source, fieldNumber: 1)
+    }
+    try { if let v = self._titleText {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 2)
+    } }()
+    try { if let v = self._bodyText {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 3)
+    } }()
+    try { if let v = self._action {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 4)
+    } }()
+    try { if let v = self._category {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 5)
+    } }()
+    try { if let v = self._componentOrClassName {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 6)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: CoreSdk_V1_NotificationInteraction, rhs: CoreSdk_V1_NotificationInteraction) -> Bool {
+    if lhs.source != rhs.source {return false}
+    if lhs._titleText != rhs._titleText {return false}
+    if lhs._bodyText != rhs._bodyText {return false}
+    if lhs._action != rhs._action {return false}
+    if lhs._category != rhs._category {return false}
+    if lhs._componentOrClassName != rhs._componentOrClassName {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension CoreSdk_V1_NotificationInteraction.NotificationSource: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "SOURCE_UNKNOWN"),
+    1: .same(proto: "SOURCE_PUSH_SERVICE"),
+    2: .same(proto: "SOURCE_GEOFENCE"),
+    3: .same(proto: "SOURCE_CALENDAR"),
+    4: .same(proto: "SOURCE_TIME_INTERVAL"),
+  ]
+}
+
 extension CoreSdk_V1_Event: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Event"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
@@ -1445,6 +1662,7 @@ extension CoreSdk_V1_Event: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
     2: .same(proto: "interaction"),
     3: .standard(proto: "version_change"),
     4: .standard(proto: "component_transition"),
+    5: .standard(proto: "notification_interaction"),
     20: .standard(proto: "app_visibility_state"),
   ]
 
@@ -1506,6 +1724,19 @@ extension CoreSdk_V1_Event: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
           self.kind = .componentTransition(v)
         }
       }()
+      case 5: try {
+        var v: CoreSdk_V1_NotificationInteraction?
+        var hadOneofValue = false
+        if let current = self.kind {
+          hadOneofValue = true
+          if case .notificationInteraction(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.kind = .notificationInteraction(v)
+        }
+      }()
       case 20: try { try decoder.decodeSingularEnumField(value: &self._appVisibilityState) }()
       default: break
       }
@@ -1533,6 +1764,10 @@ extension CoreSdk_V1_Event: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
     case .componentTransition?: try {
       guard case .componentTransition(let v)? = self.kind else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+    }()
+    case .notificationInteraction?: try {
+      guard case .notificationInteraction(let v)? = self.kind else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
     }()
     case nil: break
     }

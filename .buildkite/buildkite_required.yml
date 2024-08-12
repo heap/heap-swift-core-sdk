@@ -51,7 +51,7 @@ steps:
     artifact_paths:
       - "build/reports/*"
 
-  - label: "iOS 16.0 - iPhone - Unit Test Suite"
+  - label: "iOS 16.2 - iPhone - Unit Test Suite"
     timeout_in_minutes: 5
     command:  "make clear_results iphone_ios16_unit_tests"
     agents:

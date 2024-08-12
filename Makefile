@@ -137,7 +137,7 @@ iphone_ios16_unit_tests:
 
 	DevTools/DeleteOldSimulators.rb
 	
-	$(call create_device,com.apple.CoreSimulator.SimRuntime.iOS-16-0,iPhone Xs)
+	$(call create_device,com.apple.CoreSimulator.SimRuntime.iOS-16-2,iPhone Xs)
 
 	# The "," breaks `call` so we move it to a file
 	mkdir -p build
@@ -241,8 +241,9 @@ ios_sample_extension:
 protobufs:
 # (LOCAL) Rebuilds the protobuf Swift files.
 
+	./DevTools/BuildSwiftProtobuf.sh
 	-rm Development/Sources/HeapSwiftCore/Protobufs/*.pb.swift
-	cd Development/Sources/Protobufs && protoc --swift_out=../HeapSwiftCore/Protobufs *.proto
+	cd Development/Sources/Protobufs && PATH="../../../build/swift-protobuf/.build/release/:$$PATH" protoc --swift_out=../HeapSwiftCore/Protobufs *.proto
 
 push_branch_to_public:
 # (CI) Pushes the current branch to the public repo if it is `main`.

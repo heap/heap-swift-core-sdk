@@ -68,6 +68,10 @@ public class Heap: NSObject, HeapProtocol {
     public func trackInteraction(interaction: Interaction, nodes: [InteractionNode], callbackName: String? = nil, timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, pageview: Pageview? = nil) {
         trackInteraction(interaction: interaction, nodes: nodes, callbackName: callbackName, timestamp: timestamp, sourceInfo: sourceInfo, sourceProperties: [:], pageview: pageview)
     }
+    
+    public func trackNotificationInteraction(properties: NotificationInteractionProperties, timestamp: Date = Date(), sourceInfo: SourceInfo? = nil) {
+        consumer.trackNotificationInteraction(properties: properties, timestamp: timestamp, sourceInfo: sourceInfo)
+    }
 
     @objc
     public func identify(_ identity: String) {
