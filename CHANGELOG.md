@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0]
+
+### Added
+
+- Added new interfaces for upcoming autocapture release.
+
 ## [0.6.1]
 
 ### Fixed
@@ -186,7 +192,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
-[Unreleased]: https://github.com/heap/heap-swift-core-sdk/compare/0.6.1...main
+[Unreleased]: https://github.com/heap/heap-swift-core-sdk/compare/0.7.0...main
+[0.7.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.6.1...0.7.0
 [0.6.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.6.0...0.6.1
 [0.6.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.3...0.6.0
 [0.5.3]: https://github.com/heap/heap-swift-core-sdk/compare/0.5.2...0.5.3
