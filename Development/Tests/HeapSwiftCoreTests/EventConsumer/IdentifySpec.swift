@@ -104,6 +104,17 @@ final class EventConsumer_IdentifySpec: HeapSpec {
                             let state = dataStore.loadState(for: "11")
                             expect(state.properties).to(equal(originalState.properties))
                         }
+                        
+                        it("causes identity to be sent in subsequent messages") {
+                            consumer.track("event")
+                            let user = try dataStore.assertUserToUploadExists(with: consumer.userId!)
+                            let messages = try dataStore.getPendingMessages(for: user, sessionId: consumer.activeOrExpiredSessionId)
+                            
+                            expect(messages).toNot(beEmpty())
+                            for message in messages {
+                                expect(message.identity).to(equal("user1"))
+                            }
+                        }
                     }
                     
                     context("called with a valid identity, before the session expires") {

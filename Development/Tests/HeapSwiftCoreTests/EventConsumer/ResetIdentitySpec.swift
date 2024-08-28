@@ -174,7 +174,17 @@ final class EventConsumer_ResetIdentitySpec: HeapSpec {
                     
                     it("extends the session") {
                         try consumer.assertSessionWasExtended(from: resetTimestamp)
-                    }                    
+                    }
+                    
+                    it("causes identity to not be sent in subsequent messages") {
+                        let user = try dataStore.assertUserToUploadExists(with: consumer.userId!)
+                        let messages = try dataStore.getPendingMessages(for: user, sessionId: consumer.activeOrExpiredSessionId)
+                        
+                        expect(messages).toNot(beEmpty())
+                        for message in messages {
+                            expect(message.identity).to(beEmpty())
+                        }
+                    }
                 }
                 
                 context("Heap is recording with clearEventPropertiesOnNewUser set as true") {

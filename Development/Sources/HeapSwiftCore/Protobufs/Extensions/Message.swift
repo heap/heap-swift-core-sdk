@@ -8,6 +8,10 @@ extension Message {
         envID = state.environment.envID
         userID = state.environment.userID
         
+        if state.environment.hasIdentity {
+            identity = state.environment.identity
+        }
+
         baseLibrary = state.sdkInfo.libraryInfo
         application = state.sdkInfo.applicationInfo
         device = state.sdkInfo.deviceInfo

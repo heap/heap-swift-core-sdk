@@ -8,6 +8,7 @@ extension NotificationInteractionSource {
         case .geofence: return .sourceGeofence
         case .interval: return .sourceTimeInterval
         case .calendar: return .sourceCalendar
+        @unknown default: return .sourceUnknown
         }
     }
 }
