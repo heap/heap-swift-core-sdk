@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2]
+
+### Fixed
+
+- Zero length events (`Heap.shared.track("")`) are no longer uploaded to the server, where they were
+  being rejected.
+
 ## [0.7.1]
 
 ### Added
@@ -198,7 +205,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
-[Unreleased]: https://github.com/heap/heap-swift-core-sdk/compare/0.7.1...main
+[Unreleased]: https://github.com/heap/heap-swift-core-sdk/compare/0.7.2...main
+[0.7.2]: https://github.com/heap/heap-swift-core-sdk/compare/0.7.1...0.7.2
 [0.7.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.7.0...0.7.1
 [0.7.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.6.1...0.7.0
 [0.6.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.6.0...0.6.1

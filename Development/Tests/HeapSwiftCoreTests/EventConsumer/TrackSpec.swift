@@ -201,9 +201,15 @@ final class EventConsumer_TrackSpec: HeapSpec {
                     try dataStore.assertExactPendingMessagesCountInOnlySession(for: user, count: 4)
                 }
                 
-                it("does not send event where the event name is above the maximum length") {
+                it("does not send an event where the event name is above the maximum length") {
                     let name = String(repeating: "あ", count: 513)
                     consumer.track(name)
+                    let user = try dataStore.assertOnlyOneUserToUpload()
+                    expect(user.sessionIds).to(beEmpty(), description: "The event should have been suppressed, so the first session should not have started.")
+                }
+                
+                it("does not send an event where the event name is empty") {
+                    consumer.track("")
                     let user = try dataStore.assertOnlyOneUserToUpload()
                     expect(user.sessionIds).to(beEmpty(), description: "The event should have been suppressed, so the first session should not have started.")
                 }

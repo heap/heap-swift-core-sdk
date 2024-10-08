@@ -186,8 +186,13 @@ extension EventConsumer {
 
     func track(_ event: String, properties: [String: HeapPropertyValue] = [:], timestamp: Date = Date(), sourceInfo: SourceInfo? = nil, pageview: Pageview? = nil) {
         
+        if event.utf16.count == 0 {
+            HeapLogger.shared.warn("Event without a name will not be logged.")
+            return
+        }
+        
         if event.utf16.count > 512 {
-            HeapLogger.shared.warn("Event \(event) was not logged because its name exceeds 512 UTF-16 code units")
+            HeapLogger.shared.warn("Event \(event) was not logged because its name exceeds 512 UTF-16 code units.")
             return
         }
         
