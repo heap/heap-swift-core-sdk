@@ -5,13 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-> **Note**
->
-> When publishing releases, the syntax of `## [VERSION_NUMBER]` is used to automatically
-> extract the release notes.  To ensure the entire section is copied, only include `###` or
-> deeper headings in a release section.
+## [0.8.0]
 
-## [Unreleased]
+### Changes
+
+- The SDK is now distributed as a dynamic XCFramework.
+- The SDK now depends on the binary-distributed CSSwiftProtobuf instead of SwiftProtobuf from source.
+- The interfaces from HeapSwiftCoreInterfaces have been merged into this project.  **This is a
+  breaking change that requires updates to the latest versions of HeapIOSAutocapture,
+  HeapNotificationAutocapture, and HeapContentsquareIntegration.**  If an error appears at build
+  time, update the corresponding packages.
+
+- The minimum deployment targets have increased to macOS 11, iOS 13, tvOS 13, and watchOS 6.0.
+
+### Added
+
+- Added support for visionOS.
 
 ## [0.7.2]
 
@@ -205,7 +214,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
-[Unreleased]: https://github.com/heap/heap-swift-core-sdk/compare/0.7.2...main
+[0.8.0]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.8.0
 [0.7.2]: https://github.com/heap/heap-swift-core-sdk/compare/0.7.1...0.7.2
 [0.7.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.7.0...0.7.1
 [0.7.0]: https://github.com/heap/heap-swift-core-sdk/compare/0.6.1...0.7.0
