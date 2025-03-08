@@ -5,9 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.1]
+
+### Fixed
+
+- Fixed an issue where the framework's Info.plist had an invalid minimum OS version, preventing App
+  Store releases.
+
 ## [0.8.0]
 
-### Changes
+### Changed
 
 - The SDK is now distributed as a dynamic XCFramework.
 - The SDK now depends on the binary-distributed CSSwiftProtobuf instead of SwiftProtobuf from source.
@@ -214,6 +221,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
+[0.8.1]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.8.1
 [0.8.0]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.8.0
 [0.7.2]: https://github.com/heap/heap-swift-core-sdk/compare/0.7.1...0.7.2
 [0.7.1]: https://github.com/heap/heap-swift-core-sdk/compare/0.7.0...0.7.1

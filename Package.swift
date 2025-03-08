@@ -1,14 +1,16 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.9
 
 import PackageDescription
 
 let package = Package(
     name: "HeapSwiftCore",
     platforms: [
-        .macOS(.v11),
         .iOS(.v13),
-        .watchOS(.v6),
+        .macCatalyst(.v13),
+        .macOS(.v11),
         .tvOS(.v13),
+        .watchOS(.v6),
+        .visionOS(.v1),
     ],
     products: [
         .library(name: "HeapSwiftCore", targets: [
@@ -28,8 +30,8 @@ let package = Package(
         ),
         .binaryTarget(
             name: "HeapSwiftCore",
-            url: "https://github.com/heap/heap-swift-core-sdk/releases/download/0.8.0/package.zip",
-            checksum: "79ab0348e8113263b5957b4c9f9573e7e63d797ad3868541710302ff3cc30c1d"
+            url: "https://github.com/heap/heap-swift-core-sdk/releases/download/0.8.1/package.zip",
+            checksum: "264714786d9e766ad25b2f0af02797dce1ad2c0b99f5ee32a389f3e620ca25ef"
     )
     ],
     swiftLanguageVersions: [.v5]
