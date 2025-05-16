@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name = 'HeapSwiftCore'
-    s.version = '0.8.4'
+    s.version = '0.8.5'
     s.summary = 'The core Heap library used for apps on Apple platforms.'
     s.homepage = 'https://docs.contentsquare.com/ios'
     s.author = { 'Contentsquare' => 'contact@contentsquare.com' }
