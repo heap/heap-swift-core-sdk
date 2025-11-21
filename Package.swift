@@ -18,7 +18,7 @@ let package = Package(
         ]),
     ],
     dependencies: [
-        .package(url: "https://github.com/ContentSquare/CSSwiftProtobuf.git", exact: "1.28.2"),
+        .package(url: "https://github.com/ContentSquare/CSSwiftProtobuf.git", exact: "1.33.3"),
     ],
     targets: [
         .target(
@@ -30,8 +30,8 @@ let package = Package(
         ),
         .binaryTarget(
             name: "HeapSwiftCore",
-            url: "https://github.com/heap/heap-swift-core-sdk/releases/download/0.8.7/package.zip",
-            checksum: "0b78adbce272f343aa1a0b1467a057b0163de9953d5d387a81806d0ec72484bf"
+            url: "https://github.com/heap/heap-swift-core-sdk/releases/download/0.8.8/package.zip",
+            checksum: "5670993b2ecf7406ebc11658af4832a994406e50e4c55021864ce51cb37b9baa"
     )
     ],
     swiftLanguageVersions: [.v5]

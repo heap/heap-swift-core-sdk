@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name = 'HeapSwiftCore'
-    s.version = '0.8.7'
+    s.version = '0.8.8'
     s.summary = 'The core Heap library used for apps on Apple platforms.'
     s.homepage = 'https://docs.contentsquare.com/ios'
     s.author = { 'Contentsquare' => 'contact@contentsquare.com' }
@@ -32,7 +32,7 @@ Pod::Spec.new do |s|
     s.tvos.deployment_target = '13.0'
     s.cocoapods_version = '>= 1.7.0'
     
-    s.dependency 'CSSwiftProtobuf', '= 1.28.2'
+    s.dependency 'CSSwiftProtobuf', '= 1.33.3'
 
     s.vendored_frameworks = [ 'HeapSwiftCore.xcframework' ]
     s.swift_versions = ['5.0']
