@@ -18,7 +18,7 @@ let package = Package(
         ]),
     ],
     dependencies: [
-        .package(url: "https://github.com/ContentSquare/CSSwiftProtobuf.git", exact: "1.28.2"),
+        .package(url: "https://github.com/ContentSquare/CSSwiftProtobuf.git", exact: "1.33.3"),
     ],
     targets: [
         .target(
