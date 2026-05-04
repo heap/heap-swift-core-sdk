@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0]
+
+### Changed
+
+- Calling `startRecording` with different options no longer ends the current session.
+
+- The Heap SDK now stores its state in UserDefaults rather than a file and maintains a shared state
+  and user with the Contentsquare SDK.
+
+- When Heap and Contentsquare are used together for the first time, a new Heap user ID will be
+  generated that is derived from the Contentsquare visitor ID. If the Heap user was previously
+  identified, the user will be merged and with the previous based on that identity.
+
+- Users IDs are now rotated every 13 calendar months. For existing Heap users, the 13 months will
+  be calculated from the last session date prior to migration.
+
+### Removed
+
+- Removed `.startSessionImmediately` and `.disableInteractionReferencingPropertyCapture`
+  initialization options.
+
+### Deprecated
+
+- `.enableInteractionReferencingPropertyCapture` initialization option is deprecated and no longer
+  functional.
+
 ## [0.8.8]
 
 ### Fixed
@@ -285,6 +311,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
+[0.9.0]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.9.0
 [0.8.8]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.8.8
 [0.8.7]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.8.7
 [0.8.6]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.8.6
