@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1]
+
+### Changed
+
+- In addition to scheduled uploads, the SDK now uploads all pending events when entering the
+  background.
+
 ## [0.9.0]
 
 ### Changed
@@ -311,6 +318,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
+[0.9.1]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.9.1
 [0.9.0]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.9.0
 [0.8.8]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.8.8
 [0.8.7]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.8.7
