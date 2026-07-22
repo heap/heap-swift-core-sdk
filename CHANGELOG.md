@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2]
+
+### Changed
+
+- Internal improvements for the Contentsquare SDK.
+- The debug logs no longer emit repeated "0 requests were made" during lulls in user activity.
+
 ## [0.9.1]
 
 ### Changed
@@ -71,14 +78,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed support for tvOS devices, which do not have access to persistent storage in the library
-  directory.  When running on tvOS, Heap will persist minimal data in `UserDefaults` under the
+  directory. When running on tvOS, Heap will persist minimal data in `UserDefaults` under the
   following keys:
-  
-    - `heap-environment-{id}`: This contains the active SDK state, including the current user,
-      identity, and session information.  By default, this will be under 200 bytes, but will
-      grow to include stored data when `identify` and `addEventProperties` are used.
-    - `heap-user-upload-status`: This holds upload status for the current user.  This will be
-      consistently under 300 bytes.
+  - `heap-environment-{id}`: This contains the active SDK state, including the current user,
+    identity, and session information. By default, this will be under 200 bytes, but will
+    grow to include stored data when `identify` and `addEventProperties` are used.
+  - `heap-user-upload-status`: This holds upload status for the current user. This will be
+    consistently under 300 bytes.
 
 ## [0.8.4]
 
@@ -115,9 +121,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The SDK is now distributed as a dynamic XCFramework.
 - The SDK now depends on the binary-distributed CSSwiftProtobuf instead of SwiftProtobuf from source.
-- The interfaces from HeapSwiftCoreInterfaces have been merged into this project.  **This is a
+- The interfaces from HeapSwiftCoreInterfaces have been merged into this project. **This is a
   breaking change that requires updates to the latest versions of HeapIOSAutocapture,
-  HeapNotificationAutocapture, and HeapContentsquareIntegration.**  If an error appears at build
+  HeapNotificationAutocapture, and HeapContentsquareIntegration.** If an error appears at build
   time, update the corresponding packages.
 
 - The minimum deployment targets have increased to macOS 11, iOS 13, tvOS 13, and watchOS 6.0.
@@ -172,7 +178,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `enableInteractionReferencingPropertyCapture`, which will be used in heap-ios-autocapture
-  0.5.0 and later to enable "Target Ivar" capture.  The feature is off-by-default to avoid edge
+  0.5.0 and later to enable "Target Ivar" capture. The feature is off-by-default to avoid edge
   conditions that can cause Swift's `Mirror` functionality to crash.
 
 ### Deprecated
@@ -199,9 +205,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed crash on `Heap.attachWebView` when called twice on the same web view prior to iOS 15.
   Now, subsequent calls are ignored.
 
-- Fixed small memory leak when an attached `WKWebView` is deallocated.  This was caused by the 
+- Fixed small memory leak when an attached `WKWebView` is deallocated. This was caused by the
   `WKUserContentController` maintaining a strong self reference when it has message handlers
-  attached.  This change may trigger a warning message from WebKit on `WKWebView` deallocation,
+  attached. This change may trigger a warning message from WebKit on `WKWebView` deallocation,
   which can be resolved by calling `Heap.detachWebView` when removing the web view.
 
 - `Heap.removeHeapJsCookie` is now public.
@@ -210,7 +216,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Heap.shared.resetIdentity()` and `Heap.shared.identify()` no longer clear event properties by
   default when a new user is identified.
-  
+
   The previous behavior is available using the option `.clearEventPropertiesOnNewUser`.
 
 - Changed uploader behavior around server errors.
@@ -220,15 +226,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added option `.clearEventPropertiesOnNewUser` to continue using existing SDK behavior where event
   properties are cleared when a new user is identified.
 
-- Added `Heap.detachWebView`.  This method removes most integrations added with
-  `Heap.attachWebView` with the exception of the heap.js cookie.  This method is optional and
+- Added `Heap.detachWebView`. This method removes most integrations added with
+  `Heap.attachWebView` with the exception of the heap.js cookie. This method is optional and
   intended to be used before deallocating a `WKWebView`.
 
 ## [0.4.0]
 
 ### Added
 
-- Added `.captureVendorId` option to enable capture of **iOS Vendor ID**  and **Initial iOS Vendor
+- Added `.captureVendorId` option to enable capture of **iOS Vendor ID** and **Initial iOS Vendor
   ID** from `UIDevice.current.identifierForVendor`. This supports a behavior change discussed in the
   **Changed** section.
 
@@ -237,13 +243,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Target Text** and **Target accessibilityLabel** are now trimmed of whitespace.
 
 - Properties from `addEventProperties` will no longer show up on sessions, matching Classic SDK
-  behavior.  Pageviews and events are not affected by the change.
+  behavior. Pageviews and events are not affected by the change.
 
 - The SDK no longer captures **iOS Vendor ID** and **Initial iOS Vendor ID** by default. This change
   allows developers to opt into Vendor ID tracking after they've validated their use complies with
   Apple's [user privacy and data use] guidelines.
   To enable these properties, use the `.captureVendorId` option in `startRecording`.
-  
+
 ## [0.3.1]
 
 ### Fixed
@@ -254,19 +260,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Exposed `+[HeapSourceInfo sourceInfoWithName:version:platform:properties:]` and
- `-[Heap track:properties:sourceInfo:]` to Objective-C.
+  `-[Heap track:properties:sourceInfo:]` to Objective-C.
 
 ## [0.3.0]
 
 ### Added
 
-- Added app version change and install events.  These will fire when an environment first
+- Added app version change and install events. These will fire when an environment first
   encounters a different application identifier, app name, or version at session start.
 
 ### Changed
 
-- Changed process to retrieve iOS device model. `sysctlbyname` is now used to retrieve the 
-  detailed hardware identifier (e.g., "iPhone10,3"). This results in more specific 
+- Changed process to retrieve iOS device model. `sysctlbyname` is now used to retrieve the
+  detailed hardware identifier (e.g., "iPhone10,3"). This results in more specific
   model identification than the generic `UIDevice.model` approach which is now used
   as a fallback.
 
@@ -318,6 +324,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
+[0.9.2]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.9.2
 [0.9.1]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.9.1
 [0.9.0]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.9.0
 [0.8.8]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.8.8

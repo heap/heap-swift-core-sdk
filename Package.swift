@@ -18,7 +18,7 @@ let package = Package(
         ]),
     ],
     dependencies: [
-        .package(url: "https://github.com/ContentSquare/apple-core-sdk.git", .upToNextMinor(from: "0.1.0")),
+        .package(url: "https://github.com/ContentSquare/apple-core-sdk.git", .upToNextMinor(from: "0.2.0")),
     ],
     targets: [
         .target(
@@ -30,8 +30,8 @@ let package = Package(
         ),
         .binaryTarget(
             name: "HeapSwiftCore",
-            url: "https://github.com/heap/heap-swift-core-sdk/releases/download/0.9.1/package.zip",
-            checksum: "91d497d1838389009c2ec735c331273546768a335a2ec5120027c3d6d24db619"
+            url: "https://github.com/heap/heap-swift-core-sdk/releases/download/0.9.2/package.zip",
+            checksum: "95e816dfd19a64f30e1e9c9edc51d18c5e57612dbbc303af37fc4190745ce67b"
     )
     ],
     swiftLanguageVersions: [.v5]
