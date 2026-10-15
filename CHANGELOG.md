@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0]
+
+### Added
+
+- Event properties now support list values, e.g.
+  `Heap.shared.track("viewed items", properties: ["item ids": [1, 2, 3]])`. Lists may contain
+  `Bool`, integer, floating point, or string elements. User properties do not support list values;
+  a list passed as a user property is dropped and a message is logged.
+
+### Changed
+
+- Logging is now unified with other CSQ SDKs and formatting may appear different.
+- `Heap.shared.logChannel` is now nullable.
+- The SDK now depends on ContentsquareCore 0.2.4.
+
 ## [0.9.2]
 
 ### Changed
@@ -324,6 +339,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
+[0.10.0]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.10.0
 [0.9.2]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.9.2
 [0.9.1]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.9.1
 [0.9.0]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.9.0
