@@ -30,8 +30,8 @@ let package = Package(
         ),
         .binaryTarget(
             name: "HeapSwiftCore",
-            url: "https://github.com/heap/heap-swift-core-sdk/releases/download/0.10.0/package.zip",
-            checksum: "840dd439372c52f95d4e6bd33d9b1ef0e22a20e17c51caf4efb16e03e3cdf18e"
+            url: "https://github.com/heap/heap-swift-core-sdk/releases/download/0.10.1-rc.1/package.zip",
+            checksum: "9b581c3c73779741167f828c0b6d3c033c1d75916ae98f91dc99b871f3d486e0"
     )
     ],
     swiftLanguageVersions: [.v5]
