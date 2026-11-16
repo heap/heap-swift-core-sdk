@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1]
+
+### Added
+
+- Internal improvements to allow list properties in future Flutter and React Native releases.
+
 ## [0.10.0]
 
 ### Added
@@ -339,6 +345,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for manual capture within WKWebView.
 - Support for platforms targeting Swift: macOS, watchOS, iOS, iPadOS, tvOS.
 
+[0.10.1]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.10.1
 [0.10.0]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.10.0
 [0.9.2]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.9.2
 [0.9.1]: https://github.com/heap/heap-swift-core-sdk/releases/tag/0.9.1
